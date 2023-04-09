@@ -1,0 +1,7 @@
+framework:
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
+        envelope:
+            sender: 'booxit@support.com'
+        headers:
+            From: 'Booxit <booxit@support.com>'

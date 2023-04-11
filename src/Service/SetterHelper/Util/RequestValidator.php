@@ -71,11 +71,12 @@ class RequestValidator{
         $parameters = $parameterContainer->getParameters();
         $aliases = [];
         foreach($parameters as $parameter){
+            $parameterName = $parameter->getName();
             $alias = $parameter->getAlias();
             if(is_null($alias)){
+                $aliases[$parameterName] = $parameterName;
                 continue;
             }
-            $parameterName = $parameter->getName();
             $aliases[$parameterName] = $alias;
         }
         return $aliases;

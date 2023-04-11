@@ -71,11 +71,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $verified = null;
 
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, orphanRemoval: true)]
+    private Collection $organizationAssignments;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
+        $this->organizationAssignments = new ArrayCollection();
     }
 
+    #[Getter]
     public function getId(): ?int
     {
         return $this->id;
@@ -215,6 +220,46 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->verified = $verified;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, OrganizationMember>
+     */
+    public function getOrganizationAssignments(): Collection
+    {
+        return $this->organizationAssignments;
+    }
+
+    public function addOrganizationAssignment(OrganizationMember $organizationAssignment): self
+    {
+        if (!$this->organizationAssignments->contains($organizationAssignment)) {
+            $this->organizationAssignments->add($organizationAssignment);
+            $organizationAssignment->setAppUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrganizationAssignment(OrganizationMember $organizationAssignment): self
+    {
+        if ($this->organizationAssignments->removeElement($organizationAssignment)) {
+            // set the owning side to null (unless already changed)
+            if ($organizationAssignment->getAppUser() === $this) {
+                $organizationAssignment->setAppUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getOrganizations(): Collection
+    {
+        $organizations = new ArrayCollection([]);
+        foreach($this->organizationAssignments as $assignment){
+            $organizations->add($assignment->getOrganization());
+        }
+
+        return $organizations;
     }
 
 }

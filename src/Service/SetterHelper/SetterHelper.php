@@ -2,6 +2,7 @@
 
 namespace App\Service\SetterHelper;
 
+use App\Exceptions\InvalidRequestException;
 use App\Kernel;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\SetterHelper\Attribute\Setter;
@@ -27,6 +28,10 @@ class SetterHelper implements SetterHelperInterface
 
     public function updateObjectSettings(object $object, array $settings):void
     {
+        if(empty($settings)){
+            throw new InvalidRequestException('Request has no parameters');
+        }
+
         $reflectionClass = new ReflectionClass($object);
         $requestParameters = array_keys($settings);
         $setterManager = new SetterManager(self::SETTER_ATTRIBUTE, $this->container);

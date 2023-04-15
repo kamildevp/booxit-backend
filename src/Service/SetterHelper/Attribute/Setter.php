@@ -8,7 +8,12 @@ use Attribute;
 class Setter
 {
 
-    public function __construct(private ?string $setterTask = null, private ?string $targetParameter = null, private ?array $aliases = [])
+    public function __construct(
+        public ?string $setterTask = null, 
+        public ?string $targetParameter = null, 
+        public ?array $aliases = [], 
+        public array $groups = ['Default']
+        )
     {
         
     }

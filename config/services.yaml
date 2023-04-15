@@ -29,5 +29,9 @@ services:
         resource: '../src/Service/GetterHelper/CustomAccessRule/'
         public: true
 
+    App\Service\GetterHelper\CustomFormat\:
+        resource: '../src/Service/GetterHelper/CustomFormat/'
+        public: true
+
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'

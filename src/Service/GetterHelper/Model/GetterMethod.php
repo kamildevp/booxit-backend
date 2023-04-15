@@ -3,6 +3,7 @@
 namespace App\Service\GetterHelper\Model;
 
 use App\Service\GetterHelper\CustomAccessRule\CustomAccessRuleInterface;
+use App\Service\GetterHelper\CustomFormat\CustomFormatInterface;
 
 class GetterMethod
 {
@@ -12,6 +13,9 @@ class GetterMethod
 
     private int|CustomAccessRuleInterface $accessRule;
 
+    private ?CustomFormatInterface $format;
+
+    private string $targetPropertyAlias;
 
 
     public function getName(): ?string
@@ -42,5 +46,25 @@ class GetterMethod
     public function setAccessRule(int|CustomAccessRuleInterface $accessRule)
     {
         $this->accessRule = $accessRule;
+    }
+
+    public function getFormat(): ?CustomFormatInterface
+    {
+        return $this->format;
+    }
+
+    public function setFormat(?CustomFormatInterface $format)
+    {
+        $this->format = $format;
+    }
+
+    public function getTargetPropertyAlias(): string
+    {
+        return $this->targetPropertyAlias;
+    }
+
+    public function setTargetPropertyAlias(string $targetPropertyAlias)
+    {
+        $this->targetPropertyAlias = $targetPropertyAlias;
     }
 }

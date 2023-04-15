@@ -11,9 +11,11 @@ namespace App\Service\SetterHelper;
  */
 interface SetterHelperInterface
 {
-    public function updateObjectSettings(object $object, array $settings):void;
+    public function updateObjectSettings(object $object, array $settings, bool $requireAll = false):void;
 
     public function runPostValidationTasks():void;
 
     public function getValidationGroups():array;
+
+    public function getPropertyRequestParameter(string $propertyName):string;
 }

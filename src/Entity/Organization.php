@@ -29,9 +29,13 @@ class Organization
     #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, orphanRemoval: true)]
     private Collection $members;
 
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true)]
+    private Collection $services;
+
     public function __construct()
     {
         $this->members = new ArrayCollection();
+        $this->services = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -97,5 +101,35 @@ class Organization
             return $value->getAppUser() === $user;
         });
         return $member;
+    }
+
+    /**
+     * @return Collection<int, Service>
+     */
+    public function getServices(): Collection
+    {
+        return $this->services;
+    }
+
+    public function addService(Service $service): self
+    {
+        if (!$this->services->contains($service)) {
+            $this->services->add($service);
+            $service->setOrganization($this);
+        }
+
+        return $this;
+    }
+
+    public function removeService(Service $service): self
+    {
+        if ($this->services->removeElement($service)) {
+            // set the owning side to null (unless already changed)
+            if ($service->getOrganization() === $this) {
+                $service->setOrganization(null);
+            }
+        }
+
+        return $this;
     }
 }

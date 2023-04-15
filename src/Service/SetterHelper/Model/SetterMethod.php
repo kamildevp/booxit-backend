@@ -8,6 +8,8 @@ class SetterMethod
 {
     private ?string $name = null;
 
+    private ?string $targetProperty = null;
+
     private ?string $targetParameter = null;
 
     private ?SetterTaskInterface $task = null;
@@ -23,6 +25,16 @@ class SetterMethod
     public function setName(string $name)
     {
         $this->name = $name;
+    }
+
+    public function getTargetProperty(): ?string
+    {
+        return $this->targetProperty;
+    }
+
+    public function setTargetProperty(string $targetProperty)
+    {
+        $this->targetProperty = $targetProperty;
     }
 
     public function getTargetParameter(): ?string
@@ -54,4 +66,5 @@ class SetterMethod
     {
         $this->aliases = $aliases;
     }
+
 }

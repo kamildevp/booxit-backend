@@ -6,9 +6,9 @@ use App\Exceptions\InvalidRequestException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\SetterHelper\Model\ParameterContainer;
 
-class RequestValidator{
+class RequestParser{
 
-    public function validateRequestParameters(array $setterMethods, array $requestParameters):void
+    public function parseRequestParameters(array $setterMethods, array $requestParameters):void
     {
         $usedParameters = [];
         foreach($setterMethods as $setterMethod){

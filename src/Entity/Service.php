@@ -7,8 +7,9 @@ use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\GetterHelper\CustomFormat\DateIntervalFormat;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\ServiceDurationTask;
-use App\Service\SetterHelper\Task\ServiceOrganizationTask;
-use DateInterval;
+use App\Service\SetterHelper\Task\OrganizationTask;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -48,6 +49,15 @@ class Service
     #[ORM\Column(length: 255)]
     private ?string $estimatedPrice = null;
 
+    #[ORM\ManyToMany(targetEntity: Schedule::class, mappedBy: 'services')]
+    private Collection $schedules;
+
+    public function __construct()
+    {
+        $this->schedules = new ArrayCollection();
+    }
+
+    #[Getter(groups:['schedule-services'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -65,7 +75,7 @@ class Service
         return $this->organization->getId();
     }
 
-    #[Setter(targetParameter: 'organization_id', setterTask: ServiceOrganizationTask::class, groups: ['initOnly'])]
+    #[Setter(targetParameter: 'organization_id', setterTask: OrganizationTask::class, groups: ['initOnly'])]
     public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
@@ -73,7 +83,7 @@ class Service
         return $this;
     }
 
-    #[Getter]
+    #[Getter(groups:['schedule-services'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -101,7 +111,7 @@ class Service
         return $this;
     }
 
-    #[Getter(format: DateIntervalFormat::class)]
+    #[Getter(format: DateIntervalFormat::class, groups: ['schedule-services'])]
     public function getDuration(): ?\DateInterval
     {
         return $this->duration;
@@ -115,7 +125,7 @@ class Service
         return $this;
     }
 
-    #[Getter]
+    #[Getter(groups:['schedule-services'])]
     public function getEstimatedPrice(): ?string
     {
         return $this->estimatedPrice;
@@ -125,6 +135,33 @@ class Service
     public function setEstimatedPrice(string $estimatedPrice): self
     {
         $this->estimatedPrice = $estimatedPrice;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Schedule>
+     */
+    public function getSchedules(): Collection
+    {
+        return $this->schedules;
+    }
+
+    public function addSchedule(Schedule $schedule): self
+    {
+        if (!$this->schedules->contains($schedule)) {
+            $this->schedules->add($schedule);
+            $schedule->addService($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSchedule(Schedule $schedule): self
+    {
+        if ($this->schedules->removeElement($schedule)) {
+            $schedule->removeService($this);
+        }
 
         return $this;
     }

@@ -56,11 +56,12 @@ class RequestParser{
                 }
     
                 $alias = (new DataHandlingHelper)->findLooseStringMatch($parameterName, $requestParameters);
-                if(is_null($alias))
+                if(is_null($alias) && $parameter->isRequired())
                 {
                     throw new InvalidRequestException("Parameter {$parameterName} is required");
                 }
-                $parameter->setAlias($alias);
+
+                $parameter->setAlias($alias ?? $parameterName);
     
             }
             return $parameterContainer;

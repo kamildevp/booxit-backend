@@ -47,7 +47,7 @@ class GetterHelper implements GetterHelperInterface
             $format = $getter->getFormat();
 
             if(!($format instanceof CustomFormatInterface)){
-                $objectInfo[$targetPropertyAlias] =  $this->getPropertyValue($property);
+                $objectInfo[$targetPropertyAlias] =  $this->getPropertyValue($property, $groups);
                 continue;
             }
 
@@ -56,21 +56,21 @@ class GetterHelper implements GetterHelperInterface
         return $objectInfo;
     }
 
-    private function getPropertyValue($property):mixed
+    private function getPropertyValue($property, array $groups):mixed
     {
         if(!is_object($property) && !is_array($property)){
             return $property;
         }
 
         $getterHelper = new GetterHelper($this->kernel, $this->security);
-
-        if(is_object($property)){
-            return $getterHelper->get($property);
+        
+        if(is_object($property) && !($property instanceof \Doctrine\Common\Collections\Collection)){
+            return $getterHelper->get($property, $groups);
         }
         else{
             $values = [];
             foreach($property as $element){
-                $values[] = $this->getPropertyValue($element);
+                $values[] = $this->getPropertyValue($element, $groups);
             }
             return $values;
         }

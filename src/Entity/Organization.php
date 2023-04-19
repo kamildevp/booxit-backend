@@ -32,10 +32,14 @@ class Organization
     #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true)]
     private Collection $services;
 
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, orphanRemoval: true)]
+    private Collection $schedules;
+
     public function __construct()
     {
         $this->members = new ArrayCollection();
         $this->services = new ArrayCollection();
+        $this->schedules = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -127,6 +131,44 @@ class Organization
             // set the owning side to null (unless already changed)
             if ($service->getOrganization() === $this) {
                 $service->setOrganization(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Schedule>
+     */
+    public function getSchedules(): Collection
+    {
+        return $this->schedules;
+    }
+
+    public function hasSchedule(Schedule $schedule):bool
+    {
+        $scheduleExists = $this->schedules->exists(function($key, $value) use ($schedule){
+            return $value === $schedule;
+        });
+        return $scheduleExists;
+    }
+
+    public function addSchedule(Schedule $schedule): self
+    {
+        if (!$this->schedules->contains($schedule)) {
+            $this->schedules->add($schedule);
+            $schedule->setOrganization($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSchedule(Schedule $schedule): self
+    {
+        if ($this->schedules->removeElement($schedule)) {
+            // set the owning side to null (unless already changed)
+            if ($schedule->getOrganization() === $this) {
+                $schedule->setOrganization(null);
             }
         }
 

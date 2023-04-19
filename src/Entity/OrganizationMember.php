@@ -3,8 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\OrganizationMemberRepository;
+use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\MemberRoleTask;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -27,6 +30,15 @@ class OrganizationMember
     #[ORM\Column(type: Types::ARRAY)]
     private array $roles = [];
 
+    #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class, orphanRemoval: true)]
+    private Collection $scheduleAssignments;
+
+    public function __construct()
+    {
+        $this->scheduleAssignments = new ArrayCollection();
+    }
+
+    #[Getter(groups: ['schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +56,7 @@ class OrganizationMember
         return $this;
     }
 
+    #[Getter(groups: ['schedule-assignments'], propertyNameAlias: 'user')]
     public function getAppUser(): ?User
     {
         return $this->appUser;
@@ -73,4 +86,36 @@ class OrganizationMember
     {
         return empty(array_diff($roles, $this->roles));
     }
+
+    /**
+     * @return Collection<int, ScheduleAssignment>
+     */
+    public function getScheduleAssignments(): Collection
+    {
+        return $this->scheduleAssignments;
+    }
+
+    public function addScheduleAssignment(ScheduleAssignment $scheduleAssignment): self
+    {
+        if (!$this->scheduleAssignments->contains($scheduleAssignment)) {
+            $this->scheduleAssignments->add($scheduleAssignment);
+            $scheduleAssignment->setOrganizationMember($this);
+        }
+
+        return $this;
+    }
+
+    public function removeScheduleAssignment(ScheduleAssignment $scheduleAssignment): self
+    {
+        if ($this->scheduleAssignments->removeElement($scheduleAssignment)) {
+            // set the owning side to null (unless already changed)
+            if ($scheduleAssignment->getOrganizationMember() === $this) {
+                $scheduleAssignment->setOrganizationMember(null);
+            }
+        }
+
+        return $this;
+    }
+
+   
 }

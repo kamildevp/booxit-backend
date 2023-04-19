@@ -11,7 +11,6 @@ use App\Service\SetterHelper\Model\SetterMethod;
 use App\Service\SetterHelper\Task\SetterTaskInterface;
 use ReflectionClass;
 use ReflectionMethod;
-use Symfony\Component\Validator\Test\ConstraintViolationAssertion;
 
 class SetterManager{
 
@@ -20,7 +19,7 @@ class SetterManager{
         
     }
 
-    public function filterSetters(ReflectionClass $reflectionClass, $requestParameters, bool $selectAll, array $filterGroups):array
+    public function filterSetters(ReflectionClass $reflectionClass, $requestParameters, array $requiredGroups, array $optionalGroups):array
     {
         $classMethods = $reflectionClass->getMethods();
 
@@ -32,20 +31,22 @@ class SetterManager{
             $setterAttributeInstance = $setterAttribute->newInstance();
 
             $setterGroups = $setterAttributeInstance->groups;
-            if(empty(array_intersect($filterGroups, $setterGroups))){
+            $setterRequired = !empty(array_intersect($requiredGroups, $setterGroups));
+            $setterAllowed = $setterRequired || !empty(array_intersect($optionalGroups, $setterGroups));
+            
+            if(!$setterAllowed){
                 continue;
             }
 
             $targetProperty = $this->getSetterParameter($reflectionClass, $method);
-            $targetParameter = $setterAttributeInstance->targetParameter ?? 
-            (new DataHandlingHelper)->findLooseStringMatch($targetProperty, $requestParameters);
+            $targetParameter = (new DataHandlingHelper)->findLooseStringMatch($setterAttributeInstance->targetParameter ?? $targetProperty, $requestParameters);
 
-            if($selectAll && !in_array($targetParameter, $requestParameters)){
+            if($setterRequired && !in_array($targetParameter, $requestParameters)){
                 $targetParameter = $targetParameter ?? $targetProperty;
                 throw new InvalidRequestException("Parameter {$targetParameter} is required");
             }
 
-            if(!$selectAll && !in_array($targetParameter, $requestParameters)){
+            if(!$setterRequired && !in_array($targetParameter, $requestParameters)){
                 continue;
             }
 

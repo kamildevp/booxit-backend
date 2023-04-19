@@ -2,6 +2,7 @@
 
 namespace App\Service\DataHandlingHelper;
 
+use DateTime;
 use InvalidArgumentException;
 use ReflectionMethod;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
@@ -85,5 +86,11 @@ class DataHandlingHelper{
             } 
         }
         return null;
+    }
+
+    public function validateDateTime(string $dateTime, $format)
+    {
+        $dateTimeObject = DateTime::createFromFormat($format, $dateTime);
+        return $dateTimeObject && $dateTimeObject->format($format) === $dateTime;
     }
 }

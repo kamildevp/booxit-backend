@@ -3,15 +3,13 @@
 namespace App\Service\SetterHelper\Task;
 
 use App\Entity\Organization;
-use App\Entity\Service;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 
-/** @property Service $object */
-class ServiceOrganizationTask implements SetterTaskInterface
+class OrganizationTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
     private ?User $currentUser;

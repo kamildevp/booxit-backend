@@ -24,16 +24,18 @@ class SetterHelper implements SetterHelperInterface
 
     }
 
-    public function updateObjectSettings(object $object, array $settings, bool $requireAll = false, array $groups = ['Default']):void
+    public function updateObjectSettings(object $object, array $settings, array $requiredGroups = [], array $optionalGroups = ['Default']):void
     {
+        $reflectionClass = new ReflectionClass($object);
         if(empty($settings)){
-            throw new InvalidRequestException('Request has no parameters');
+            $objectName = end(explode('\\', $reflectionClass->getName()));
+            throw new InvalidRequestException("Request has no parameters for object {$objectName}");
         }
 
-        $reflectionClass = new ReflectionClass($object);
+        
         $requestParameters = array_keys($settings);
         $setterManager = new SetterManager(self::SETTER_ATTRIBUTE, new ObjectHandlingHelper($this->kernel));
-        $this->setterMethods = $setterManager->filterSetters($reflectionClass, $requestParameters, $requireAll, $groups);
+        $this->setterMethods = $setterManager->filterSetters($reflectionClass, $requestParameters, $requiredGroups, $optionalGroups);
         (new RequestParser)->parseRequestParameters($this->setterMethods, $requestParameters);
 
         foreach($this->setterMethods as $setter){

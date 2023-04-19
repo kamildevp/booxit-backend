@@ -27,7 +27,7 @@ class ServiceController extends AbstractController
         $service = new Service();
 
         try{
-            $setterHelper->updateObjectSettings($service, $request->request->all(), true, ['Default', 'initOnly']);
+            $setterHelper->updateObjectSettings($service, $request->request->all(), requiredGroups: ['Default', 'initOnly']);
             $violations = $validator->validate($service, groups: $setterHelper->getValidationGroups());
             
             if(count($violations) > 0) {

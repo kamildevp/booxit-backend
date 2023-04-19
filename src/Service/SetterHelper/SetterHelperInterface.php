@@ -11,7 +11,7 @@ namespace App\Service\SetterHelper;
  */
 interface SetterHelperInterface
 {
-    public function updateObjectSettings(object $object, array $settings, bool $requireAll = false):void;
+    public function updateObjectSettings(object $object, array $settings, array $requiredGroups = [], array $allowedGroups = ['Default']):void;
 
     public function runPostValidationTasks():void;
 

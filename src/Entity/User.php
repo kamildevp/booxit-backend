@@ -80,7 +80,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->organizationAssignments = new ArrayCollection();
     }
 
-    #[Getter]
+    #[Getter(groups: ['schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -153,7 +153,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    #[Getter]
+    #[Getter(groups: ['schedule-assignments'])]
     public function getName(): ?string
     {
         return $this->name;

@@ -147,7 +147,7 @@ Route: /api/reservation/{reservationId}
 
 Request Method: GET
 
-Authorization: not required
+Authorization: organization admin or organization member assigned to reservation schedule
 
 Optional query parameters:
 - details - comma separated details groups (example query string: ?details=schedule,service)

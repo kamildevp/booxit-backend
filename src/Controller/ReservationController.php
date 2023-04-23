@@ -218,6 +218,28 @@ class ReservationController extends AbstractController
             ]);
         }
 
+        $schedule = $reservation->getSchedule();
+        $organization = $schedule->getOrganization();
+        $currentUser = $this->getUser();
+        if(!($currentUser && $organization->hasMember($currentUser))){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'Access Denied'
+            ]);
+        }
+
+        $organizationMember = $organization->getMember($currentUser);
+        $scheduleAssignment = $organizationMember->getScheduleAssignment($schedule);
+
+        if(!$organizationMember->hasRoles(['ADMIN']) && !$scheduleAssignment){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'Access Denied'
+            ]);
+        }
+
         $responseData = $getterHelper->get($reservation, $groups);
 
         return $this->json($responseData);
@@ -345,7 +367,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('reservation_confirm/{reservationId}', name: 'reservation_confirm', methods: ['POST'])]
-    public function confirm(EntityManagerInterface $entityManager, Request $request, int $reservationId): JsonResponse
+    public function confirm(EntityManagerInterface $entityManager, int $reservationId): JsonResponse
     {        
         $reservation = $entityManager->getRepository(Reservation::class)->find($reservationId);
         if(!($reservation instanceof Reservation)){

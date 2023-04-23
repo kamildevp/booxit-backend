@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ScheduleRepository;
+use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\OrganizationTask;
@@ -18,6 +19,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: ScheduleRepository::class)]
 class Schedule
 {
+    const DATE_FORMAT = 'Y-m-d';
+    const TIME_FORMAT = 'H:i';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -53,19 +57,15 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: Reservation::class, orphanRemoval: true)]
     private Collection $reservations;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: FreeTerm::class, orphanRemoval: true)]
-    private Collection $freeTerms;
-
     public function __construct()
     {
         $this->services = new ArrayCollection();
         $this->workingHours = new ArrayCollection();
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
-        $this->freeTerms = new ArrayCollection();
     }
 
-    #[Getter(groups:['schedule'])]
+    #[Getter(groups:['schedule', 'reservation-schedule'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -90,7 +90,7 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups:['schedule'])]
+    #[Getter(groups:['schedule', 'reservation-schedule'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -239,6 +239,7 @@ class Schedule
         return $this;
     }
 
+
     #[Setter(setterTask: ScheduleAssignmentsTask::class, groups: ['assignments'])]
     public function setAssignments(Collection $assignments): self
     {
@@ -252,6 +253,13 @@ class Schedule
     public function getReservations(): Collection
     {
         return $this->reservations;
+    }
+
+    public function getDateReservations(string $date): ?Collection
+    {
+        return $this->reservations->filter(function($element) use ($date){
+            return $element->getDate() === $date;
+        });
     }
 
     public function addReservation(Reservation $reservation): self
@@ -276,42 +284,33 @@ class Schedule
         return $this;
     }
 
-    /**
-     * @return Collection<int, FreeTerm>
-     */
-    public function getFreeTerms(): Collection
-    {
-        return $this->freeTerms;
-    }
-
     public function getDateFreeTerms(string $date): Collection
     {
-        return $this->freeTerms->filter(function($key, $element) use ($date){
-            return $element->getDate() === $date;
+        $workingHours = $this->getDayWorkingHours($date);
+        $dataHandlingHelper = new DataHandlingHelper;
+        if(!$workingHours){
+            $weekDay = $dataHandlingHelper->getWeekDay($date, self::DATE_FORMAT);
+            $workingHours = $this->getDayWorkingHours($weekDay);
+        } 
+
+        if(!$workingHours){
+            return new ArrayCollection([]);
+        }
+
+        $workingHoursTimeWindows = $workingHours->getTimeWindows();
+        if($workingHoursTimeWindows->count() === 0){
+            return new ArrayCollection([]);
+        }
+
+        $reservations = $this->getDateReservations($date);
+        $reservedTimeWindows = $reservations->map(function($element){
+            return $element->getTimeWindow();
         });
-    }
 
+        $diff =  $dataHandlingHelper->TimeWindowCollectionDiff($workingHoursTimeWindows, $reservedTimeWindows);
 
-    public function addFreeTerm(FreeTerm $freeTerm): self
-    {
-        if (!$this->freeTerms->contains($freeTerm)) {
-            $this->freeTerms->add($freeTerm);
-            $freeTerm->setSchedule($this);
-        }
+        return $diff;
 
-        return $this;
-    }
-
-    public function removeFreeTerm(FreeTerm $freeTerm): self
-    {
-        if ($this->freeTerms->removeElement($freeTerm)) {
-            // set the owning side to null (unless already changed)
-            if ($freeTerm->getSchedule() === $this) {
-                $freeTerm->setSchedule(null);
-            }
-        }
-
-        return $this;
     }
     
 

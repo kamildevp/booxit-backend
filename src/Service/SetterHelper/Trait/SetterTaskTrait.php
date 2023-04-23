@@ -11,6 +11,7 @@ trait SetterTaskTrait
 {
     private object $object;
     private array $validationGroups;
+    private array $validationErrors;
 
     public function getTaskParameters():ParameterContainer
     {
@@ -59,6 +60,11 @@ trait SetterTaskTrait
     public function getValidationGroups():array
     {
         return $this->validationGroups ?? [];
+    }
+
+    public function getValidationErrors():array
+    {
+        return $this->validationErrors ?? [];
     }
 
     public function runPreValidation():void

@@ -52,12 +52,16 @@ class Service
     #[ORM\ManyToMany(targetEntity: Schedule::class, mappedBy: 'services')]
     private Collection $schedules;
 
+    #[ORM\OneToMany(mappedBy: 'service', targetEntity: Reservation::class, orphanRemoval: true)]
+    private Collection $reservations;
+
     public function __construct()
     {
         $this->schedules = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['schedule-services'])]
+    #[Getter(groups:['schedule-services', 'reservation-service'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -83,7 +87,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['schedule-services'])]
+    #[Getter(groups:['schedule-services', 'reservation-service'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -125,7 +129,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['schedule-services'])]
+    #[Getter(groups:['schedule-services', 'reservation-service'])]
     public function getEstimatedPrice(): ?string
     {
         return $this->estimatedPrice;
@@ -161,6 +165,36 @@ class Service
     {
         if ($this->schedules->removeElement($schedule)) {
             $schedule->removeService($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): self
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setService($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): self
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getService() === $this) {
+                $reservation->setService(null);
+            }
         }
 
         return $this;

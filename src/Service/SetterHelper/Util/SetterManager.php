@@ -41,12 +41,12 @@ class SetterManager{
             $targetProperty = $this->getSetterParameter($reflectionClass, $method);
             $targetParameter = (new DataHandlingHelper)->findLooseStringMatch($setterAttributeInstance->targetParameter ?? $targetProperty, $requestParameters);
 
-            if($setterRequired && !in_array($targetParameter, $requestParameters)){
-                $targetParameter = $targetParameter ?? $targetProperty;
+            if($setterRequired && (is_null($targetParameter) || !in_array($targetParameter, $requestParameters))){
+                $targetParameter = $setterAttributeInstance->targetParameter ?? $targetProperty;
                 throw new InvalidRequestException("Parameter {$targetParameter} is required");
             }
 
-            if(!$setterRequired && !in_array($targetParameter, $requestParameters)){
+            if(!$setterRequired && (is_null($targetParameter) || !in_array($targetParameter, $requestParameters))){
                 continue;
             }
 

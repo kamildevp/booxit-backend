@@ -3,8 +3,14 @@
 namespace App\Service\MailingHelper;
 
 use App\Entity\EmailConfirmation;
+use App\Entity\Reservation;
+use App\Entity\Schedule;
 use App\Entity\User;
+use App\Exceptions\MailingHelperException;
+use App\Service\DataHandlingHelper\DataHandlingHelper;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
@@ -18,16 +24,90 @@ class MailingHelper{
 
     public function newEmailVerification(User $user, string $email){
         $expiryDate = new \DateTime('+1 days');
-        $url = $this->newEmailConfirmation($user, $email, 'user_verify', $expiryDate, []);
+        try{
+            $emailConfirmation = $this->newEmailConfirmation($user, $email, 'user_verify', $expiryDate, []);
+            $this->entityManager->persist($emailConfirmation);
+            $this->entityManager->flush();
 
-        $email = (new TemplatedEmail())->to($email)
-        ->subject('Email Verification')
-        ->htmlTemplate('emails/emailVerification.html.twig')
-        ->context([
-            'expiration_date' => $expiryDate,
-            'url' => $url
-        ]);
-        $this->mailer->send($email);
+            $url = $this->generateSignature($emailConfirmation);
+
+            $email = (new TemplatedEmail())->to($email)
+            ->subject('Email Verification')
+            ->htmlTemplate('emails/emailVerification.html.twig')
+            ->context([
+                'expiration_date' => $expiryDate,
+                'url' => $url
+            ]);
+            $this->mailer->send($email);
+        }
+        catch(Exception){
+            $this->entityManager->remove($emailConfirmation);
+            throw new MailingHelperException();
+        }
+    }
+
+    public function newReservationVerification(Reservation $reservation){
+        $email = $reservation->getEmail();
+        $reservationId = $reservation->getId();
+        $expiryDate = new \DateTime('+1 hours');
+        $reservation->setExpiryDate($expiryDate);
+
+        try{
+            $emailConfirmation = $this->newEmailConfirmation(null, $email, 'reservation_verify', $expiryDate, ['reservationId' => $reservationId]);
+            $this->entityManager->persist($emailConfirmation);
+            $this->entityManager->flush();
+            
+            $url = $this->generateSignature($emailConfirmation);
+            $email = (new TemplatedEmail())->to($email)
+            ->subject('Reservation Verification')
+            ->htmlTemplate('emails/reservationVerification.html.twig')
+            ->context([
+                'organization' => $reservation->getSchedule()->getOrganization()->getName(),
+                'dateTime' => $reservation->getDate() . $reservation->getTimeWindow()->getStartTime()->format(' H:i'),
+                'serviceName' => $reservation->getService()->getName(),
+                'duration' => (new DataHandlingHelper)->getPrettyDateInterval($reservation->getService()->getDuration()),
+                'estimatedPrice' => $reservation->getService()->getEstimatedPrice(),
+                'expiration_date' => $expiryDate,
+                'url' => $url
+            ]);
+            $this->mailer->send($email);
+        }
+        catch(Exception){
+            $this->entityManager->remove($emailConfirmation);
+            throw new MailingHelperException();
+        }
+    }
+
+    public function newReservationCancellation(Reservation $reservation){
+        $email = $reservation->getEmail();
+        $reservationId = $reservation->getId();
+        $startTime = $reservation->getTimeWindow()->getStartTime();
+        $expiryDate = DateTime::createFromFormat(Schedule::DATE_FORMAT, $reservation->getDate())
+        ->setTime((int)$startTime->format('H'), (int)$startTime->format('i'));
+
+        try{
+            $emailConfirmation = $this->newEmailConfirmation(null, $email, 'reservation_cancel', $expiryDate, ['reservationId' => $reservationId]);
+            $this->entityManager->persist($emailConfirmation);
+            $this->entityManager->flush();
+            
+            $url = $this->generateSignature($emailConfirmation);
+            $email = (new TemplatedEmail())->to($email)
+            ->subject('Reservation Verified')
+            ->htmlTemplate('emails/reservationVerified.html.twig')
+            ->context([
+                'organization' => $reservation->getSchedule()->getOrganization()->getName(),
+                'dateTime' => $reservation->getDate() . $startTime->format(' H:i'),
+                'serviceName' => $reservation->getService()->getName(),
+                'duration' => (new DataHandlingHelper)->getPrettyDateInterval($reservation->getService()->getDuration()),
+                'estimatedPrice' => $reservation->getService()->getEstimatedPrice(),
+                'url' => $url
+            ]);
+            $this->mailer->send($email);
+        }
+        catch(Exception){
+            $this->entityManager->remove($emailConfirmation);
+            throw new MailingHelperException();
+        }
     }
 
     public function newEmailConfirmation(?User $user, string $email, string $verificationRoute, \DateTime $expiryDate, array $extraParams)
@@ -39,9 +119,10 @@ class MailingHelper{
         $emailConfirmation->setExpiryDate($expiryDate);
         $emailConfirmation->setParams($extraParams);
 
-        $this->entityManager->persist($emailConfirmation);
-        $this->entityManager->flush();
+        return $emailConfirmation;
+    }
 
+    public function generateSignature(EmailConfirmation $emailConfirmation){
         $signatureComponents = $this->verifyEmailHelper->generateSignature(
             $emailConfirmation->getVerificationRoute(),
             $emailConfirmation->getId(),

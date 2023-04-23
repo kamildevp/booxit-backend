@@ -64,12 +64,21 @@ class GetterManager{
 
     private function getGetterTargetProperty(ReflectionMethod $getter){
         $getterName = $getter->name;
-        if(strlen($getterName) > 3){
-            $propertyName = lcfirst(substr($getterName,3));
+
+        switch(true){
+            case strlen($getterName) <= 3:
+                $propertyName = $getterName;
+                break;
+            case str_starts_with($getterName, 'get'):
+                $propertyName = lcfirst(substr($getterName,3));
+                break;
+            case str_starts_with($getterName, 'is'):
+                $propertyName = lcfirst(substr($getterName,2));
+                break;
+            default:
+                $propertyName = $getterName;
         }
-        else{
-            $propertyName = $getterName;
-        }
+        
         return $propertyName;
     }
 

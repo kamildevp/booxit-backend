@@ -10,6 +10,7 @@ use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Util\RequestParser;
 use App\Service\SetterHelper\Util\SetterManager;
 use ReflectionClass;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
 class SetterHelper implements SetterHelperInterface
 {
@@ -18,6 +19,7 @@ class SetterHelper implements SetterHelperInterface
     private array $setterMethods = [];
     private array $settings = [];
     private array $validationGroups = ['Default'];
+    private array $validationErrors = [];
 
     public function __construct(private Kernel $kernel)
     {
@@ -28,8 +30,10 @@ class SetterHelper implements SetterHelperInterface
     {
         $reflectionClass = new ReflectionClass($object);
         if(empty($settings)){
-            $objectName = end(explode('\\', $reflectionClass->getName()));
-            throw new InvalidRequestException("Request has no parameters for object {$objectName}");
+            $nameComponents = explode('\\', $reflectionClass->getName());
+            $objectName = end($nameComponents);
+            $objectName = (new CamelCaseToSnakeCaseNameConverter())->normalize($objectName);
+            throw new InvalidRequestException("Request has no parameters for {$objectName}");
         }
 
         
@@ -52,7 +56,9 @@ class SetterHelper implements SetterHelperInterface
             $mappedSettings = (new DataHandlingHelper)->replaceArrayKeys($settings, array_flip($setter->getAliases()));
             $task->runPreValidationTask($mappedSettings);
             $this->validationGroups = array_merge($this->validationGroups, $task->getValidationGroups());
+            $this->validationErrors = array_merge($this->validationErrors, $task->getValidationErrors());
         }
+        $this->mapValidationErrors();
         $this->settings = $settings;
     }
 
@@ -60,6 +66,11 @@ class SetterHelper implements SetterHelperInterface
     public function getValidationGroups():array
     {
         return $this->validationGroups;
+    }
+
+    public function getValidationErrors():array
+    {
+        return $this->validationErrors;
     }
 
     public function runPostValidationTasks():void
@@ -81,6 +92,15 @@ class SetterHelper implements SetterHelperInterface
         }
 
         return $this->setterMethods[$propertyName]->getTargetParameter();
+    }
+
+    private function mapValidationErrors(){
+        $requestParametersNames = [];
+        foreach($this->validationErrors as $propertyName => $message){
+            $requestParametersNames[$propertyName] = $this->getPropertyRequestParameter($propertyName);
+        }
+
+        $this->validationErrors = (new DataHandlingHelper)->replaceArrayKeys($this->validationErrors, $requestParametersNames);
     }
 
 }

@@ -24,16 +24,12 @@ class TimeWindow
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $endTime = null;
 
-    #[ORM\ManyToOne(inversedBy: 'timeWindows')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?WorkingHours $workingHours = null;
-
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms'])]
+    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms', 'reservation'])]
     public function getStartTime(): ?\DateTimeInterface
     {
         return $this->startTime;
@@ -47,7 +43,7 @@ class TimeWindow
         return $this;
     }
 
-    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms'])]
+    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms', 'reservation'])]
     public function getEndTime(): ?\DateTimeInterface
     {
         return $this->endTime;
@@ -56,18 +52,6 @@ class TimeWindow
     public function setEndTime(\DateTimeInterface $endTime): self
     {
         $this->endTime = $endTime;
-
-        return $this;
-    }
-
-    public function getWorkingHours(): ?WorkingHours
-    {
-        return $this->workingHours;
-    }
-
-    public function setWorkingHours(?WorkingHours $workingHours): self
-    {
-        $this->workingHours = $workingHours;
 
         return $this;
     }

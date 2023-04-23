@@ -17,5 +17,7 @@ interface SetterHelperInterface
 
     public function getValidationGroups():array;
 
+    public function getValidationErrors():array;
+
     public function getPropertyRequestParameter(string $propertyName):string;
 }

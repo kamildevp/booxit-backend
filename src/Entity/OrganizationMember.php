@@ -95,6 +95,13 @@ class OrganizationMember
         return $this->scheduleAssignments;
     }
 
+    public function getScheduleAssignment(Schedule $schedule): ?ScheduleAssignment
+    {
+        return $this->scheduleAssignments->findFirst(function($key, $assigment) use ($schedule){
+            return $assigment->getSchedule() === $schedule;
+        });
+    }
+
     public function addScheduleAssignment(ScheduleAssignment $scheduleAssignment): self
     {
         if (!$this->scheduleAssignments->contains($scheduleAssignment)) {
@@ -116,6 +123,8 @@ class OrganizationMember
 
         return $this;
     }
+
+
 
    
 }

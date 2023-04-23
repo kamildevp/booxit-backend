@@ -33,5 +33,11 @@ services:
         resource: '../src/Service/GetterHelper/CustomFormat/'
         public: true
 
+    App\Service\SetterHelper\SetterHelper:
+        shared: false
+
+    App\Service\GetterHelper\GetterHelper:
+        shared: false
+
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'

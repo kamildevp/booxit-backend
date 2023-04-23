@@ -42,12 +42,13 @@ class Organization
         $this->schedules = new ArrayCollection();
     }
 
+    #[Getter(groups: ['reservation-organization'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter]
+    #[Getter(groups:['reservation-organization'])]
     public function getName(): ?string
     {
         return $this->name;

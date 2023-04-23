@@ -6,10 +6,8 @@ use App\Service\SetterHelper\Model\ParameterContainer;
 
 /**
  * Interface SetterTaskInterface
- * @use SetterTrait
+ * @use App\Service\SetterHelper\Trait\SetterTaskTrait
  * @property object object
- * @method runPreValidation
- * @method runPostValidation
  */
 interface SetterTaskInterface
 {
@@ -23,4 +21,5 @@ interface SetterTaskInterface
 
     public function getValidationGroups():array;
 
+    public function getValidationErrors():array;
 }

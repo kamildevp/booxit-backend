@@ -147,7 +147,7 @@ class ScheduleController extends AbstractController
 
         $setterHelper->runPostValidationTasks();
 
-        $entityManager->flush();
+        // $entityManager->flush();
 
         return $this->json([
             'message' => 'Schedule modified successfully'
@@ -166,7 +166,7 @@ class ScheduleController extends AbstractController
     {
 
         $rangeRequest = $request->query->get('range'); 
-        $range = !is_null($rangeRequest) ? (int)$rangeRequest : 7;
+        $range = !is_null($rangeRequest) ? (int)$rangeRequest : 1;
         if($range < 1 || $range > 7){
             return $this->json([
                 'message' => 'Range must be between 1 and 7'
@@ -180,29 +180,26 @@ class ScheduleController extends AbstractController
             ]);
         }
 
-        $dateFormat = 'Y-m-d';
+
         $dataHandlingHelper = new DataHandlingHelper();
-        if(!$dataHandlingHelper->validateDateTime($date, $dateFormat)){
+        if(!$dataHandlingHelper->validateDateTime($date, Schedule::DATE_FORMAT)){
             return $this->json([
                 'message' => 'Date format must be Y-m-d'
             ]);
         }
 
-        $dateTimeObject = DateTime::createFromFormat($dateFormat, $date);
-        $dates[] = $date;
-        for($i=1;$i<$range;$i++){
+        $dateTimeObject = DateTime::createFromFormat(Schedule::DATE_FORMAT, $date);
+        for($i=0;$i<$range;$i++){
+            $date = $dateTimeObject->format(Schedule::DATE_FORMAT);
+            $dateFreeTerms = $schedule->getDateFreeTerms($date);
+            $freeTerms[$date] = [];
+            foreach($dateFreeTerms as $freeTerm){
+                $freeTerms[$date][] = $getterHelper->get($freeTerm, ['schedule-freeTerms']);
+            }
             $dateTimeObject = $dateTimeObject->add(new DateInterval('P1D'));
-            $dates[] = $dateTimeObject->format($dateFormat);
         }
 
-        $freeTermsCollection = $schedule->getFreeTerms();
-        $filtredFreeTerms = $freeTermsCollection->filter(function($key, $element) use ($dates){
-            return in_array($element->getDate(), $dates);
-        });
-
-        $responseData = $getterHelper->get($filtredFreeTerms, ['schedule-freeTerms']);
-
-        return $this->json($responseData);
+        return $this->json($freeTerms);
     }
 
 

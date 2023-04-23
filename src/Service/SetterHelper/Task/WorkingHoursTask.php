@@ -2,6 +2,7 @@
 
 namespace App\Service\SetterHelper\Task;
 
+use App\Entity\Reservation;
 use App\Entity\Schedule;
 use App\Entity\TimeWindow;
 use App\Entity\WorkingHours;
@@ -9,6 +10,7 @@ use App\Exceptions\InvalidRequestException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\SetterHelper\SetterHelperInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
+use DateTime;
 use Doctrine\Common\Collections\Collection;
 
 /** @property Schedule $object */
@@ -25,13 +27,15 @@ class WorkingHoursTask implements SetterTaskInterface
     public function runPreValidation(array $workingHours)
     {
         foreach($workingHours as $day => $timeWindows){
-            if(!in_array($day, self::WEEK_DAYS) && !(new DataHandlingHelper)->validateDateTime($day, 'Y-m-d')){
+            if(!in_array($day, self::WEEK_DAYS) && !(new DataHandlingHelper)->validateDateTime($day, Schedule::DATE_FORMAT)){
                 throw new InvalidRequestException("Parameter {$day} is not valid date or day of week");
             }
             
             $workHours = $this->object->getDayWorkingHours($day);
             if($timeWindows === null){
-                $this->object->removeWorkingHours($workHours);
+                if($workHours instanceof WorkingHours){
+                    $this->object->removeWorkingHours($workHours);
+                }
                 continue;
             }
 
@@ -56,11 +60,14 @@ class WorkingHoursTask implements SetterTaskInterface
                 $workHours->addTimeWindow($timeWindow);
                 $loop_indx++;
             }
-            $this->validateTimeWindows($workHours->getTimeWindows());
+
+            $this->validateTimeWindows($day ,$workHours->getTimeWindows());
+            $this->validateReservationsConflicts($workHours, $workHours->getSchedule()->getReservations());
         }
     }
 
-    private function validateTimeWindows(Collection $timeWindows){
+    /** @param Collection<int, TimeWindow>  $timeWindows*/
+    private function validateTimeWindows(string $day, Collection $timeWindows){
         
         foreach($timeWindows as $timeWindow){
             $timeWindowsOverlay = $timeWindows->exists(function($key, $element) use ($timeWindow){
@@ -76,10 +83,39 @@ class WorkingHoursTask implements SetterTaskInterface
             });
 
             if($timeWindowsOverlay){
-                $day = $timeWindow->getWorkingHours()->getDay();
                 throw new InvalidRequestException("Time windows defined for {$day} are overlaping");
             }
         }
     }
 
+    /** @param Collection<int, Reservation>  $reservations*/
+    private function validateReservationsConflicts(WorkingHours $workHours, Collection $reservations){
+        $workDay = $workHours->getDay();
+        $workTimeWindows = $workHours->getTimeWindows();
+
+        $filtredReservations = $reservations->filter(function($reservation) use ($workDay){
+            $reservationDate = $reservation->getDate();
+            $reservationEndTime = $reservation->getTimeWindow()->getEndTime();
+            $reservationDateTime = DateTime::createFromFormat(Schedule::DATE_FORMAT, $reservationDate);
+            $reservationDateTime->setTime((int)$reservationEndTime->format('H'), (int)$reservationEndTime->format('i'), (int)$reservationEndTime->format('s'));
+            if($reservationDateTime < new DateTime('now')){
+                return false;
+            }
+
+            $reservationDay = in_array($workDay, self::WEEK_DAYS) ? self::WEEK_DAYS[$reservationDateTime->format('N')-1] : $reservationDate;
+            return $reservationDay === $workDay;
+        });
+        
+        foreach($filtredReservations as $reservation){
+            $reservedTimeWindow = $reservation->getTimeWindow();
+            $reservationMatch = $workTimeWindows->exists(function($key, $timeWindow) use ($reservedTimeWindow){
+                return $reservedTimeWindow->getStartTime() >= $timeWindow->getStartTime() && $reservedTimeWindow->getEndTime() <= $timeWindow->getEndTime();
+            });
+
+            if(!$reservationMatch){
+                $reservationDate = $reservation->getDate();
+                throw new InvalidRequestException("Cannot modify working hours for {$workDay} because of reservation conflict on {$reservationDate}");
+            }
+        }
+    }
 }

@@ -23,7 +23,10 @@ class WorkingHours
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
-    #[ORM\OneToMany(mappedBy: 'workingHours', targetEntity: TimeWindow::class, orphanRemoval: true, cascade: ['persist'])]
+    #[ORM\JoinTable(name: 'working_hours_time_window')]
+    #[ORM\JoinColumn(name: 'working_hours_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'time_window_id', referencedColumnName: 'id', unique: true)]
+    #[ORM\ManyToMany(targetEntity: TimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $timeWindows;
 
     public function __construct()
@@ -75,7 +78,6 @@ class WorkingHours
     {
         if (!$this->timeWindows->contains($timeWindow)) {
             $this->timeWindows->add($timeWindow);
-            $timeWindow->setWorkingHours($this);
         }
 
         return $this;
@@ -83,13 +85,8 @@ class WorkingHours
 
     public function removeTimeWindow(TimeWindow $timeWindow): self
     {
-        if ($this->timeWindows->removeElement($timeWindow)) {
-            // set the owning side to null (unless already changed)
-            if ($timeWindow->getWorkingHours() === $this) {
-                $timeWindow->setWorkingHours(null);
-            }
-        }
-
+        $this->timeWindows->removeElement($timeWindow);
+        
         return $this;
     }
 

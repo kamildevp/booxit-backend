@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Reservation Verification</title>
+    </head>
+    <body>
+        <h1>Verify your {{ organization }} reservation</h1>
+        <h3>Reservation details:</h3>
+        <p>Date and time: {{ dateTime }}</p>
+        <p>Service: {{ serviceName }}</p>
+        <p>Duration: {{ duration }}</p>
+        <p>Estimated price: {{ estimatedPrice }}</p>
+        <br>
+        <p>
+            <a href="{{ url }}">Click here to verify your reservation</a>
+            (this link is valid until {{ expiration_date|date('F jS G:i') }})
+        </p>
+    </body>
+</html>

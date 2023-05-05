@@ -25,7 +25,7 @@ class ReservationController extends AbstractController
         EntityManagerInterface $entityManager, 
         SetterHelperInterface $setterHelper, 
         ValidatorInterface $validator, 
-        MailingHelper $mailingHelper, 
+        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
         Request $request
         ): JsonResponse
     {
@@ -69,7 +69,7 @@ class ReservationController extends AbstractController
         $entityManager->flush();
         
         try{
-            $mailingHelper->newReservationVerification($reservation);
+            // $mailingHelper->newReservationVerification($reservation);
         }
         catch(MailingHelperException){
             $entityManager->remove($reservation);
@@ -90,7 +90,7 @@ class ReservationController extends AbstractController
     public function verify(
         EntityManagerInterface $entityManager, 
         VerifyEmailHelperInterface $verifyEmailHelper, 
-        MailingHelper $mailingHelper,
+        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
         Request $request
         )
     {
@@ -113,7 +113,7 @@ class ReservationController extends AbstractController
                     ['header' => 'Verification Failed', 'description' => 'Reservation not found']
                 );
             }
-            $mailingHelper->newReservationCancellation($reservation);
+            // $mailingHelper->newReservationCancellation($reservation); //uncomment when mailing provider is available
 
             $reservation->setVerified(true);
             $reservation->setExpiryDate(null);

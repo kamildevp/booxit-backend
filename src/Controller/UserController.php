@@ -27,7 +27,7 @@ class UserController extends AbstractController
         ValidatorInterface $validator, 
         UserPasswordHasherInterface $passwordHasher, 
         EntityManagerInterface $entityManager, 
-        MailingHelper $mailingHelper, 
+        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
         Request $request
         ): JsonResponse
     {

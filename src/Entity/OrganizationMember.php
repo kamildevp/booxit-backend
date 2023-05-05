@@ -45,6 +45,7 @@ class OrganizationMember
         return $this->id;
     }
 
+    #[Getter(groups: ['user-organizations'])]
     public function getOrganization(): ?Organization
     {
         return $this->organization;
@@ -71,7 +72,7 @@ class OrganizationMember
         return $this;
     }
 
-    #[Getter(groups: ['organization-members', 'organization-admins'])]
+    #[Getter(groups: ['user-organizations', 'organization-members', 'organization-admins'])]
     public function getRoles(): array
     {
         return $this->roles;

@@ -14,13 +14,20 @@ class PasswordTask implements SetterTaskInterface
 
     public function __construct(private UserPasswordHasherInterface $passwordHasher)
     {
-        $this->validationGroups[] = 'plainPassword';
+        
     }
 
-    public function runPreValidation(string $password, string $oldPassword):void
+    public function runPreValidation(string $password, ?string $oldPassword = null):void
     {
-        if(!$this->passwordHasher->isPasswordValid($this->object, $oldPassword)){
-            throw new InvalidRequestException('Old password is invalid');
+        $this->validationGroups[] = 'plainPassword';
+        
+        if(!is_null($this->object->getPassword()) && is_null($oldPassword)){
+            $requestParameter = $this->getParameterAlias('oldPassword');
+            throw new InvalidRequestException("Parameter {$requestParameter} is required");
+        }
+
+        if(!is_null($this->object->getPassword()) && !$this->passwordHasher->isPasswordValid($this->object, $oldPassword)){
+            $this->validationErrors['oldPassword'] = 'Old password is invalid';
         }
 
         $this->object->setPlainPassword($password);

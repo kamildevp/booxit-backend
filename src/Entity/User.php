@@ -34,7 +34,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         maxMessage: 'Max length of email is 180 characters'
     )]
     #[Assert\Email(
-        message: 'The email {{ value }} is not a valid email.',
+        message: 'Value is not a valid email.',
     )]
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
@@ -43,7 +43,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = ['ROLE_USER'];
 
   
-    #[Assert\NotBlank(groups: ['plainPassword'], message: 'Password cannot be blank')]
+    #[Assert\NotBlank(
+        groups: ['plainPassword'], 
+        message: 'Password cannot be blank'
+    )]
     #[Assert\Regex(
         groups: ['plainPassword'],
         pattern: '/^(?=.*[A-Z])(?=.*\d)[A-Z\d!@#$%?&*]{8,}$/i',
@@ -58,9 +61,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[Assert\NotBlank]
-    #[Assert\Regex(
-        pattern: '/^(?!\s)[^<>]{6,40}$/i',
-        message: 'Name must be from 6 to 40 characters long, cannot start from whitespace and contain characters: <>'
+    #[Assert\Length(
+        min: 6,
+        max: 50,
+        minMessage: 'Minimum name length is 6 characters',
+        maxMessage: 'Maximum name length is 50 characters'
     )]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
@@ -80,13 +85,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->organizationAssignments = new ArrayCollection();
     }
 
-    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: ['users', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class, groups: ['organization-members', 'organization-admins'])]
+    #[Getter(accessRule: EmailAccessRule::class, groups: ['users', 'user', 'organization-members', 'organization-admins'])]
     public function getEmail(): ?string
     {
         return $this->email;
@@ -132,7 +137,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see PasswordAuthenticatedUserInterface
      */
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
@@ -153,7 +158,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: ['users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -222,6 +227,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    #[Getter(propertyNameAlias: 'organizations', groups: ['user-organizations'])]
     /**
      * @return Collection<int, OrganizationMember>
      */

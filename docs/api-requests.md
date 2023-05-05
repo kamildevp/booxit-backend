@@ -42,8 +42,404 @@ Example response structure:
 ```
 
 ## Sections:
+### 1. [User](#User)
 ### 2. [Organization](#Organization)
 ### 4. [Reservation](#Reservation)
+
+## Organization
+
+This section describes organization related requests.
+
+Possible requests:
+1. [New user](#New-user)
+2. [Login](#Login)
+3. [Refresh token](#Refresh-token)
+4. [Get user](#Get-user)
+5. [Modify user](#Modify-user)
+6. [Delete user](#Delete-user)
+7. [Get users](#Get-users)
+
+
+### New user
+Used to create new user account.
+
+Route: /api/user
+
+Request Method: POST
+
+Authorization: not required
+
+Required parameters:
+- name - user name, from 6 to 50 characters long
+- email - user email
+- password - user password, from 8 to 20 characters long, can contain special characters (!#$%?&*) and must have at least one letter and digit
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "name": "T1",
+    "email": "ada",
+    "password": "sda"
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Validation Error",
+    "errors": {
+        "email": "Value is not a valid email.",
+        "password": "Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit",
+        "name": "Minimum name length is 6 characters"
+    }
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "name": "testName",
+    "email": "test@test.com",
+    "password": "password123"
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Account created successfully"
+}
+```
+
+#### Additional info:
+- After successful account creation, verification link is sent to user email address
+
+### Login
+Used to log in.
+
+Route: /api/login_check
+
+Request Method: POST
+
+Authorization: not required
+
+Required parameters:
+- email - user email
+- password - user password
+
+After successful login following parameters are returned:
+- token - Json Web Token, used to check user identity and authorize requests. It is valid for 1 hour and must be passed with request header: ```Authorization: Bearer token```
+- refresh token - used to get new Json Web Token, when previous expires. Refreshing tokens is described in [Refresh token](#Refresh-token) section
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "email": "test@tes.com",
+    "password": "password123"
+}
+```
+
+##### Response Body:
+```json
+{
+    "code": 401,
+    "message": "Invalid credentials."
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "email": "test@test.com",
+    "password": "password123"
+}
+```
+
+##### Response Body:
+```json
+{
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODMzMjI4MDksImV4cCI6MTY4MzMyNjQwOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.H9TB1lT7CYmc0ZIwPK0J2OQ7_PNOKvyTp8sHJf2PG2ldQbSYBjBG2HXIN-xJK-Rb-XJYOeIRjZCQ6jTL6JNtOAFnaVHH22hutmd5b4RMD_y6f14W2vGnmqqersaK2PZIi1wkgZTifp_wbx6my5cKA8wLU9MMDHHja69YJR9rsztMff1Pu92kMXYlNFEKQXrMVAjFzHTVgDoAukdUClpNYY1h-u0dOEwYdbpM2r7XURIAmHTzslRQQQZ9A_wtFv5GgWA-gVNBtggjh9V2Oe1sPHR9n-eJIQm3gU-Bsb9n7XQ2eQZhmUsQhu_ZI5KnHoNEn_TrP4-wFdRB5SNuiLELUA",
+    "refresh_token": "4ece5a9572d18c2957e08465882cc43959252a1f43b73c71a296313f63b1db8751eea2a2a549c7ed7bbd45fe405b8622a4e0b1d2cd5445b455532854142d6870"
+}
+```
+
+#### Additional info:
+- Login attempt will fail if user account not active (email is not verified)
+
+### Refresh token
+Used to refresh token.
+
+Route: /api/login_check
+
+Request Method: POST
+
+Authorization: not required
+
+Required parameters:
+- refresh_token - refresh token received after logging in
+
+If token refresh is successful new token is returned.
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "refresh_token": "4ece5a9572d18c2957e08465882cc43959252a1f43b73c71a296313f63b1db8751eea2a2a549c7ed7bbd45fe405b8622a4e0b1d2cd5445b455532854142d687"
+}
+```
+
+##### Response Body:
+```json
+{
+    "code": 401,
+    "message": "JWT Refresh Token Not Found"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "email": "test@test.com",
+    "password": "password123"
+}
+```
+
+##### Response Body:
+```json
+{
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODMzMjQ0MjMsImV4cCI6MTY4MzMyODAyMywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.DEd3aEtdlaRMe3YipJR7TX1ijNMo3eD-9RnLkw4P-XcuIjpWzgvUF9rCproSM0uG55hrTzIi52KuO6jdQ0_ZUh9ZCjgIpQ8GAV_oJJYm6WOHWN6yyrvJ1NEW8XUxhWqAa5Pz1WR2nNDTjN3Whh3NAIXS_rxqHEK3_ivz_ZElfu5xuijprrvxIZO5n3YZegijEaeqz4Bu2oexJmK6Cg8UkEYF5xH6whjZZ3GT1-xMiZ1winziot11umfdS3ZF37A0tFB5Iq3nttW-whKxx95wQ3tyjyl-nzcPIh6VLM4ze4yQA8-2BmjSH0-NlYsnlGWbVYHRZxMSpIiu1tiYBTAjeQ",
+    "refresh_token": "4ece5a9572d18c2957e08465882cc43959252a1f43b73c71a296313f63b1db8751eea2a2a549c7ed7bbd45fe405b8622a4e0b1d2cd5445b455532854142d6870"
+}
+```
+
+#### Additional info:
+- Once user email was modified, refresh token is no longer valid and user must log in again
+
+### Get user
+Used to fetch user data.
+
+Route: /api/user/{userId}
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- details - comma separated details groups (example query string: ?details=organizations)
+
+    Parameter specifies scope of returned data, allowed details groups:
+    * organizations - returns information about organizations user belongs to
+
+    If no groups are specified only basic information about user is returned.
+
+- range - returned collections elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested details,
+    for example query string "?details=organizations&range=5-10" will return part of organizations collection starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/user/4
+
+##### Response Body:
+```json
+{
+    "name": "testName"
+}
+```
+
+#### Request With Details Parameter Example:
+
+Route: /api/user/4?details=organizations
+
+##### Response Body:
+```json
+{
+    "name": "testName",
+    "organizations": [
+        {
+            "organization": {
+                "id": 2,
+                "name": "MyOrganization"
+            },
+            "roles": [
+                "MEMBER",
+                "ADMIN"
+            ]
+        }
+    ]
+}
+```
+
+If user was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "User not found"
+}
+```
+
+#### Additional info:
+- User email will be returned only if request is made be authorized users (user himself or admin of user organization)
+
+### Modify user
+Used to modify user settings
+
+Route: /api/user
+
+Request Method: PATCH
+
+Authorization: logged in
+
+At least one of parameters is required:
+- name - user name, from 6 to 50 characters long
+- email - user email
+- password - user password, from 8 to 20 characters long, can contain special characters (!#$%?&*) and must have at least one letter and digit, requires additional parameter old_password
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "password": "test1234"
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Parameter oldPassword is required"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "password": "test1234",
+    "old_password": "password123"
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Account settings modified successfully"
+}
+```
+
+#### Additional info:
+- If user email was modified, verification link is sent to new email address and only once it is verfied email changes will take effect.
+
+### Delete user
+Used to delete user account.
+
+Route: /api/user
+
+Request Method: DELETE
+
+Authorization: logged in
+
+#### Unauthorized Request Example:
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Access Denied"
+}
+```
+
+#### Request With appropriate credentials:
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Account removed successfully"
+}
+```
+
+#### Additional info:
+- If user is only admin in organization, that organization will be removed as well
+
+
+### Get users
+Used to fetch basic data of multiple users.
+
+Route: /api/users
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- filter - partial user name or email, used to filter users list
+ (example query string: ?filter=testname)
+
+- range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested collection,
+    for example query string "?range=5-10" will return users collection starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/users
+
+##### Response Body:
+```json
+[
+    {
+        "id": 2,
+        "name": "TestName2"
+    },
+    {
+        "id": 3,
+        "name": "TestName3"
+    },
+    {
+        "id": 4,
+        "name": "testName"
+    }
+]
+```
+
+#### Request With Filter Parameter Example:
+
+Route: /api/users?filter=name3
+
+##### Response Body:
+```json
+[
+    {
+        "id": 3,
+        "name": "TestName3"
+    }
+]
+```
 
 ## Organization
 

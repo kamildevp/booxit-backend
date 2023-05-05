@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
+use App\Exceptions\MailingHelperException;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\RequestValidator\RequestValidator;
@@ -25,56 +26,70 @@ class UserController extends AbstractController
     #[Route('user', name: 'user_new', methods: ['POST'])]
     public function new(
         ValidatorInterface $validator, 
-        UserPasswordHasherInterface $passwordHasher, 
+        SetterHelperInterface $setterHelper, 
         EntityManagerInterface $entityManager, 
         // MailingHelper $mailingHelper, //uncomment when mailing provider is available
         Request $request
         ): JsonResponse
     {
+        $user = new User();
+
         try{
-            (new RequestValidator)->validateRequest($request->request->all(), ['name', 'email', 'password']);
+            $setterHelper->updateObjectSettings($user, $request->request->all(), ['Default']);
+            $validationErrors = $setterHelper->getValidationErrors();
+
+            $violations = $validator->validate($user, groups: $setterHelper->getValidationGroups());
+            $validationErrors = $setterHelper->getValidationErrors();
+
+            foreach ($violations as $violation) {
+                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
+                $validationErrors[$requestParameterName] = $violation->getMessage();
+            }
+
+            if(count($validationErrors) > 0){
+                return $this->json([
+                    'status' => 'Failure',
+                    'message' => 'Validation Error',
+                    'errors' => $validationErrors
+                ]);
+            }
+
+            $setterHelper->runPostValidationTasks();
+
         }
         catch(InvalidRequestException $e){
             return $this->json([
+                'status' => 'Failure',
                 'message' => 'Invalid Request',
-                'error' => $e->getMessage()
+                'errors' => $e->getMessage()
             ]);
         }
 
-        $user = new User();
-        $user->setName($request->get('name'));
-        $user->setEmail($request->get('email'));
-        $user->setPlainPassword($request->get('password'));
-
-        $violations = $validator->validate($user, groups: ['Default', 'plainPassword']);
-        
-        if(count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[$violation->getPropertyPath()][] = $violation->getMessage();
-            }
-            return $this->json([
-                'message' => 'Validation Error',
-                'errors' => $errors
-            ]);
-        }
-
-        $password = $passwordHasher->hashPassword($user, $user->getPlainPassword());
-        $user->setPassword($password);
         // $user->setVerified(false);   //uncomment when mailing provider is available
         $user->setVerified(true); //remove when mailing provider is available
 
         $entityManager->persist($user);
         $entityManager->flush();
 
-        // $mailingHelper->newEmailVerification($user, $user->getEmail()); //uncomment when mailing provider is available
+        try{
+            // $mailingHelper->newEmailVerification($user, $user->getEmail()); //uncomment when mailing provider is available
+        }
+        catch(MailingHelperException){
+            $entityManager->remove($user);
+            $entityManager->flush();
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Server Error'
+            ]);
+        }
 
         return $this->json([
-            'message' => 'Account was created successfully'
+            'status' => 'Success',
+            'message' => 'Account created successfully'
         ]);
     }
 
-    #[Route('user/verify', name: 'user_verify', methods: ['GET'])]
+    #[Route('user_verify', name: 'user_verify', methods: ['GET'])]
     public function verify(EntityManagerInterface $entityManager, VerifyEmailHelperInterface $verifyEmailHelper, Request $request)
     {
         $id = (int)$request->get('id');
@@ -105,24 +120,49 @@ class UserController extends AbstractController
                 ['header' => 'Verification Failed', 'description' => $e->getReason()]
             );
         }
+        
     }
 
     #[Route('user/{id}', name: 'user_get', methods: ['GET'])]
-    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, int $id): JsonResponse
+    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $id): JsonResponse
     {
-        $user = $entityManager->getRepository(User::class)->find($id);
-
-        if(!$user){
-            $responseData['message'] = 'Account not found';
+        $allowedDetails = ['organizations'];
+        $details = $request->query->get('details');
+        $detailGroups = !is_null($details) ? explode(',', $details) : [];
+        if(!empty(array_diff($detailGroups, $allowedDetails))){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'Requested details are invalid'
+            ]);
         }
-        else{
-            $responseData = $getterHelper->get($user);
+
+        $range = $request->query->get('range');
+        $detailGroups = array_map(fn($group) => 'user-' . $group, $detailGroups);
+        $groups = array_merge(['user'], $detailGroups);
+
+        $user = $entityManager->getRepository(User::class)->find($id);
+        if(!($user instanceof User)){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'User not found'
+            ]);
+        }
+        
+        try{
+            $responseData = $getterHelper->get($user, $groups, $range);
+        }
+        catch(InvalidRequestException $e){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => $e->getMessage()
+            ]);
         }
 
         return $this->json($responseData);
     }
-
-    
 
     #[Route('user', name: 'user_modify', methods: ['PATCH'])]
     public function modify(SetterHelperInterface $setterHelper, ValidatorInterface $validator, EntityManagerInterface $entityManager, Request $request):JsonResponse
@@ -132,77 +172,109 @@ class UserController extends AbstractController
 
         if(!($user instanceof User)){
             return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
                 'message' => 'Access Denied'
             ]);
         }
 
-        $requestParameters = $request->request->all();
-        if(empty($requestParameters)){
-            return $this->json([
-                'message' => 'Invalid Request',
-                'errors' => 'Request has no parameters'
-            ]);
-        }
-
         try{
+            $setterHelper->updateObjectSettings($user, $request->request->all(), [], ['Default']);
+            $validationErrors = $setterHelper->getValidationErrors();
             
-            $setterHelper->updateObjectSettings($user, $requestParameters);
-
             $violations = $validator->validate($user, groups: $setterHelper->getValidationGroups());
-            
-            if(count($violations) > 0) {
-                $errors = [];
-                foreach ($violations as $violation) {
-                    $errors[$violation->getPropertyPath()][] = $violation->getMessage();
-                }
+
+            foreach ($violations as $violation) {
+                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
+                $validationErrors[$requestParameterName] = $violation->getMessage();
+            }            
+
+            if(count($validationErrors) > 0){
                 return $this->json([
+                    'status' => 'Failure',
                     'message' => 'Validation Error',
-                    'errors' => $errors
+                    'errors' => $validationErrors
                 ]);
             }
-    
+
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException $e){
             return $this->json([
-                'message' => 'Modification Failed',
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
                 'errors' => $e->getMessage()
+            ]);
+        }
+        catch(MailingHelperException){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Server Error'
             ]);
         }
 
         $entityManager->flush();
 
-        $responseData =  $this->json([
-            'message' => 'Settings changed successfully',
+        return $this->json([
+            'status' => 'Success',
+            'message' => 'Account settings modified successfully'
         ]);
-        
-        return $responseData;
-
     }
 
-    #[Route('user/{id}', name: 'user_delete', methods: ['DELETE'])]
-    public function delete(EntityManagerInterface $entityManager, int $id){
-        $user = $entityManager->getRepository(User::class)->find($id);
+    #[Route('user', name: 'user_delete', methods: ['DELETE'])]
+    public function delete(EntityManagerInterface $entityManager){
+        $user = $this->getUser();
+
+        if(!($user instanceof User)){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'Access Denied'
+            ]);
+        }
+
+        $orphanedOrganizations = $user->getOrganizationAssignments()->filter(function($element){
+            return $element->hasRoles(['ADMIN']) && $element->getOrganization()->getAdmins()->count() < 2;
+        })
+        ->map(function($element){
+            return $element->getOrganization();
+        });
+
+        foreach($orphanedOrganizations as $organization){
+            $entityManager->remove($organization);
+        }
+
+        $entityManager->remove($user);
+        $entityManager->flush();
 
 
-        switch(true){
-            case !$user:
-                $responseData['message'] = 'Account not found';
-                break;
-            case $user !== $this->getUser():
-                $responseData['message'] = 'Access denied';
-                break;
-            case $user && $user === $this->getUser():
-                $entityManager->remove($user);
-                $entityManager->flush();
-                $responseData['message'] = 'Account deleted successfully';
-                break;
+        return $this->json([
+            'status' => 'Success',
+            'message' => 'Account removed successfully'
+        ]);
+    }
+
+    #[Route('users', name: 'users_get', methods: ['GET'])]
+    public function getUsers(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request): JsonResponse
+    {
+        $filter = $request->query->get('filter');
+        $range = $request->query->get('range');
+
+        $users = $entityManager->getRepository(User::class)->findByPartialIdentifier($filter ?? '');
+        
+        try{
+            $responseData = $getterHelper->getCollection($users, ['users'], $range);
+        }
+        catch(InvalidRequestException $e){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => $e->getMessage()
+            ]);
         }
 
         return $this->json($responseData);
     }
-
-
 
 
 }

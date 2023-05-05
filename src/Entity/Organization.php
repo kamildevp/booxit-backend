@@ -59,13 +59,13 @@ class Organization
         $this->schedules = new ArrayCollection();
     }
 
-    #[Getter(groups: ['organizations','reservation-organization'])]
+    #[Getter(groups: ['user-organizations', 'organizations','reservation-organization'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups:['organizations', 'organization', 'reservation-organization'])]
+    #[Getter(groups:['user-organizations', 'organizations', 'organization', 'reservation-organization'])]
     public function getName(): ?string
     {
         return $this->name;

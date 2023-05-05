@@ -80,4 +80,14 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function findByPartialIdentifier(string $identifier, int $maxResults = 100){
+        $query = $this->createQueryBuilder('u')
+                    ->where('LOWER(u.name) LIKE LOWER(:identifier) OR LOWER(u.email) LIKE LOWER(:identifier)')
+                    ->setParameter('identifier', '%' . $identifier . '%')
+                    ->setMaxResults($maxResults)
+                    ->getQuery();
+        
+        return $query->getResult();
+    }
 }

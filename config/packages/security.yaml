@@ -22,6 +22,8 @@ security:
                 check_path: /api/login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                username_path: email
+
 
         refresh:
             pattern: ^/api/token/refresh
@@ -50,7 +52,7 @@ security:
     access_control:
         - { path: ^/api/user/modify, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: PUBLIC_ACCESS }
-
+        
 
 when@test:
     security:
@@ -64,3 +66,4 @@ when@test:
                 cost: 4 # Lowest possible value for bcrypt
                 time_cost: 3 # Lowest possible value for argon
                 memory_cost: 10 # Lowest possible value for argon
+

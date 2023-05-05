@@ -3,7 +3,6 @@
 namespace App\Service\SetterHelper\Task;
 
 use App\Entity\Service;
-use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use DateInterval;
 use Exception;
@@ -19,7 +18,8 @@ class ServiceDurationTask implements SetterTaskInterface
             $interval = new DateInterval($duration);
         }
         catch(Exception){
-            throw new InvalidRequestException("Invalid duration format");
+             $this->validationErrors['duration'] = "Invalid duration format";
+             return;
         }
 
         $this->object->setDuration($interval);

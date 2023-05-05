@@ -51,7 +51,7 @@ class Reservation
     private ?string $phoneNumber = null;
 
     #[ORM\ManyToOne(inversedBy: 'reservations')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
     private ?Service $service = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]

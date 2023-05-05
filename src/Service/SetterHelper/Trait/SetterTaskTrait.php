@@ -6,32 +6,41 @@ use App\Exceptions\InvalidActionException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\SetterHelper\Model\ParameterContainer;
 use App\Service\SetterHelper\Model\TaskParameter;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 trait SetterTaskTrait
 {
     private object $object;
-    private array $validationGroups;
-    private array $validationErrors;
+    private array $validationGroups = [];
+    private array $validationErrors = [];
+    /** @var Collection<int, TaskParameter> */
+    private Collection $parameters;
 
-    public function getTaskParameters():ParameterContainer
+    /** @return Collection<int, TaskParameter> */
+    public function getTaskParameters():Collection
     {
-        $parameterContainer = new ParameterContainer();
+        $parameters = new ArrayCollection();
         $dataHandlingHelper = new DataHandlingHelper();
         $preTaskParameters = $dataHandlingHelper->getMethodParameters($this, 'runPreValidation');
         $postTaskParameters = $dataHandlingHelper->getMethodParameters($this, 'runPostValidation');
-        $parameters = array_merge($preTaskParameters, $postTaskParameters);
+        $taskParameters = array_merge($preTaskParameters, $postTaskParameters);
 
-        foreach($parameters as $parameter){
+        foreach($taskParameters as $parameter){
             $taskParameter = new TaskParameter();
             $taskParameter->setName($parameter->name);
             $taskParameter->setRequired(!$parameter->isDefaultValueAvailable());
-            $parameterContainer->addParameter($taskParameter);
+            $parameters->add($taskParameter);
         }
-        return $parameterContainer;
+        $this->parameters = $parameters;
+        return $parameters;
     }
 
     public function runPreValidationTask(array $args):void
     {
+        $this->validationGroups = [];
+        $this->validationErrors = [];
+
         if(!$this->object){
             throw new InvalidActionException('Setter task object has not been set');
         }
@@ -59,12 +68,18 @@ trait SetterTaskTrait
 
     public function getValidationGroups():array
     {
-        return $this->validationGroups ?? [];
+        return $this->validationGroups;
     }
 
     public function getValidationErrors():array
     {
-        return $this->validationErrors ?? [];
+        $validationErrors = [];
+        foreach($this->validationErrors as $parameterName => $value){
+            $key = $this->getParameterAlias($parameterName);
+            $validationErrors[$key] = $value;
+        }
+
+        return $validationErrors;
     }
 
     public function runPreValidation():void
@@ -75,6 +90,19 @@ trait SetterTaskTrait
     public function runPostValidation():void
     {
 
+    }
+
+    private function getParameterAlias(string $parameterName){
+        $parameter = $this->parameters->findFirst(function($key,$element) use ($parameterName){
+            return $element->getName() === $parameterName;
+        });
+        
+        if(!$parameter){
+            return $parameterName;
+        }
+
+        $alias  = $parameter->getAlias();
+        return $alias ? $alias : $parameterName;
     }
 
 

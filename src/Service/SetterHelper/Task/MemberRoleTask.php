@@ -2,6 +2,7 @@
 
 namespace App\Service\SetterHelper\Task;
 
+use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
@@ -12,8 +13,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 class MemberRoleTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
-    const ALLOWED_ROLES = ['MEMBER', 'ADMIN'];
-    const MODIFICATION_TYPES = ['ADD', 'REMOVE', 'OVERWRITE'];
+    
     private User $user;
 
     public function __construct(Security $security)
@@ -21,55 +21,33 @@ class MemberRoleTask implements SetterTaskInterface
         $this->user = $security->getUser();
     }
 
-    public function runPreValidation(array $roles, string $rolesModificationType)
+    public function runPreValidation(array $roles)
     {
-        if(!in_array($rolesModificationType, self::MODIFICATION_TYPES)){
-            $modificationTypesString = join(', ', self::MODIFICATION_TYPES);
-            throw new InvalidRequestException("Invalid roles modification type. Allowed modification types: {$modificationTypesString}");
-        }
-
+        $roles = array_unique($roles);
         foreach($roles as $role){
-            if(!in_array($role, self::ALLOWED_ROLES)){
-                $allowedRolesString = join(', ', self::ALLOWED_ROLES);
-                throw new InvalidRequestException("Role {$role} is not valid role. Allowed roles: {$allowedRolesString}");
+            if(!in_array($role, Organization::ALLOWED_ROLES)){
+                $allowedRolesString = join(', ', Organization::ALLOWED_ROLES);
+                $this->validationErrors['roles'] = "Role {$role} is not valid member role. Allowed roles: {$allowedRolesString}";
+                return;
             }
         }
 
-        $memberRoles = $this->object->getRoles();
-        $rolesDiff = array_diff($roles, $memberRoles);
-        $rolesIntersect = array_intersect($roles, $memberRoles);
-        
-        switch(true){
-            case $rolesModificationType === 'OVERWRITE':
-                $modifiedRoles = $roles;
-                break;
-            case $rolesModificationType === 'REMOVE' && !empty($rolesDiff):
-                $invalidRole = array_values($rolesDiff)[0];
-                throw new InvalidRequestException("Member does not have {$invalidRole} role");
-                break;
-            case $rolesModificationType === 'REMOVE':
-                $modifiedRoles = array_diff($memberRoles, $roles);
-                break;
-            case $rolesModificationType === 'ADD' && !empty($rolesIntersect):
-                $invalidRole = array_values($rolesIntersect)[0];
-                throw new InvalidRequestException("Member already has {$invalidRole} role");
-                break;
-            case $rolesModificationType === 'ADD':
-                $modifiedRoles = array_merge($memberRoles, $roles);
-                break;
-        }
+        $memberRoles = $this->object->getRoles();  
 
         $organization = $this->object->getOrganization();
-        $members = $organization->getMembers();
-        $adminCount = $members->filter(function($member){
-            return $member->hasRoles(['ADMIN']);
-        })->count();
-
-        if($adminCount === 1 && in_array('ADMIN', $memberRoles) && !in_array('ADMIN', $modifiedRoles)){
-            throw new InvalidRequestException('Cannot remove ADMIN role from member. Organization needs to have at least one admin');
+        if(!$organization){
+            $this->object->setRoles($roles);
+            return;
         }
 
-        $this->object->setRoles($modifiedRoles);
+        $adminCount = $organization->getAdmins()->count();
+
+        if($adminCount === 1 && in_array('ADMIN', $memberRoles) && !in_array('ADMIN', $roles)){
+            $memberId = $this->object->getId();
+            throw new InvalidRequestException("Cannot remove ADMIN role from member with id = {$memberId}, organization needs to have at least one admin");
+        }
+
+        $this->object->setRoles($roles);
     }
 
 

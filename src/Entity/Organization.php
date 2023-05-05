@@ -5,35 +5,52 @@ namespace App\Entity;
 use App\Repository\OrganizationRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
+use App\Service\SetterHelper\Task\OrganizationMembersTask;
+use App\Service\SetterHelper\Task\OrganizationServicesTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: OrganizationRepository::class)]
 class Organization
 {
+    const ALLOWED_ROLES = ['MEMBER', 'ADMIN'];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
     #[Assert\NotBlank]
-    #[Assert\Regex(
-        pattern: '/^(?!\s)[^<>]{6,40}$/i',
-        message: 'Name must be from 6 to 40 characters long, cannot start from whitespace and contain characters: <>'
+    #[Assert\Length(
+        min: 6,
+        max: 50,
+        minMessage: 'Minimum name length is 6 characters',
+        maxMessage: 'Maximum name length is 50 characters'
     )]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, orphanRemoval: true, cascade: ['persist'])]
     private Collection $members;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true, cascade: ['persist'])]
     private Collection $services;
 
     #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, orphanRemoval: true)]
     private Collection $schedules;
+
+    #[Assert\Length(
+        max: 2000,
+        maxMessage: 'Maximum description length is 2000 characters'
+    )]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $banner = null;
 
     public function __construct()
     {
@@ -42,13 +59,13 @@ class Organization
         $this->schedules = new ArrayCollection();
     }
 
-    #[Getter(groups: ['reservation-organization'])]
+    #[Getter(groups: ['organizations','reservation-organization'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups:['reservation-organization'])]
+    #[Getter(groups:['organizations', 'organization', 'reservation-organization'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -62,12 +79,53 @@ class Organization
         return $this;
     }
 
+    #[Getter(groups: ['organization'])]
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    #[Setter]
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    #[Getter(groups: ['organizations', 'organization'])]
+    public function getMembersCount(): ?string
+    {
+        return $this->members->count();
+    }
+
+    #[Getter(groups: ['organizations', 'organization'])]
+    public function getServicesCount(): ?string
+    {
+        return $this->services->count();
+    }
+
+    #[Getter(groups: ['organizations', 'organization'])]
+    public function getSchedulesCount(): ?string
+    {
+        return $this->schedules->count();
+    }
+
+    #[Getter(groups: ['organization-members'])]
     /**
      * @return Collection<int, OrganizationMember>
      */
     public function getMembers(): Collection
     {
         return $this->members;
+    }
+
+    #[Setter(setterTask: OrganizationMembersTask::class, groups: ['members'])]
+    public function setMembers(Collection $members): self
+    {
+        $this->members = $members;
+
+        return $this;
     }
 
     public function addMember(OrganizationMember $member): self
@@ -108,12 +166,21 @@ class Organization
         return $member;
     }
 
+    #[Getter(groups: ['organization-services'])]
     /**
      * @return Collection<int, Service>
      */
     public function getServices(): Collection
     {
         return $this->services;
+    }
+
+    #[Setter(setterTask: OrganizationServicesTask::class, groups: ['services'])]
+    public function setServices(Collection $services): self
+    {
+        $this->services = $services;
+
+        return $this;
     }
 
     public function addService(Service $service): self
@@ -138,6 +205,7 @@ class Organization
         return $this;
     }
 
+    #[Getter(groups: ['organization-schedules'])]
     /**
      * @return Collection<int, Schedule>
      */
@@ -175,4 +243,28 @@ class Organization
 
         return $this;
     }
+
+    #[Getter(groups: ['organization-admins'])]
+    /**
+     * @return Collection<int, OrganizationMember>
+     */
+    public function getAdmins():Collection
+    {
+        return $this->members->filter(function($element){
+            return $element->hasRoles(['ADMIN']);
+        });
+    }
+
+    public function getBanner(): ?string
+    {
+        return $this->banner;
+    }
+
+    public function setBanner(?string $banner): self
+    {
+        $this->banner = $banner;
+
+        return $this;
+    }
+
 }

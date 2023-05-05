@@ -63,4 +63,14 @@ class OrganizationRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function findByPartialName(string $name, int $maxResults = 100){
+        $query = $this->createQueryBuilder('o')
+                    ->where('LOWER(o.name) LIKE LOWER(:name)')
+                    ->setParameter('name', '%' . $name . '%')
+                    ->setMaxResults($maxResults)
+                    ->getQuery();
+        
+        return $query->getResult();
+    }
 }

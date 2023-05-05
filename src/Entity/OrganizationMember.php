@@ -6,6 +6,7 @@ use App\Repository\OrganizationMemberRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\MemberRoleTask;
+use App\Service\SetterHelper\Task\MemberUserTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -38,7 +39,7 @@ class OrganizationMember
         $this->scheduleAssignments = new ArrayCollection();
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
+    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -56,12 +57,13 @@ class OrganizationMember
         return $this;
     }
 
-    #[Getter(groups: ['schedule-assignments'], propertyNameAlias: 'user')]
+    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'], propertyNameAlias: 'user')]
     public function getAppUser(): ?User
     {
         return $this->appUser;
     }
 
+    #[Setter(targetParameter: 'user_id', setterTask: MemberUserTask::class, groups: ['user'])]
     public function setAppUser(?User $appUser): self
     {
         $this->appUser = $appUser;
@@ -69,12 +71,13 @@ class OrganizationMember
         return $this;
     }
 
+    #[Getter(groups: ['organization-members', 'organization-admins'])]
     public function getRoles(): array
     {
         return $this->roles;
     }
 
-    #[Setter(setterTask: MemberRoleTask::class)]
+    #[Setter(setterTask: MemberRoleTask::class, groups: ['Default', 'roles'])]
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;

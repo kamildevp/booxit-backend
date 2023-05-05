@@ -2,7 +2,7 @@
 
 namespace App\Service\SetterHelper\Task;
 
-use App\Service\SetterHelper\Model\ParameterContainer;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * Interface SetterTaskInterface
@@ -11,7 +11,8 @@ use App\Service\SetterHelper\Model\ParameterContainer;
  */
 interface SetterTaskInterface
 {
-    public function getTaskParameters():ParameterContainer;
+    /** @return Collection<int, TaskParameter> */
+    public function getTaskParameters():Collection;
 
     public function runPreValidationTask(array $params):void;
 

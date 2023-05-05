@@ -7,6 +7,6 @@ class DateIntervalFormat implements CustomFormatInterface
     /** @param \DateInterval $property */
     public function format($property)
     {
-        return $property->format('PT%HH%IM%SS');
+        return $property->format('PT%HH%IM');
     }
 }

@@ -32,16 +32,20 @@ class SetterHelper implements SetterHelperInterface
         if(empty($settings)){
             $nameComponents = explode('\\', $reflectionClass->getName());
             $objectName = end($nameComponents);
-            $objectName = (new CamelCaseToSnakeCaseNameConverter())->normalize($objectName);
+            $objectName = str_replace('_', ' ', (new CamelCaseToSnakeCaseNameConverter())->normalize($objectName));
+            
             throw new InvalidRequestException("Request has no parameters for {$objectName}");
         }
 
         
         $requestParameters = array_keys($settings);
         $setterManager = new SetterManager(self::SETTER_ATTRIBUTE, new ObjectHandlingHelper($this->kernel));
+        $this->setterMethods = [];
         $this->setterMethods = $setterManager->filterSetters($reflectionClass, $requestParameters, $requiredGroups, $optionalGroups);
         (new RequestParser)->parseRequestParameters($this->setterMethods, $requestParameters);
 
+        $this->validationGroups = [];
+        $this->validationErrors = [];
         foreach($this->setterMethods as $setter){
             $task = $setter->getTask();
             if(is_null($task)){
@@ -56,9 +60,8 @@ class SetterHelper implements SetterHelperInterface
             $mappedSettings = (new DataHandlingHelper)->replaceArrayKeys($settings, array_flip($setter->getAliases()));
             $task->runPreValidationTask($mappedSettings);
             $this->validationGroups = array_merge($this->validationGroups, $task->getValidationGroups());
-            $this->validationErrors = array_merge($this->validationErrors, $task->getValidationErrors());
+            $this->validationErrors = $this->validationErrors + $task->getValidationErrors();
         }
-        $this->mapValidationErrors();
         $this->settings = $settings;
     }
 
@@ -92,15 +95,6 @@ class SetterHelper implements SetterHelperInterface
         }
 
         return $this->setterMethods[$propertyName]->getTargetParameter();
-    }
-
-    private function mapValidationErrors(){
-        $requestParametersNames = [];
-        foreach($this->validationErrors as $propertyName => $message){
-            $requestParametersNames[$propertyName] = $this->getPropertyRequestParameter($propertyName);
-        }
-
-        $this->validationErrors = (new DataHandlingHelper)->replaceArrayKeys($this->validationErrors, $requestParametersNames);
     }
 
 }

@@ -65,7 +65,7 @@ class Schedule
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['schedule', 'reservation-schedule'])]
+    #[Getter(groups:['schedule', 'organization-schedules', 'reservation-schedule'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -90,7 +90,7 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups:['schedule', 'reservation-schedule'])]
+    #[Getter(groups:['schedule', 'organization-schedules', 'reservation-schedule'])]
     public function getName(): ?string
     {
         return $this->name;

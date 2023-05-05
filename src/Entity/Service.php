@@ -7,7 +7,6 @@ use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\GetterHelper\CustomFormat\DateIntervalFormat;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\ServiceDurationTask;
-use App\Service\SetterHelper\Task\OrganizationTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -25,15 +24,18 @@ class Service
     #[ORM\JoinColumn(nullable: false)]
     private ?Organization $organization = null;
 
-    #[Assert\Regex(
-        pattern: '/^(?!\s)[^<>]{6,40}$/i',
-        message: 'Name must be from 6 to 40 characters long, cannot start from whitespace and contain characters: <>'
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 6,
+        max: 50,
+        minMessage: 'Minimum name length is 6 characters',
+        maxMessage: 'Maximum name length is 50 characters'
     )]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
     #[Assert\Length(
-        max: 180,
+        max: 255,
         maxMessage: 'Max length of description is 255 characters'
     )]
     #[ORM\Column(length: 255)]
@@ -52,7 +54,7 @@ class Service
     #[ORM\ManyToMany(targetEntity: Schedule::class, mappedBy: 'services')]
     private Collection $schedules;
 
-    #[ORM\OneToMany(mappedBy: 'service', targetEntity: Reservation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'service', targetEntity: Reservation::class)]
     private Collection $reservations;
 
     public function __construct()
@@ -61,13 +63,12 @@ class Service
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups: ['organizationDetails'])]
     public function getOrganization(): ?Organization
     {
         return $this->organization;
@@ -79,7 +80,6 @@ class Service
         return $this->organization->getId();
     }
 
-    #[Setter(targetParameter: 'organization_id', setterTask: OrganizationTask::class, groups: ['initOnly'])]
     public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
@@ -87,7 +87,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -101,7 +101,7 @@ class Service
         return $this;
     }
 
-    #[Getter]
+    #[Getter(groups: ['organization-services'])]
     public function getDescription(): ?string
     {
         return $this->description;
@@ -115,7 +115,7 @@ class Service
         return $this;
     }
 
-    #[Getter(format: DateIntervalFormat::class, groups: ['schedule-services'])]
+    #[Getter(format: DateIntervalFormat::class, groups: ['organization-services', 'schedule-services'])]
     public function getDuration(): ?\DateInterval
     {
         return $this->duration;
@@ -129,7 +129,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
     public function getEstimatedPrice(): ?string
     {
         return $this->estimatedPrice;

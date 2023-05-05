@@ -80,13 +80,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->organizationAssignments = new ArrayCollection();
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
+    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class)]
+    #[Getter(accessRule: EmailAccessRule::class, groups: ['organization-members', 'organization-admins'])]
     public function getEmail(): ?string
     {
         return $this->email;
@@ -153,7 +153,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
+    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getName(): ?string
     {
         return $this->name;

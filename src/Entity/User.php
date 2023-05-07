@@ -91,7 +91,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class, groups: ['users', 'user', 'organization-members', 'organization-admins'])]
+    #[Getter(accessRule: EmailAccessRule::class, groups: ['users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getEmail(): ?string
     {
         return $this->email;

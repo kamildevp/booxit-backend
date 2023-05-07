@@ -29,7 +29,7 @@ class TimeWindow
         return $this->id;
     }
 
-    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms', 'reservation'])]
+    #[Getter(format: TimeFormat::class, groups: ['schedule-working_hours', 'schedule-freeTerms', 'reservation', 'schedule-reservations'])]
     public function getStartTime(): ?\DateTimeInterface
     {
         return $this->startTime;
@@ -43,7 +43,7 @@ class TimeWindow
         return $this;
     }
 
-    #[Getter(format: TimeFormat::class, groups: ['schedule-workingHours', 'schedule-freeTerms', 'reservation'])]
+    #[Getter(format: TimeFormat::class, groups: ['schedule-working_hours', 'schedule-freeTerms', 'reservation', 'schedule-reservations'])]
     public function getEndTime(): ?\DateTimeInterface
     {
         return $this->endTime;

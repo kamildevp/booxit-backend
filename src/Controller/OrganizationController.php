@@ -445,6 +445,44 @@ class OrganizationController extends AbstractController
         return $this->json($responseData);
     }
 
+    #[Route('organization/{id}/schedules', name: 'organization_getSchedules', methods: ['GET'])]
+    public function getSchedules(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $id): JsonResponse
+    {
+        $filter = $request->query->get('filter');
+        $range = $request->query->get('range');
+
+        $organization = $entityManager->getRepository(Organization::class)->find($id);
+        if(!($organization instanceof Organization)){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => 'Organization not found'
+            ]);
+        }
+        
+        if(is_null($filter)){
+            $schedules = $organization->getSchedules();
+        }
+        else{
+            $schedules = $organization->getSchedules()->filter(function($element) use ($filter){
+                return str_contains(strtolower($element->getName()), strtolower($filter));
+            });
+        }
+
+        try{
+            $responseData = $getterHelper->getCollection($schedules, ['organization-schedules'], $range);
+        }
+        catch(InvalidRequestException $e){
+            return $this->json([
+                'status' => 'Failure',
+                'message' => 'Invalid Request',
+                'errors' => $e->getMessage()
+            ]);
+        }
+
+        return $this->json($responseData);
+    }
+
     #[Route('organization/{id}/banner', name: 'organization_addBanner', methods: ['POST'])]
     public function addBanner(EntityManagerInterface $entityManager, Request $request, int $id): JsonResponse
     {

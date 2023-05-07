@@ -84,7 +84,7 @@ class OrganizationServicesTask implements SetterTaskInterface
     private function patchServices(array $services):void
     {
         $loop_indx = 0;
-        foreach($services as $serviceId => $settings){
+        foreach($services as $settings){
             if(!is_array($settings)){
                 throw new InvalidRequestException("Parameter services parameter must be array of settings arrays");
             }
@@ -100,7 +100,7 @@ class OrganizationServicesTask implements SetterTaskInterface
             unset($settings['id']);
 
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$serviceId} does not exist");
+                throw new InvalidRequestException("Service with id = {$id} does not exist");
             }
 
             $this->setterHelper->updateObjectSettings($service, $settings);

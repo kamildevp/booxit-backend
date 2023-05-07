@@ -4,6 +4,9 @@ namespace App\Entity;
 
 use App\Repository\WorkingHoursRepository;
 use App\Service\GetterHelper\Attribute\Getter;
+use App\Service\SetterHelper\Attribute\Setter;
+use App\Service\SetterHelper\Task\WorkingHoursDayTask;
+use App\Service\SetterHelper\Task\WorkingHoursTimeWindowsTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -40,15 +43,16 @@ class WorkingHours
         return $this->id;
     }
 
-    #[Getter(groups:['schedule-workingHours'])]
+    #[Getter(groups:['schedule-working_hours'])]
     public function getDay(): ?string
     {
         return $this->day;
     }
 
-    public function setDay(string $date): self
+    #[Setter(setterTask: WorkingHoursDayTask::class)]
+    public function setDay(string $day): self
     {
-        $this->day = $date;
+        $this->day = $day;
 
         return $this;
     }
@@ -65,7 +69,7 @@ class WorkingHours
         return $this;
     }
 
-    #[Getter(groups:['schedule-workingHours'])]
+    #[Getter(groups:['schedule-working_hours'])]
     /**
      * @return Collection<int, TimeWindow>
      */
@@ -87,6 +91,14 @@ class WorkingHours
     {
         $this->timeWindows->removeElement($timeWindow);
         
+        return $this;
+    }
+
+    #[Setter(setterTask: WorkingHoursTimeWindowsTask::class)]
+    public function setTimeWindows(Collection $timeWindows): self
+    {
+        $this->timeWindows = $timeWindows;
+
         return $this;
     }
 

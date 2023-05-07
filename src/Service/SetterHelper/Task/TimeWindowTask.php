@@ -2,6 +2,7 @@
 
 namespace App\Service\SetterHelper\Task;
 
+use App\Entity\Schedule;
 use App\Entity\TimeWindow;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
@@ -15,8 +16,8 @@ class TimeWindowTask implements SetterTaskInterface
 
     public function runPreValidation(string $startTime, string $endTime)
     {
-        $startTimeObject = $this->getDateTimeObject($startTime);
-        $endTimeObject = $this->getDateTimeObject($endTime);
+        $startTimeObject = $this->getDateTimeObject($startTime, Schedule::TIME_FORMAT);
+        $endTimeObject = $this->getDateTimeObject($endTime, Schedule::TIME_FORMAT);
 
         if($startTimeObject >= $endTimeObject){
             throw new InvalidRequestException("Time window start time({$startTime}) must be defined at earlier time than end time({$endTime})");
@@ -25,12 +26,12 @@ class TimeWindowTask implements SetterTaskInterface
         $this->object->setEndTime($endTimeObject);
     }
 
-    private function getDateTimeObject(string $dateTime, $format = 'H:i:s')
+    private function getDateTimeObject(string $dateTime, $format = 'H:i')
     {
         $dateTimeObject = DateTime::createFromFormat($format, $dateTime);
 
         if(!($dateTimeObject && $dateTimeObject->format($format) === $dateTime)){
-            throw new InvalidRequestException("{$dateTime} is not valid time format");
+            throw new InvalidRequestException("{$dateTime} is not valid time format. Supported time format: {$format}");
         }
         $dateTimeObject->setDate(1970, 1, 1);
 

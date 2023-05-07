@@ -44,6 +44,7 @@ Example response structure:
 ## Sections:
 ### 1. [User](#User)
 ### 2. [Organization](#Organization)
+### 3. [Schedule](#Schedule)
 ### 4. [Reservation](#Reservation)
 
 ## Organization
@@ -461,8 +462,9 @@ Possible requests:
 13. [Get organizations](#Get-organizations)
 14. [Get members](#Get-members)
 15. [Get services](#Get-services)
-16. [Add banner](#Add-banner)
-17. [Get banner](#Get-banner)
+16. [Get schedules](#Get-schedules)
+17. [Add banner](#Add-banner)
+18. [Get banner](#Get-banner)
 
 
 ### New organization
@@ -1393,13 +1395,13 @@ Request Method: GET
 Authorization: not required
 
 Optional query parameters:
-- filter - partial service name, used to filter members list
+- filter - partial service name, used to filter services list
  (example query string: ?filter=test)
 
 - range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
 
     Parameter can be used to fetch only specific range of requested collection,
-    for example query string "?range=5-10" will return organization members starting from fifth member and ending on tenth member.
+    for example query string "?range=5-10" will return services collection starting from fifth element and ending on tenth element.
 
 #### Basic Request Example:
 
@@ -1472,6 +1474,70 @@ If organization was not found, invalid request message is returned:
 }
 ```
 
+### Get schedules
+Used to fetch organization schedules.
+
+Route: /api/organization/{organizationId}/schedules
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- filter - partial schedule name, used to filter schedule list
+ (example query string: ?filter=test)
+
+- range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested collection,
+    for example query string "?range=5-10" will return collection starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/organization/1/schedules
+
+##### Response Body:
+```json
+[
+    {
+        "id": 1,
+        "name": "TestSchedule"
+    },
+    {
+        "id": 2,
+        "name": "TestSchedule2"
+    },
+    {
+        "id": 3,
+        "name": "MySchedule"
+    }
+]
+```
+
+#### Request With Filter And Range Parameters Example:
+
+Route: /api/organization/1/schedules?filter=test&range=1-1
+
+##### Response Body:
+```json
+[
+    {
+        "id": 1,
+        "name": "TestSchedule"
+    }
+]
+```
+
+If organization was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Organization not found"
+}
+```
+
+
 ### Add banner
 Used to add organization banner by organization member with appropriate credentials.
 
@@ -1543,6 +1609,1422 @@ Route: /api/organization/1/services
 Image or empty response if organization banner has not been uploaded.
 
 
+## Schedule
+
+This section describes schedule related requests.
+
+Possible requests:
+1. [New schedule](#New-schedule)
+2. [Get schedule](#Get-schedule)
+3. [Modify schedule](#Modify-schedule)
+4. [Delete schedule](#Delete-schedule)
+5. [Add services](#Add-services)
+6. [Remove services](#Remove-services)
+7. [Overwrite services](#Overwrite-services)
+8. [Add assignments](#Add-assignments)
+9. [Remove assignments](#Remove-assignments)
+10. [Modify assignments](#Modify-assignments)
+11. [Overwrite assignments](#Overwrite-assignments)
+12. [Add working hours](#Add-working-hours)
+13. [Remove working hours](#Remove-working-hours)
+14. [Modify working hours](#Modify-working-hours)
+15. [Overwrite working hours](#Overwrite-working-hours)
+16. [Get services](#Get-services)
+17. [Get assignments](#Get-assignments)
+18. [Get working hours](#Get-working-hours)
+19. [Get free terms](#Get-free-terms)
+20. [Get reservations](#Get-reservations)
+
+### New schedule
+Used to create new schedule.
+
+Route: /api/schedule
+
+Request Method: POST
+
+Authorization: organization admin
+
+Required parameters:
+- organization_id - schedule organization id
+- name -  name, from 6 to 50 characters long
+- description - schedule description, from 0 to 500 characters long
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "organization_id": 1,
+    "name": "My",
+    "description": ""
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Validation Error",
+    "errors": {
+        "name": "Minimum name length is 6 characters"
+    }
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "organization_id": 1,
+    "name": "MySchedule2",
+    "description": ""
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Schedule created successfully"
+}
+```
+
+
+### Get schedule
+Used to fetch schedule data.
+
+Route: /api/schedule/{scheduleId}
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- details - comma separated details groups (example query string: ?details=services, working_hours)
+
+    Parameter specifies scope of returned data, allowed details groups:
+    * services - returns schedule services information
+    * assignments - returns schedules assignments information
+    * working_hours - returns schedule working hours information
+
+    If no groups are specified only basic information about schedule is returned.
+
+- range - returned collections elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested details,
+    for example query string "?details=services&range=5-10" will return schedule services collection starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1
+
+##### Response Body:
+```json
+{
+    "organization": {
+        "id": 1,
+        "name": "MyOrganization"
+    },
+    "name": "TestSchedule",
+    "description": "desc"
+}
+```
+
+#### Request With Details Parameter Example:
+
+Route: /api/schedule/1?details=services
+
+##### Response Body:
+```json
+{
+    "organization": {
+        "id": 1,
+        "name": "MyOrganization"
+    },
+    "name": "TestSchedule",
+    "description": "desc",
+    "services": [
+        {
+            "id": 1,
+            "name": "TestService1",
+            "duration": "PT01H00M",
+            "estimated_price": "50 PLN"
+        },
+        {
+            "id": 2,
+            "name": "TestService2",
+            "duration": "PT01H30M",
+            "estimated_price": "30 PLN"
+        }
+    ]
+}
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
+
+### Modify schedule
+Used to modify schedule by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}
+
+Request Method: PATCH
+
+Authorization: organization admin or member assigned to schedule with write access
+
+At least one of parameters is required:
+- name -  name, from 6 to 50 characters long
+- description - schedule description, from 0 to 500 characters long
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "name": "My",
+    "description": ""
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Validation Error",
+    "errors": {
+        "name": "Minimum name length is 6 characters"
+    }
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "name": "MySchedule",
+    "description": ""
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Schedule settings modified successfully"
+}
+```
+
+### Delete schedule
+Used to delete schedule by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}
+
+Request Method: DELETE
+
+Authorization: organization admin or member assigned to schedule with write access
+
+#### Unauthorized Request Example:
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Access Denied"
+}
+```
+
+#### Request With appropriate credentials:
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Schedule removed successfully"
+}
+```
+
+### Add services
+Used to add schedule services by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/services
+
+Request Method: POST
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- services - array of services id
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "services": [
+        20,13
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Service with id = 20 does not exist"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "services": [
+        1,3
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Services added successfully"
+}
+```
+
+### Remove services
+Used to remove organization members by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/services
+
+Request Method: DELETE
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- services - array of services id
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "services": [
+        124,7
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Service with id = 124 is not assigned to schedule"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "members": [1,2]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Services removed successfully"
+}
+```
+
+### Overwrite services
+Used to overwrite schedule services by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/services
+
+Request Method: PUT
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- services - array of services id
+
+Services not specified in the request will be removed.
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "services": [
+        124,7
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Service with id = 124 does not exist"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "services": [
+        1,2
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Services overwritten successfully"
+}
+```
+
+### Add assignments
+Used to add schedule assignments by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/assignments
+
+Request Method: POST
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- member_id - member id
+- access_type - access type. Allowed values: READ, WRITE
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+        "member_id": 2,
+        "access_type": "WR"
+        },
+        {
+        "member_id": 3,
+        "access_type": "WRITE"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Invalid access type 'WR'. Allowed access types: READ, WRITE"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+        "member_id": 2,
+        "access_type": "READ"
+        },
+        {
+        "member_id": 3,
+        "access_type": "WRITE"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Assignments added successfully"
+}
+```
+
+### Remove assignments
+Used to remove schedule assignments by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/assignments
+
+Request Method: DELETE
+
+Authorization: organization admin
+
+Required parameters:
+- assignments - array of assignments id
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        70,52
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Assignment with id = 70 does not exist"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [1,2]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Assignments removed successfully"
+}
+```
+
+### Modify assignments
+Used to modify schedule assignments by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/assignments
+
+Request Method: PATCH
+
+Authorization: organization admin
+
+Required parameters:
+- id - assignment id
+- At least one of parameters:
+    - member_id - member id
+    - access_type - access type. Allowed values: READ, WRITE
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+            "id": 9,
+            "access_type": "AD"
+        },
+        {
+            "id": 10,
+            "access_type": "READ"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Invalid access type 'AD'. Allowed access types: READ, WRITE"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+            "id": 9,
+            "access_type": "WRITE"
+        },
+        {
+            "id": 10,
+            "access_type": "READ"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Assignments modified successfully"
+}
+```
+
+### Overwrite assignments
+Used to overwrite schedule assignments by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/assignments
+
+Request Method: PUT
+
+Authorization: organization admin
+Required parameters:
+- id - assignment id (optional if specified existing assignment will replaced, otherwise new assignment will be created)
+- member_id - member id
+- access_type - access type. Allowed values: READ, WRITE
+
+Assignments not specified in the request will be removed.
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+            "id": 9,
+            "access_type": "WRITE"
+        },
+        {
+            "id": 10,
+            "access_type": "READ"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Parameter member_id is required"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "assignments": [
+        {
+            "id": 9,
+            "member_id": 2,
+            "access_type": "WRITE"
+        },
+        {
+            "member_id": 3,
+            "access_type": "READ"
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Assignments overwritten successfully"
+}
+```
+
+### Add working hours
+Used to add schedule working hours by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/working_hours
+
+Request Method: POST
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- day - day of the week or specific date in format Y-m-d
+- time_windows - day time windows, array of time window settings:
+    - start_time - start time in format H:i
+    - end_time - end time in format H:i
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "tuesday",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "11:00"
+                },
+                {
+                    "start_time": "10:00",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Time windows defined for tuesday are overlaping"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "tuesday",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "11:00"
+                },
+                {
+                    "start_time": "12:00",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Working hours added successfully"
+}
+```
+
+#### Additional info:
+- Working hours specified for specific date have priority over working hours specified for day of week, meaning date working hours are used when free terms are calculated
+
+
+### Remove working hours
+Used to remove schedule working hours by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/working_hours
+
+Request Method: DELETE
+
+Authorization: organization admin or member assigned to schedule with write access
+
+Required parameters:
+- working_hours - array of day names or dates in format Y-m-d
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        "monday"
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Working hours for monday are not defined"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        "tuesday", "2023-05-18"
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Working hours removed successfully"
+}
+```
+
+
+### Modify working hours
+Used to modify schedule working hours by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/working_hours
+
+Request Method: PATCH
+
+Authorization: organization admin
+
+Required parameters:
+- day - day of the week or date in format Y-m-d
+- time_windows - day time windows, array of time window settings:
+    - start_time - start time in format H:i
+    - end_time - end time in format H:i
+
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "sunday",
+            "time_windows": [
+                {
+                    "start_time": "12:00",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Working hours for sunday are not defined"
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "tuesday",
+            "time_windows": [
+                {
+                    "start_time": "12:00",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Working hours modified successfully"
+}
+```
+
+#### Additional info:
+- Working hours specified for specific date have priority over working hours specified for day of week, meaning date working hours are used when free terms are calculated
+
+### Overwrite working hours
+Used to overwrite schedule working hours by organization member with appropriate credentials.
+
+Route: /api/schedule/{scheduleId}/working_hours
+
+Request Method: PUT
+
+Authorization: organization admin or member assigned to schedule with write access
+Required parameters:
+- day - day of the week or date in format Y-m-d
+- time_windows - day time windows, array of time window settings:
+    - start_time - start time in format H:i
+    - end_time - end time in format H:i
+
+Working hours not specified in the request will be removed.
+
+#### Invalid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "tuesday",
+            "time_windows": [
+                {
+                    "start_time": "12",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "12 is not valid time format. Supported time format: H:i"
+}
+```
+
+#### Additional info:
+- Working hours specified for specific date have priority over working hours specified for day of week, meaning date working hours are used when free terms are calculated
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
+        {
+            "day": "tuesday",
+            "time_windows": [
+                {
+                    "start_time": "12:00",
+                    "end_time": "17:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "Success",
+    "message": "Working hours overwritten successfully"
+}
+```
+
+### Get services
+Used to fetch schedule services.
+
+Route: /api/schedule/{scheduleId}/services
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- filter - partial service name, used to filter services list
+ (example query string: ?filter=test)
+
+- range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested collection,
+    for example query string "?range=5-10" will return collection elements starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1/services
+
+##### Response Body:
+```json
+[
+    {
+        "id": 1,
+        "name": "TestService1",
+        "duration": "PT01H00M",
+        "estimated_price": "50 PLN"
+    },
+    {
+        "id": 3,
+        "name": "TestService3",
+        "duration": "PT00H30M",
+        "estimated_price": "10 PLN"
+    }
+]
+```
+
+#### Request With Range Parameter Example:
+
+Route: /api/schedule/1/services?range=1-1
+
+##### Response Body:
+```json
+[
+    {
+        "id": 1,
+        "name": "TestService1",
+        "duration": "PT01H00M",
+        "estimated_price": "50 PLN"
+    }
+]
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
+
+### Get assignments
+Used to fetch schedule assignments.
+
+Route: /api/schedule/{scheduleId}/assignments
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- filter - partial assigned member name or email, used to filter assignments list
+ (example query string: ?filter=test)
+
+- range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested collection,
+    for example query string "?range=5-10" will return collection elements starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1/assignments
+
+##### Response Body:
+```json
+[
+    {
+        "id": 9,
+        "member": {
+            "id": 2,
+            "user": {
+                "id": 2,
+                "email": "test2@test.com",
+                "name": "testName"
+            }
+        },
+        "access_type": "WRITE"
+    },
+    {
+        "id": 11,
+        "member": {
+            "id": 3,
+            "user": {
+                "id": 3,
+                "email": "test3@test.com",
+                "name": "testName"
+            }
+        },
+        "access_type": "READ"
+    }
+]
+```
+
+#### Request With Filter Parameter Example:
+
+Route: /api/schedule/1/assignments?filter=test3@test
+
+##### Response Body:
+```json
+[
+    {
+        "id": 11,
+        "member": {
+            "id": 3,
+            "user": {
+                "id": 3,
+                "email": "test3@test.com",
+                "name": "testName"
+            }
+        },
+        "access_type": "READ"
+    }
+]
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
+
+### Get working hours
+Used to fetch schedule working hours.
+
+Route: /api/schedule/{scheduleId}/working_hours
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- filter - partial day name or date, used to filter working hours list
+ (example query string: ?filter=monday)
+
+- range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
+
+    Parameter can be used to fetch only specific range of requested collection,
+    for example query string "?range=5-10" will return collection elements starting from fifth element and ending on tenth element.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1/working_hours
+
+##### Response Body:
+```json
+[
+    {
+        "day": "tuesday",
+        "time_windows": [
+            {
+                "start_time": "12:00",
+                "end_time": "17:00"
+            }
+        ]
+    },
+    {
+        "day": "2023-05-18",
+        "time_windows": [
+            {
+                "start_time": "08:00",
+                "end_time": "10:00"
+            },
+            {
+                "start_time": "15:00",
+                "end_time": "20:00"
+            }
+        ]
+    }
+]
+```
+
+#### Request With Filter Parameter Example:
+
+Route: /api/schedule/1/working_hours?filter=2023-05-18
+
+##### Response Body:
+```json
+[
+    {
+        "day": "2023-05-18",
+        "time_windows": [
+            {
+                "start_time": "08:00",
+                "end_time": "10:00"
+            },
+            {
+                "start_time": "15:00",
+                "end_time": "20:00"
+            }
+        ]
+    }
+]
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
+
+### Get free terms
+Used to fetch schedule free terms.
+
+Route: /api/schedule/{scheduleId}/free_terms/{date}
+
+Request Method: GET
+
+Authorization: not required
+
+Optional query parameters:
+- range - determines how many days starting from date are checked for free terms, must be integer from 1 to 7 (1 by default).
+For example request "/api/schedule/1/free_terms/2023-05-20?range=7" will fetch free terms from seven days starting from 2023-05-20.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1/free_terms/2023-05-09
+
+##### Response Body:
+```json
+{
+    "2023-05-09": [
+        {
+            "start_time": "12:00",
+            "end_time": "17:00"
+        }
+    ]
+}
+```
+
+#### Request With Range Parameter Example:
+
+Route: /api/schedule/1/free_terms/2023-05-09?range=7
+
+##### Response Body:
+```json
+{
+    "2023-05-09": [
+        {
+            "start_time": "12:00",
+            "end_time": "17:00"
+        }
+    ],
+    "2023-05-10": [],
+    "2023-05-11": [],
+    "2023-05-12": [
+        {
+            "start_time": "10:00",
+            "end_time": "12:00"
+        },
+        {
+            "start_time": "13:00",
+            "end_time": "20:00"
+        }
+    ],
+    "2023-05-13": [],
+    "2023-05-14": [],
+    "2023-05-15": []
+}
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
+
+### Get reservations
+Used to fetch schedule reservations.
+
+Route: /api/schedule/{scheduleId}/reservations/{date}
+
+Request Method: GET
+
+Authorization: organization admin or member assigned to schedule
+
+Optional query parameters:
+- range - determines how many days starting from date are checked for reservations, must be integer from 1 to 7 (1 by default).
+For example request "/api/schedule/1/reservations/2023-05-20?range=7" will fetch reservations from seven days starting from 2023-05-20.
+
+#### Basic Request Example:
+
+Route: /api/schedule/1/reservations/2023-05-12
+
+##### Response Body:
+```json
+{
+    "2023-05-12": [
+        {
+            "id": 1,
+            "email": "test@test.com",
+            "phone_number": "141416153",
+            "service": {
+                "id": 1,
+                "name": "TestService1",
+                "estimated_price": "50 PLN"
+            },
+            "time_window": {
+                "start_time": "08:00",
+                "end_time": "09:00"
+            },
+            "verified": false,
+            "confirmed": false
+        }
+    ]
+}
+```
+
+#### Request With Range Parameter Example:
+
+Route: /api/schedule/1/reservations/2023-05-12?range=4
+
+##### Response Body:
+```json
+{
+    "2023-05-12": [
+        {
+            "id": 1,
+            "email": "test@test.com",
+            "phone_number": "141416153",
+            "service": {
+                "id": 1,
+                "name": "TestService1",
+                "estimated_price": "50 PLN"
+            },
+            "time_window": {
+                "start_time": "08:00",
+                "end_time": "09:00"
+            },
+            "verified": false,
+            "confirmed": false
+        }
+    ],
+    "2023-05-13": [],
+    "2023-05-14": [
+        {
+            "id": 2,
+            "email": "test@test.com",
+            "phone_number": "141416153",
+            "service": {
+                "id": 1,
+                "name": "TestService1",
+                "estimated_price": "50 PLN"
+            },
+            "time_window": {
+                "start_time": "15:00",
+                "end_time": "16:00"
+            },
+            "verified": false,
+            "confirmed": false
+        }
+    ],
+    "2023-05-15": []
+}
+```
+
+If schedule was not found, invalid request message is returned:
+```json
+{
+    "status": "Failure",
+    "message": "Invalid Request",
+    "errors": "Schedule not found"
+}
+```
 
 ## Reservation
 

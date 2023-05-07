@@ -5,12 +5,16 @@ namespace App\Entity;
 use App\Repository\ScheduleAssignmentRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\ScheduleAssignmentTask;
+use App\Service\SetterHelper\Task\ScheduleAssignmentAccessTypeTask;
+use App\Service\SetterHelper\Task\ScheduleAssignmentMemberTask;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ScheduleAssignmentRepository::class)]
 class ScheduleAssignment
 {
+
+    const ACCESS_TYPES = ['READ', 'WRITE'];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -27,6 +31,7 @@ class ScheduleAssignment
     #[ORM\Column(length: 255)]
     private ?string $accessType = null;
 
+    #[Getter(groups: ['schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -44,13 +49,13 @@ class ScheduleAssignment
         return $this;
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
+    #[Getter(propertyNameAlias: 'member', groups: ['schedule-assignments'])]
     public function getOrganizationMember(): ?OrganizationMember
     {
         return $this->organizationMember;
     }
 
-    #[Setter(targetParameter: 'member_id', setterTask: ScheduleAssignmentTask::class)]
+    #[Setter(targetParameter: 'member_id', setterTask: ScheduleAssignmentMemberTask::class)]
     public function setOrganizationMember(?OrganizationMember $organizationMember): self
     {
         $this->organizationMember = $organizationMember;
@@ -64,6 +69,7 @@ class ScheduleAssignment
         return $this->accessType;
     }
 
+    #[Setter(setterTask: ScheduleAssignmentAccessTypeTask::class)]
     public function setAccessType(string $accessType): self
     {
         $this->accessType = $accessType;

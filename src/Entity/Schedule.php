@@ -8,8 +8,8 @@ use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Task\OrganizationTask;
 use App\Service\SetterHelper\Task\ScheduleAssignmentsTask;
-use App\Service\SetterHelper\Task\ServicesTask;
-use App\Service\SetterHelper\Task\WorkingHoursTask;
+use App\Service\SetterHelper\Task\ScheduleServicesTask;
+use App\Service\SetterHelper\Task\ScheduleWorkingHoursTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -21,6 +21,7 @@ class Schedule
 {
     const DATE_FORMAT = 'Y-m-d';
     const TIME_FORMAT = 'H:i';
+    const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -31,14 +32,14 @@ class Schedule
     #[ORM\JoinColumn(nullable: false)]
     private ?Organization $organization = null;
 
-    #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules')]
-    private Collection $services;
-
-    #[Assert\Regex(
-        pattern: '/^(?!\s)[^<>]{6,40}$/i',
-        message: 'Name must be from 6 to 40 characters long, cannot start from whitespace and contain characters: <>'
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 6,
+        max: 50,
+        minMessage: 'Minimum name length is 6 characters',
+        maxMessage: 'Maximum name length is 50 characters'
     )]
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
     private ?string $name = null;
 
     #[Assert\Length(
@@ -47,6 +48,9 @@ class Schedule
     )]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
+
+    #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules')]
+    private Collection $services;
 
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WorkingHours::class, orphanRemoval: true, cascade: ['persist'])]
     private Collection $workingHours;
@@ -65,18 +69,18 @@ class Schedule
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['schedule', 'organization-schedules', 'reservation-schedule'])]
+    #[Getter(groups:['organization-schedules', 'reservation-schedule'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    #[Getter(groups:['schedule'])]
     public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
-
-    #[Getter(groups:['schedule'])]
+    
     public function getOrganizationId(): int
     {
         return $this->organization->getId();
@@ -134,7 +138,7 @@ class Schedule
         return $serviceExists;
     }
 
-    #[Setter(setterTask: ServicesTask::class, groups: ['schedule-services'])]
+    #[Setter(setterTask: ScheduleServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services)
     {
         $this->services = $services;
@@ -163,7 +167,7 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups: ['schedule-workingHours'])]
+    #[Getter(groups: ['schedule-working_hours'])]
     /**
      * @return Collection<int, WorkingHours>
      */
@@ -179,7 +183,7 @@ class Schedule
         });
     }
 
-    #[Setter(setterTask: WorkingHoursTask::class, groups: ['workingHours'])]
+    #[Setter(setterTask: ScheduleWorkingHoursTask::class, groups: ['workingHours'])]
     public function setWorkingHours(Collection $workingHours): self
     {
         $this->workingHours = $workingHours;
@@ -203,6 +207,17 @@ class Schedule
             if ($workingHour->getSchedule() === $this) {
                 $workingHour->setSchedule(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function clearWorkingHours(): self
+    {
+        foreach($this->workingHours as $element){
+            /** @var WorkingHours $element */
+            $element->getTimeWindows()->clear();
+            $this->removeWorkingHours($element);
         }
 
         return $this;

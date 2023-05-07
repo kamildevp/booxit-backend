@@ -72,6 +72,7 @@ class Reservation
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
+    #[Getter(groups: ['schedule-reservations'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -111,7 +112,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
+    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getEmail(): ?string
     {
         return $this->email;
@@ -125,7 +126,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
+    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getPhoneNumber(): ?string
     {
         return $this->phoneNumber;
@@ -139,7 +140,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation-service'])]
+    #[Getter(groups: ['reservation-service', 'schedule-reservations'])]
     public function getService(): ?Service
     {
         return $this->service;
@@ -153,7 +154,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
+    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getTimeWindow(): ?TimeWindow
     {
         return $this->timeWindow;
@@ -166,7 +167,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
+    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function isVerified(): ?bool
     {
         return $this->verified;
@@ -179,7 +180,7 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
+    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function isConfirmed(): ?bool
     {
         return $this->confirmed;

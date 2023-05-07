@@ -63,7 +63,7 @@ class Service
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -87,7 +87,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getName(): ?string
     {
         return $this->name;
@@ -129,7 +129,7 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service'])]
+    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getEstimatedPrice(): ?string
     {
         return $this->estimatedPrice;

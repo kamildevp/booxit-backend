@@ -7,74 +7,129 @@ use App\Entity\ScheduleAssignment;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\SetterHelperInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
-use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /** @property Schedule $object */
 class ScheduleAssignmentsTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
-    const MODIFICATION_TYPES = ['ADD', 'REMOVE', 'OVERWRITE'];
+
+    const MODIFICATION_TYPES = ['ADD', 'REMOVE', 'PATCH', 'OVERWRITE'];
 
     public function __construct(private SetterHelperInterface $setterHelper)
     {
-
+        
     }
 
-    public function runPreValidation(array $assignments, string $assignmentsModificationType = 'ADD')
+    public function runPreValidation(array $assignments, string $modificationType)
     {
-        if(!in_array($assignmentsModificationType , self::MODIFICATION_TYPES)){
-            $modificationTypesString = join(', ', self::MODIFICATION_TYPES);
-            throw new InvalidRequestException("Invalid assignments modification type. Allowed modification types: {$modificationTypesString}");
+        if(!in_array($modificationType, self::MODIFICATION_TYPES)){
+            throw new InvalidRequestException('Invalid modification type. Allowed modifications types: ADD, REMOVE, OVERWRITE');
         }
 
-        $scheduleAssignments = $this->object->getAssignments();
-
-        if($assignmentsModificationType === 'REMOVE'){
-            $this->removeAssignments($scheduleAssignments, $assignments);
-        }
-        else{
-            $this->newAssignments($scheduleAssignments, $assignments, $assignmentsModificationType);
-        }
-    }
-
-    private function removeAssignments(Collection $scheduleAssignments, array $assignments){
-        foreach($assignments as $assignmentId){
-            if(!is_int($assignmentId)){
-                throw new InvalidRequestException("Assigments must be array of integers");
-            }
-
-            $assignment = $scheduleAssignments->findFirst(function($key, $element) use ($assignmentId){
-                return $element->getId() === $assignmentId;
-            });
-            if(is_null($assignment)){
-                throw new InvalidRequestException("Cannot find assignment with id = {$assignmentId} to remove");
-            }
-
-            $scheduleAssignments->removeElement($assignment);
-        }
-    }
-
-    private function newAssignments(Collection $scheduleAssignments, array $assignments, string $modificationType){
-        if($modificationType === 'OVERWRITE'){
-            $assignmentsDiff = count($scheduleAssignments) - count($assignments);
-            for($i=0; $i<$assignmentsDiff; $i++){
-                $scheduleAssignments->removeElement($scheduleAssignments->last());
-            }
+        switch($modificationType){
+            case 'REMOVE':
+                $this->removeAssignments($assignments);
+                break;
+            case 'ADD':
+                $this->addAssignments($assignments);
+                break;
+            case 'PATCH':
+                $this->patchAssignments($assignments);
+                break;
+            case 'OVERWRITE':
+                $this->overwriteAssignments($assignments);
+                break;
         }
         
-        $loop_indx = 0;
-        foreach($assignments as $assignment){ 
-            if(!is_array($assignment)){
-                throw new InvalidRequestException("Assignments must be array of assignment definitions");
-            }           
-            $scheduleAssignment =  ($modificationType === 'OVERWRITE' && $scheduleAssignments->containsKey($loop_indx)) ? 
-            $scheduleAssignments[$loop_indx] : new ScheduleAssignment();
-            $this->object->addAssignment($scheduleAssignment);
-            $this->setterHelper->updateObjectSettings($scheduleAssignment, $assignment);
-            $loop_indx++;
+    }
+
+    private function removeAssignments(array $assignments):void
+    {
+        foreach($assignments as $assignmentId){
+            if(!is_int($assignmentId)){
+                throw new InvalidRequestException("Parameter assigments must be array of integers");
+            }
+
+            $assignment = $this->object->getAssignments()->findFirst(function($key, $element) use ($assignmentId){
+                return $element->getId() === $assignmentId;
+            });
+            
+            if(!$assignment){
+                throw new InvalidRequestException("Assignment with id = {$assignmentId} does not exist");
+            }
+
+            $this->object->removeAssignment($assignment);
         }
     }
 
-    
+    private function addAssignments(array $assignments):void
+    {
+        foreach($assignments as $settings){
+            $assignment = new ScheduleAssignment();
+            if(!is_array($settings)){
+                throw new InvalidRequestException("Parameter assignments must be array of settings arrays");
+            }
+
+            $this->object->addAssignment($assignment);
+            $this->setterHelper->updateObjectSettings($assignment, $settings, ['Default']);
+        }
+    }
+
+    private function patchAssignments(array $assignments):void
+    {
+        foreach($assignments as $settings)
+        {
+            if(!is_array($settings)){
+                throw new InvalidRequestException("Parameter assignments must be array of settings arrays");
+            }
+
+            if(!array_key_exists('id', $settings)){
+                throw new InvalidRequestException('Parameter id is required');
+            }
+
+            $id = $settings['id'];
+            $assignment = $this->object->getAssignments()->findFirst(function($key, $element) use ($id){
+                return $element->getId() === $id;
+            });
+            
+            if(!$assignment){
+                throw new InvalidRequestException("Assignment with id = {$id} does not exist");
+            }
+
+            unset($settings['id']);
+
+            $this->setterHelper->updateObjectSettings($assignment, $settings);
+        }
+    }
+
+    private function overwriteAssignments(array $assignments):void
+    {
+        $assignmentsCollection = new ArrayCollection($this->object->getAssignments()->getValues());
+        $this->object->getAssignments()->clear();
+        
+        foreach($assignments as $settings){
+            if(!is_array($settings)){
+                throw new InvalidRequestException("Parameter assignments must be array of settings arrays");
+            }
+
+            if(array_key_exists('id', $settings)){
+                $id = $settings['id'];
+                $assignment = $assignmentsCollection->findFirst(function($key,$element) use ($id){
+                    return $element->getId() == $id;
+                });
+                if(!$assignment){
+                    throw new InvalidRequestException("Assignment with id = {$id} does not exist");
+                }
+                unset($settings['id']);
+            }
+            else{
+                $assignment = new ScheduleAssignment();
+            }
+
+            $this->object->addAssignment($assignment);
+            $this->setterHelper->updateObjectSettings($assignment, $settings, ['Default']);
+        }
+    }
 
 }

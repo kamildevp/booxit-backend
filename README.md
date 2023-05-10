@@ -8,7 +8,6 @@ It provides users the ability to:
 - manage organization members and their privileges in regard to organization and organization schedules
 - create reservations based on organization schedules and services
 
-
 For detailed API endpoints description please refer to  [API documentation](docs/api-endpoints.md#API-Endpoints)
 
 

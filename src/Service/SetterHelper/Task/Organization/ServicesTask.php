@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Organization;
 
 use App\Entity\Organization;
 use App\Entity\Service;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\SetterHelperInterface;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /** @property Organization $object */
-class OrganizationServicesTask implements SetterTaskInterface
+class ServicesTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -25,7 +26,9 @@ class OrganizationServicesTask implements SetterTaskInterface
     public function runPreValidation(array $services, string $modificationType)
     {
         if(!in_array($modificationType, self::MODIFICATION_TYPES)){
-            throw new InvalidRequestException('Invalid modification type. Allowed modifications types: ADD, PATCH, REMOVE, OVERWRITE');
+            $modificationTypesString = join(', ', self::MODIFICATION_TYPES);
+            $this->validationErrors['modificationType'] = "Invalid modification type. Allowed modifications types: {$modificationTypesString}";
+            return;
         }
 
         switch($modificationType){
@@ -49,7 +52,8 @@ class OrganizationServicesTask implements SetterTaskInterface
     {
         foreach($services as $serviceId){
             if(!is_int($serviceId)){
-                throw new InvalidRequestException("Parameter services parameter must be array of integers");
+                $this->requestErrors['services'] = "Parameter must be array of integers";
+                return;
             }
 
             $service = $this->object->getServices()->findFirst(function($key, $element) use ($serviceId){
@@ -57,7 +61,8 @@ class OrganizationServicesTask implements SetterTaskInterface
             });
             
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$serviceId} does not exist");
+                $this->requestErrors['services'][] = "Service with id = {$serviceId} does not exist";
+                continue;            
             }
             
             $this->object->removeService($service);
@@ -66,31 +71,45 @@ class OrganizationServicesTask implements SetterTaskInterface
 
     private function addServices(array $services):void
     {
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($services as $settings){
             $newService = new Service();
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter services parameter must be array of settings arrays");
+                $this->requestErrors['services'][$loopIndx] = "Parameter must be array of service settings";
+                $loopIndx++;
+                continue;
             }
 
             $this->object->addService($newService);
 
-            $this->setterHelper->updateObjectSettings($newService, $settings, ['Default']);
-            $this->validateService($loop_indx, $newService, $this->setterHelper->getValidationErrors());
-            $loop_indx++;
+            try{
+                $this->setterHelper->updateObjectSettings($newService, $settings, ['Default']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['services'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+
+            $this->validateService($loopIndx, $newService, $this->setterHelper->getValidationErrors());
+            $loopIndx++;
         }
     }
 
     private function patchServices(array $services):void
     {
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($services as $settings){
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter services parameter must be array of settings arrays");
+                $this->requestErrors['services'][$loopIndx] = "Parameter must be array of service settings";
+                $loopIndx++;
+                continue;
             }
 
             if(!array_key_exists('id', $settings)){
-                throw new InvalidRequestException('Parameter id is required');
+                $this->requestErrors['services'][$loopIndx]['id'] = 'Parameter is required';
+                $loopIndx++;
+                continue;
             }
 
             $id = $settings['id'];
@@ -100,12 +119,22 @@ class OrganizationServicesTask implements SetterTaskInterface
             unset($settings['id']);
 
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$id} does not exist");
+                $this->requestErrors['services'][$loopIndx]['id'] = "Service with id = {$id} does not exist";
+                $loopIndx++;
+                continue;
             }
 
-            $this->setterHelper->updateObjectSettings($service, $settings);
-            $this->validateService($loop_indx, $service, $this->setterHelper->getValidationErrors());
-            $loop_indx++;
+            try{
+                $this->setterHelper->updateObjectSettings($service, $settings);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['services'][$loopIndx] = $this->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+
+            $this->validateService($loopIndx, $service, $this->setterHelper->getValidationErrors());
+            $loopIndx++;
         }
     }
 
@@ -114,26 +143,49 @@ class OrganizationServicesTask implements SetterTaskInterface
         $organizationServices = new ArrayCollection($this->object->getServices()->getValues());
         $this->object->getServices()->clear();
 
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($services as $settings){
-            if(array_key_exists('id', $settings)){
-                $id = $settings['id'];
+            if(!is_array($settings)){
+                $this->requestErrors['services'][$loopIndx] = "Parameter must be array of service settings";
+                $loopIndx++;
+                continue;
+            }
+
+            if(!array_key_exists('id', $settings)){
+                $this->requestErrors['services'][$loopIndx]['id'] = 'Parameter is required';
+                $loopIndx++;
+                continue;
+            }
+
+            $id = $settings['id'];
+            if(!is_null($id)){
                 $service = $organizationServices->findFirst(function($key,$element) use ($id){
                     return $element->getId() == $id;
                 });
                 if(!$service){
-                    throw new InvalidRequestException("Service with id = {$id} does not exist");
+                    $this->requestErrors['services'][$loopIndx]['id'] = "Service with id = {$id} does not exist";
+                    $loopIndx++;
+                    continue;
                 }
-                unset($settings['id']);
             }
             else{
                 $service = new Service();
             }
+            
+            unset($settings['id']);
 
             $this->object->addService($service);
-            $this->setterHelper->updateObjectSettings($service, $settings, ['Default']);
-            $this->validateService($loop_indx, $service, $this->setterHelper->getValidationErrors());
-            $loop_indx++;
+            try{
+                $this->setterHelper->updateObjectSettings($service, $settings, ['Default']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['services'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+
+            $this->validateService($loopIndx, $service, $this->setterHelper->getValidationErrors());
+            $loopIndx++;
         }
     }
 

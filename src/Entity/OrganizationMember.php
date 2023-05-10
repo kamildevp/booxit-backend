@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\OrganizationMemberRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\MemberRoleTask;
-use App\Service\SetterHelper\Task\MemberUserTask;
+use App\Service\SetterHelper\Task\OrganizationMember\RoleTask;
+use App\Service\SetterHelper\Task\OrganizationMember\UserTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -64,7 +64,7 @@ class OrganizationMember
         return $this->appUser;
     }
 
-    #[Setter(targetParameter: 'user_id', setterTask: MemberUserTask::class, groups: ['user'])]
+    #[Setter(targetParameter: 'user_id', setterTask: UserTask::class, groups: ['user'])]
     public function setAppUser(?User $appUser): self
     {
         $this->appUser = $appUser;
@@ -78,7 +78,7 @@ class OrganizationMember
         return $this->roles;
     }
 
-    #[Setter(setterTask: MemberRoleTask::class, groups: ['Default', 'roles'])]
+    #[Setter(setterTask: RoleTask::class, groups: ['Default', 'roles'])]
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;

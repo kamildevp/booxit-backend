@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\ScheduleAssignment;
 
 use App\Entity\ScheduleAssignment;
-use App\Exceptions\InvalidRequestException;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 /** @property ScheduleAssignment $object */
-class ScheduleAssignmentMemberTask implements SetterTaskInterface
+class MemberTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
-    const ACCESS_TYPES = ['READ', 'WRITE'];
 
     public function runPreValidation(int $memberId)
     {   
@@ -21,7 +20,8 @@ class ScheduleAssignmentMemberTask implements SetterTaskInterface
         });
 
         if(!$member){
-            throw new InvalidRequestException("Cannot find organization member with id = {$memberId}");
+            $this->requestErrors['memberId'] = "Member with id = {$memberId} does not exist";
+            return;
         }
 
         $assignment = $this->object;
@@ -30,7 +30,8 @@ class ScheduleAssignmentMemberTask implements SetterTaskInterface
         });
 
         if($memberAssigned){
-            throw new InvalidRequestException("Member with id = {$memberId} is already assigned to schedule");
+            $this->requestErrors['memberId'] = "Member with id = {$memberId} is already assigned to schedule";
+            return;
         }
 
         $this->object->setOrganizationMember($member);

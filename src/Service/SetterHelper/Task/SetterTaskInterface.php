@@ -23,4 +23,6 @@ interface SetterTaskInterface
     public function getValidationGroups():array;
 
     public function getValidationErrors():array;
+
+    public function getRequestErrors():array;
 }

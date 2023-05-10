@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\WorkingHours;
 
 use App\Entity\Schedule;
 use App\Entity\WorkingHours;
 use App\Exceptions\InvalidRequestException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\SetterHelper\SetterHelperInterface;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 /** @property WorkingHours $object */
-class WorkingHoursDayTask implements SetterTaskInterface
+class DayTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -22,7 +23,8 @@ class WorkingHoursDayTask implements SetterTaskInterface
     public function runPreValidation(string $day)
     {
         if(!in_array($day, Schedule::WEEK_DAYS) && !(new DataHandlingHelper)->validateDateTime($day, Schedule::DATE_FORMAT)){
-            throw new InvalidRequestException("Parameter {$day} is not valid date or day of week");
+            $this->validationErrors['day'] = "Parameter is not valid date or day of week";
+            return;
         }
 
         $workHours = $this->object;
@@ -31,7 +33,8 @@ class WorkingHoursDayTask implements SetterTaskInterface
         });
 
         if($workHoursDefined){
-            throw new InvalidRequestException("Working hours for {$day} already defined");
+            $this->requestErrors['day'] = "Working hours for {$day} already defined";
+            return;
         }
 
         $this->object->setDay($day);

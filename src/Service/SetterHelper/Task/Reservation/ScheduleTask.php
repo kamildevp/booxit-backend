@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Reservation;
 
 use App\Entity\Schedule;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\ORM\EntityManagerInterface;
+
+/** @property Reservation $object */
 class ScheduleTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
@@ -18,7 +21,7 @@ class ScheduleTask implements SetterTaskInterface
     {
         $schedule = $this->entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            $this->validationErrors['schedule'] = "Schedule not found";
+            $this->requestErrors['scheduleId'] = "Schedule with id = {$scheduleId} does not exist";
             return;
         }
 

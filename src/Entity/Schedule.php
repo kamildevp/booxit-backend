@@ -6,10 +6,10 @@ use App\Repository\ScheduleRepository;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\OrganizationTask;
-use App\Service\SetterHelper\Task\ScheduleAssignmentsTask;
-use App\Service\SetterHelper\Task\ScheduleServicesTask;
-use App\Service\SetterHelper\Task\ScheduleWorkingHoursTask;
+use App\Service\SetterHelper\Task\Schedule\OrganizationTask;
+use App\Service\SetterHelper\Task\Schedule\ScheduleAssignmentsTask;
+use App\Service\SetterHelper\Task\Schedule\ServicesTask;
+use App\Service\SetterHelper\Task\Schedule\WorkingHoursTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -138,7 +138,7 @@ class Schedule
         return $serviceExists;
     }
 
-    #[Setter(setterTask: ScheduleServicesTask::class, groups: ['services'])]
+    #[Setter(setterTask: ServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services)
     {
         $this->services = $services;
@@ -183,7 +183,7 @@ class Schedule
         });
     }
 
-    #[Setter(setterTask: ScheduleWorkingHoursTask::class, groups: ['workingHours'])]
+    #[Setter(setterTask: WorkingHoursTask::class, groups: ['workingHours'])]
     public function setWorkingHours(Collection $workingHours): self
     {
         $this->workingHours = $workingHours;
@@ -207,17 +207,6 @@ class Schedule
             if ($workingHour->getSchedule() === $this) {
                 $workingHour->setSchedule(null);
             }
-        }
-
-        return $this;
-    }
-
-    public function clearWorkingHours(): self
-    {
-        foreach($this->workingHours as $element){
-            /** @var WorkingHours $element */
-            $element->getTimeWindows()->clear();
-            $this->removeWorkingHours($element);
         }
 
         return $this;

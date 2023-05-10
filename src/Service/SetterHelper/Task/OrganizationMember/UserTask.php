@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\OrganizationMember;
 
 use App\Entity\OrganizationMember;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\ORM\EntityManagerInterface;
 
 /** @property OrganizationMember $object */
-class MemberUserTask implements SetterTaskInterface
+class UserTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -22,21 +23,19 @@ class MemberUserTask implements SetterTaskInterface
     {
         $user = $this->entityManager->getRepository(User::class)->find($userId);
         if(!$user){
-            throw new InvalidRequestException("User with id = {$userId} not found");
-        }
-
-        $organization = $this->object->getOrganization();
-        if(!$organization){
+            $this->requestErrors['userId'] = "User with id = {$userId} does not exist";
             return;
         }
 
+        $organization = $this->object->getOrganization();
         $member = $this->object;
         $memberExists = $organization->getMembers()->exists(function($key,$element) use ($user, $member){
             return $element != $member && $element->getAppUser() === $user;
         });
 
         if($memberExists){
-            throw new InvalidRequestException("User with id = {$userId} is already organization member");
+            $this->requestErrors['userId'] = "User with id = {$userId} is already organization member";
+            return;
         }
 
         $this->object->setAppUser($user);

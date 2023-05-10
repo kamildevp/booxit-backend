@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\OrganizationMember;
 
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
-use App\Exceptions\InvalidRequestException;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Symfony\Bundle\SecurityBundle\Security;
 
 /** @property OrganizationMember $object */
-class MemberRoleTask implements SetterTaskInterface
+class RoleTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
     
@@ -33,18 +33,13 @@ class MemberRoleTask implements SetterTaskInterface
         }
 
         $memberRoles = $this->object->getRoles();  
-
         $organization = $this->object->getOrganization();
-        if(!$organization){
-            $this->object->setRoles($roles);
-            return;
-        }
-
         $adminCount = $organization->getAdmins()->count();
 
         if($adminCount === 1 && in_array('ADMIN', $memberRoles) && !in_array('ADMIN', $roles)){
             $memberId = $this->object->getId();
-            throw new InvalidRequestException("Cannot remove ADMIN role from member with id = {$memberId}, organization needs to have at least one admin");
+            $this->requestErrors['roles'] = "Cannot remove ADMIN role from member with id = {$memberId}, organization needs to have at least one admin";
+            return;
         }
 
         $this->object->setRoles($roles);

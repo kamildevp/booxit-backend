@@ -6,10 +6,11 @@ use App\Repository\UserRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\GetterHelper\CustomAccessRule\EmailAccessRule;
-use App\Service\SetterHelper\Task\EmailTask;
-use App\Service\SetterHelper\Task\PasswordTask;
+use App\Service\SetterHelper\Task\User\EmailTask;
+use App\Service\SetterHelper\Task\User\PasswordTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -39,10 +40,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
-    #[ORM\Column]
-    private array $roles = ['ROLE_USER'];
+    #[Assert\NotBlank]
+    #[Assert\Length(
+        min: 6,
+        max: 50,
+        minMessage: 'Minimum name length is 6 characters',
+        maxMessage: 'Maximum name length is 50 characters'
+    )]
+    #[ORM\Column(length: 50)]
+    private ?string $name = null;
 
-  
     #[Assert\NotBlank(
         groups: ['plainPassword'], 
         message: 'Password cannot be blank'
@@ -60,15 +67,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
-    #[ORM\Column(length: 50)]
-    private ?string $name = null;
+    #[ORM\Column]
+    private array $roles = ['ROLE_USER'];
 
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, orphanRemoval: true)]
     private Collection $emailConfirmations;
@@ -79,19 +79,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, orphanRemoval: true)]
     private Collection $organizationAssignments;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $expiryDate = null;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
         $this->organizationAssignments = new ArrayCollection();
     }
 
-    #[Getter(groups: ['users', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: ['login', 'users', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class, groups: ['users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(accessRule: EmailAccessRule::class, groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getEmail(): ?string
     {
         return $this->email;
@@ -113,6 +116,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
+    }
+
+
+    #[Getter(groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    #[Setter]
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
     }
 
     /**
@@ -156,20 +174,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
-    }
-
-    #[Getter(groups: ['users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    #[Setter]
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
     }
 
     public function getPlainPassword(): ?string
@@ -266,6 +270,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $organizations;
+    }
+
+    public function getExpiryDate(): ?\DateTimeInterface
+    {
+        return $this->expiryDate;
+    }
+
+    public function setExpiryDate(?\DateTimeInterface $expiryDate): self
+    {
+        $this->expiryDate = $expiryDate;
+
+        return $this;
     }
 
 }

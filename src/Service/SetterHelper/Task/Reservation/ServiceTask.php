@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Reservation;
 
 use App\Entity\Reservation;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 /** @property Reservation $object */
-class ReservationServiceTask implements SetterTaskInterface
+class ServiceTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -23,7 +24,7 @@ class ReservationServiceTask implements SetterTaskInterface
         });
 
         if(!$service){
-            $this->validationErrors['service'] = "Service not found";
+            $this->requestErrors['serviceId'] = "Service with id = {$serviceId} does not exist";
             return;
         }
         

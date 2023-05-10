@@ -20,6 +20,7 @@ class GetterHelper implements GetterHelperInterface
     const GETTER_ATTRIBUTE = Getter::class;
     private array $getterMethods = [];
     private ?User $user;
+    private array $requestErrors = [];
 
 
     public function __construct(private Kernel $kernel, private Security $security)
@@ -29,6 +30,11 @@ class GetterHelper implements GetterHelperInterface
 
     public function getCollection(Collection|array $collection, array $groups = ['Default'], ?string $collectionRange = null){
         $range = !is_null($collectionRange) ? $this->getCollectionRange($collectionRange) : null;
+
+        if(!empty($this->requestErrors)){
+            throw new InvalidRequestException();
+        }
+
         return $this->getPropertyValue($collection, $groups, $range);
     }
 
@@ -91,23 +97,32 @@ class GetterHelper implements GetterHelperInterface
         }
     }
 
-    private function getCollectionRange(string $stringRange){
+    private function getCollectionRange(string $stringRange)
+    {
         $rangeSplit = explode('-', $stringRange);
         if(count($rangeSplit) != 2){
-            throw new InvalidRequestException("Range must be in {start}-{end} format");
+            $this->requestErrors['range'] = "Range must be in {start}-{end} format";
+            return;
         }
         
         if(!(ctype_digit($rangeSplit[0]) &&  (int)$rangeSplit[0] > 0) || !(ctype_digit($rangeSplit[1]) && (int)$rangeSplit[1] > 0)){
-            throw new InvalidRequestException("Range start and end must be postive integers");
+            $this->requestErrors['range'] = "Range start and end must be postive integers";
+            return;
         }
 
         $range['start'] = (int)$rangeSplit[0];
         $range['end'] = (int)$rangeSplit[1];
 
         if($range['start'] > $range['end']){
-            throw new InvalidRequestException("Range start must be less or equal than range end");
+            $this->requestErrors['range'] = "Range start must be less or equal than range end";
+            return;
         }
 
         return $range;
+    }
+
+    public function getRequestErrors():array
+    {
+        return $this->requestErrors;
     }
 }

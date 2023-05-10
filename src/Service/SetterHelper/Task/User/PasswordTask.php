@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\User;
 
 use App\Entity\User;
-use App\Exceptions\InvalidRequestException;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -22,12 +22,13 @@ class PasswordTask implements SetterTaskInterface
         $this->validationGroups[] = 'plainPassword';
         
         if(!is_null($this->object->getPassword()) && is_null($oldPassword)){
-            $requestParameter = $this->getParameterAlias('oldPassword');
-            throw new InvalidRequestException("Parameter {$requestParameter} is required");
+            $this->requestErrors['oldPassword'] = "Parameter is required";
+            return;
         }
 
         if(!is_null($this->object->getPassword()) && !$this->passwordHasher->isPasswordValid($this->object, $oldPassword)){
             $this->validationErrors['oldPassword'] = 'Old password is invalid';
+            return;
         }
 
         $this->object->setPlainPassword($password);

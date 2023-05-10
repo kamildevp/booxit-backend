@@ -78,30 +78,35 @@ class MailingHelper{
         }
     }
 
-    public function newReservationCancellation(Reservation $reservation){
+    public function newReservationInformation(Reservation $reservation, string $subject, string $template, bool $generateCancellationUrl){
         $email = $reservation->getEmail();
         $reservationId = $reservation->getId();
         $startTime = $reservation->getTimeWindow()->getStartTime();
-        $expiryDate = DateTime::createFromFormat(Schedule::DATE_FORMAT, $reservation->getDate())
-        ->setTime((int)$startTime->format('H'), (int)$startTime->format('i'));
+        
+        if($generateCancellationUrl){
+            $expiryDate = DateTime::createFromFormat(Schedule::DATE_FORMAT, $reservation->getDate())
+            ->setTime((int)$startTime->format('H'), (int)$startTime->format('i'));
 
-        try{
             $emailConfirmation = $this->newEmailConfirmation(null, $email, 'reservation_cancel', $expiryDate, ['reservationId' => $reservationId]);
             $this->entityManager->persist($emailConfirmation);
             $this->entityManager->flush();
-            
+
             $url = $this->generateSignature($emailConfirmation);
+            $context['url'] = $url;
+        }
+        
+        try{
+            $context['organization'] = $reservation->getSchedule()->getOrganization()->getName();
+            $context['dateTime'] = $reservation->getDate() . $startTime->format(' H:i');
+            $context['serviceName'] = $reservation->getService()->getName();
+            $context['duration'] = (new DataHandlingHelper)->getPrettyDateInterval($reservation->getService()->getDuration());
+            $context['estimatedPrice'] = $reservation->getService()->getEstimatedPrice();
+            
             $email = (new TemplatedEmail())->to($email)
-            ->subject('Reservation Verified')
-            ->htmlTemplate('emails/reservationVerified.html.twig')
-            ->context([
-                'organization' => $reservation->getSchedule()->getOrganization()->getName(),
-                'dateTime' => $reservation->getDate() . $startTime->format(' H:i'),
-                'serviceName' => $reservation->getService()->getName(),
-                'duration' => (new DataHandlingHelper)->getPrettyDateInterval($reservation->getService()->getDuration()),
-                'estimatedPrice' => $reservation->getService()->getEstimatedPrice(),
-                'url' => $url
-            ]);
+            ->subject($subject)
+            ->htmlTemplate($template)
+            ->context($context);
+
             $this->mailer->send($email);
         }
         catch(Exception){

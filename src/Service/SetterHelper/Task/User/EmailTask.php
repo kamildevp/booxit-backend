@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\User;
 
 use App\Entity\User;
 use App\Service\MailingHelper\MailingHelper;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 /** @property User $object */

@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\OrganizationRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\OrganizationMembersTask;
-use App\Service\SetterHelper\Task\OrganizationServicesTask;
+use App\Service\SetterHelper\Task\Organization\MembersTask;
+use App\Service\SetterHelper\Task\Organization\ServicesTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -120,7 +120,7 @@ class Organization
         return $this->members;
     }
 
-    #[Setter(setterTask: OrganizationMembersTask::class, groups: ['members'])]
+    #[Setter(setterTask: MembersTask::class, groups: ['members'])]
     public function setMembers(Collection $members): self
     {
         $this->members = $members;
@@ -175,7 +175,7 @@ class Organization
         return $this->services;
     }
 
-    #[Setter(setterTask: OrganizationServicesTask::class, groups: ['services'])]
+    #[Setter(setterTask: ServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services): self
     {
         $this->services = $services;

@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\ScheduleAssignment;
 
 use App\Entity\ScheduleAssignment;
-use App\Exceptions\InvalidRequestException;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 /** @property ScheduleAssignment $object */
-class ScheduleAssignmentAccessTypeTask implements SetterTaskInterface
+class AccessTypeTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -15,7 +15,8 @@ class ScheduleAssignmentAccessTypeTask implements SetterTaskInterface
     {   
         if(!in_array($accessType , ScheduleAssignment::ACCESS_TYPES)){
             $accessTypesString = join(', ', ScheduleAssignment::ACCESS_TYPES);
-            throw new InvalidRequestException("Invalid access type '{$accessType}'. Allowed access types: {$accessTypesString}");
+            $this->validationErrors['accessType'] = "Invalid access type. Allowed access types: {$accessTypesString}";
+            return;
         }
 
         $this->object->setAccessType($accessType);

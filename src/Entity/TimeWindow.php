@@ -6,7 +6,7 @@ use App\Repository\TimeWindowRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\GetterHelper\CustomFormat\TimeFormat;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\TimeWindowTask;
+use App\Service\SetterHelper\Task\TimeWindow\TimeWindowTask;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 

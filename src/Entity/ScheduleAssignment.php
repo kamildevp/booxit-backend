@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\ScheduleAssignmentRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\ScheduleAssignmentAccessTypeTask;
-use App\Service\SetterHelper\Task\ScheduleAssignmentMemberTask;
+use App\Service\SetterHelper\Task\ScheduleAssignment\AccessTypeTask;
+use App\Service\SetterHelper\Task\ScheduleAssignment\MemberTask;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ScheduleAssignmentRepository::class)]
@@ -55,7 +55,7 @@ class ScheduleAssignment
         return $this->organizationMember;
     }
 
-    #[Setter(targetParameter: 'member_id', setterTask: ScheduleAssignmentMemberTask::class)]
+    #[Setter(targetParameter: 'member_id', setterTask: MemberTask::class)]
     public function setOrganizationMember(?OrganizationMember $organizationMember): self
     {
         $this->organizationMember = $organizationMember;
@@ -69,7 +69,7 @@ class ScheduleAssignment
         return $this->accessType;
     }
 
-    #[Setter(setterTask: ScheduleAssignmentAccessTypeTask::class)]
+    #[Setter(setterTask: AccessTypeTask::class)]
     public function setAccessType(string $accessType): self
     {
         $this->accessType = $accessType;

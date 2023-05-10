@@ -6,7 +6,7 @@ use App\Repository\ServiceRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\GetterHelper\CustomFormat\DateIntervalFormat;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\ServiceDurationTask;
+use App\Service\SetterHelper\Task\Service\DurationTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -121,7 +121,7 @@ class Service
         return $this->duration;
     }
 
-    #[Setter(setterTask: ServiceDurationTask::class)]
+    #[Setter(setterTask: DurationTask::class)]
     public function setDuration(\DateInterval $duration): self
     {
         $this->duration = $duration;

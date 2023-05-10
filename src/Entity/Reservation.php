@@ -5,9 +5,9 @@ namespace App\Entity;
 use App\Repository\ReservationRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\ReservationServiceTask;
-use App\Service\SetterHelper\Task\ReservationTimeWindowTask;
-use App\Service\SetterHelper\Task\ScheduleTask;
+use App\Service\SetterHelper\Task\Reservation\ServiceTask;
+use App\Service\SetterHelper\Task\Reservation\TimeWindowTask;
+use App\Service\SetterHelper\Task\Reservation\ScheduleTask;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -54,7 +54,7 @@ class Reservation
     #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
     private ?Service $service = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\JoinColumn(nullable: false)]
     private ?TimeWindow $timeWindow = null;
 
@@ -146,7 +146,7 @@ class Reservation
         return $this->service;
     }
 
-    #[Setter(targetParameter: 'service_id', setterTask: ReservationServiceTask::class)]
+    #[Setter(targetParameter: 'service_id', setterTask: ServiceTask::class)]
     public function setService(?Service $service): self
     {
         $this->service = $service;
@@ -160,7 +160,7 @@ class Reservation
         return $this->timeWindow;
     }
 
-    #[Setter(targetParameter: 'start_time', setterTask: ReservationTimeWindowTask::class)]
+    #[Setter(targetParameter: 'start_time', setterTask: TimeWindowTask::class)]
     public function setTimeWindow(TimeWindow $timeWindow): self
     {
         $this->timeWindow = $timeWindow;

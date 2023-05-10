@@ -10,7 +10,6 @@ use App\Service\SetterHelper\Attribute\Setter;
 use App\Service\SetterHelper\Util\RequestParser;
 use App\Service\SetterHelper\Util\SetterManager;
 use ReflectionClass;
-use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
 class SetterHelper implements SetterHelperInterface
 {
@@ -20,6 +19,7 @@ class SetterHelper implements SetterHelperInterface
     private array $settings = [];
     private array $validationGroups = ['Default'];
     private array $validationErrors = [];
+    private array $requestErrors = [];
 
     public function __construct(private Kernel $kernel)
     {
@@ -29,20 +29,22 @@ class SetterHelper implements SetterHelperInterface
     public function updateObjectSettings(object $object, array $settings, array $requiredGroups = [], array $optionalGroups = ['Default']):void
     {
         $reflectionClass = new ReflectionClass($object);
-        if(empty($settings)){
-            $nameComponents = explode('\\', $reflectionClass->getName());
-            $objectName = end($nameComponents);
-            $objectName = str_replace('_', ' ', (new CamelCaseToSnakeCaseNameConverter())->normalize($objectName));
-            
-            throw new InvalidRequestException("Request has no parameters for {$objectName}");
-        }
-
         
+        $this->requestErrors = [];        
         $requestParameters = array_keys($settings);
-        $setterManager = new SetterManager(self::SETTER_ATTRIBUTE, new ObjectHandlingHelper($this->kernel));
         $this->setterMethods = [];
+
+        $setterManager = new SetterManager(self::SETTER_ATTRIBUTE, new ObjectHandlingHelper($this->kernel));
         $this->setterMethods = $setterManager->filterSetters($reflectionClass, $requestParameters, $requiredGroups, $optionalGroups);
-        (new RequestParser)->parseRequestParameters($this->setterMethods, $requestParameters);
+        $this->requestErrors = array_merge($this->requestErrors, $setterManager->getRequestErrors());
+
+        $requestParser = new RequestParser();
+        $requestParser->parseRequestParameters($this->setterMethods, $requestParameters);
+        $this->requestErrors = array_merge($this->requestErrors, $requestParser->getRequestErrors());
+
+        if(!empty($this->requestErrors)){
+            throw new InvalidRequestException();
+        }
 
         $this->validationGroups = [];
         $this->validationErrors = [];
@@ -59,10 +61,20 @@ class SetterHelper implements SetterHelperInterface
 
             $mappedSettings = (new DataHandlingHelper)->replaceArrayKeys($settings, array_flip($setter->getAliases()));
             $task->runPreValidationTask($mappedSettings);
+
             $this->validationGroups = array_merge($this->validationGroups, $task->getValidationGroups());
             $this->validationErrors = $this->validationErrors + $task->getValidationErrors();
+            $this->requestErrors = $this->requestErrors + $task->getRequestErrors();
         }
         $this->settings = $settings;
+
+        if(empty($this->requestErrors) && empty($settings)){
+            throw new InvalidRequestException("No parameters found");
+        }
+
+        if(!empty($this->requestErrors)){
+            throw new InvalidRequestException("Invalid Request");
+        }
     }
 
     
@@ -95,6 +107,11 @@ class SetterHelper implements SetterHelperInterface
         }
 
         return $this->setterMethods[$propertyName]->getTargetParameter();
+    }
+
+    public function getRequestErrors():array
+    {
+        return $this->requestErrors;
     }
 
 }

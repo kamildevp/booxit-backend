@@ -185,7 +185,7 @@ class DataHandlingHelper{
     public function getWeekDay(string $date, string $format){
         $weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         $dateTimeObject = DateTime::createFromFormat($format, $date);
-        return $weekDays[$dateTimeObject->format('N')-1];
+        return $dateTimeObject ? $weekDays[$dateTimeObject->format('N')-1] : null;
     }
 
     public function getPrettyDateInterval(\DateInterval $dateInterval){

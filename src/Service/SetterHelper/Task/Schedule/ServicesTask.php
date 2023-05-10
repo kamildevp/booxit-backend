@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Schedule;
 
 use App\Entity\Schedule;
-use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\SetterHelperInterface;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 
 
 /** @property Schedule $object */
-class ScheduleServicesTask implements SetterTaskInterface
+class ServicesTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -23,7 +23,9 @@ class ScheduleServicesTask implements SetterTaskInterface
     public function runPreValidation(array $services, string $modificationType)
     {
         if(!in_array($modificationType, self::MODIFICATION_TYPES)){
-            throw new InvalidRequestException('Invalid modification type. Allowed modifications types: ADD, REMOVE, OVERWRITE');
+            $modificationTypesString = join(', ', self::MODIFICATION_TYPES);
+            $this->validationErrors['modificationType'] = "Invalid modification type. Allowed modifications types: {$modificationTypesString}";
+            return;
         }
 
         switch($modificationType){
@@ -44,7 +46,8 @@ class ScheduleServicesTask implements SetterTaskInterface
     {
         foreach($services as $serviceId){
             if(!is_int($serviceId)){
-                throw new InvalidRequestException("Parameter services parameter must be array of integers");
+                $this->requestErrors['services'] = "Parameter must be array of integers";
+                return;
             }
 
             $service = $this->object->getServices()->findFirst(function($key, $element) use ($serviceId){
@@ -52,7 +55,8 @@ class ScheduleServicesTask implements SetterTaskInterface
             });
             
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$serviceId} is not assigned to schedule");
+                $this->requestErrors['services'][] = "Service with id = {$serviceId} is not assigned to schedule";
+                continue;
             }
             
             $this->object->removeService($service);
@@ -63,15 +67,17 @@ class ScheduleServicesTask implements SetterTaskInterface
     {
         foreach($services as $serviceId){
             if(!is_int($serviceId)){
-                throw new InvalidRequestException("Parameter services parameter must be array of integers");
+                $this->requestErrors['services'] = "Parameter must be array of integers";
+                return;
             }
 
-            $serviceExist = $this->object->getServices()->exists(function($key, $element) use ($serviceId){
+            $serviceAssigned = $this->object->getServices()->exists(function($key, $element) use ($serviceId){
                 return $element->getId() === $serviceId;
             });
             
-            if($serviceExist){
-                throw new InvalidRequestException("Service with id = {$serviceId} is already assigned to schedule");
+            if($serviceAssigned){
+                $this->requestErrors['services'][] = "Service with id = {$serviceId} is already assigned to schedule";
+                continue;
             }
 
             $service = $this->object->getOrganization()->getServices()->findFirst(function($key, $element) use ($serviceId){
@@ -79,7 +85,8 @@ class ScheduleServicesTask implements SetterTaskInterface
             });
 
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$serviceId} does not exist");
+                $this->requestErrors['services'][] = "Service with id = {$serviceId} does not exist";
+                continue;
             }
             
             $this->object->addService($service);
@@ -92,7 +99,8 @@ class ScheduleServicesTask implements SetterTaskInterface
 
         foreach($services as $serviceId){
             if(!is_int($serviceId)){
-                throw new InvalidRequestException("Parameter services parameter must be array of integers");
+                $this->requestErrors['services'] = "Parameter must be array of integers";
+                return;
             }
 
             $service = $this->object->getOrganization()->getServices()->findFirst(function($key, $element) use ($serviceId){
@@ -100,7 +108,8 @@ class ScheduleServicesTask implements SetterTaskInterface
             });
 
             if(!$service){
-                throw new InvalidRequestException("Service with id = {$serviceId} does not exist");
+                $this->requestErrors['services'][] = "Service with id = {$serviceId} does not exist";
+                continue;
             }
             
             $this->object->addService($service);

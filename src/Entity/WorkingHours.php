@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\WorkingHoursRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\WorkingHoursDayTask;
-use App\Service\SetterHelper\Task\WorkingHoursTimeWindowsTask;
+use App\Service\SetterHelper\Task\WorkingHours\DayTask;
+use App\Service\SetterHelper\Task\WorkingHours\TimeWindowsTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,8 +27,8 @@ class WorkingHours
     private ?Schedule $schedule = null;
 
     #[ORM\JoinTable(name: 'working_hours_time_window')]
-    #[ORM\JoinColumn(name: 'working_hours_id', referencedColumnName: 'id')]
-    #[ORM\InverseJoinColumn(name: 'time_window_id', referencedColumnName: 'id', unique: true)]
+    #[ORM\JoinColumn(name: 'working_hours_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'time_window_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
     #[ORM\ManyToMany(targetEntity: TimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $timeWindows;
 
@@ -49,7 +49,7 @@ class WorkingHours
         return $this->day;
     }
 
-    #[Setter(setterTask: WorkingHoursDayTask::class)]
+    #[Setter(setterTask: DayTask::class)]
     public function setDay(string $day): self
     {
         $this->day = $day;
@@ -94,7 +94,7 @@ class WorkingHours
         return $this;
     }
 
-    #[Setter(setterTask: WorkingHoursTimeWindowsTask::class)]
+    #[Setter(setterTask: TimeWindowsTask::class)]
     public function setTimeWindows(Collection $timeWindows): self
     {
         $this->timeWindows = $timeWindows;

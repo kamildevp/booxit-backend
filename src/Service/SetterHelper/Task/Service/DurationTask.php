@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Service;
 
 use App\Entity\Service;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use DateInterval;
 use Exception;
 
 /** @property Service $object */
-class ServiceDurationTask implements SetterTaskInterface
+class DurationTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 

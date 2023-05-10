@@ -8,19 +8,16 @@ use App\Exceptions\InvalidRequestException;
 use App\Exceptions\MailingHelperException;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\MailingHelper\MailingHelper;
-use App\Service\RequestValidator\RequestValidator;
 use App\Service\SetterHelper\SetterHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
-class UserController extends AbstractController
+class UserController extends AbstractApiController
 {
 
     #[Route('user', name: 'user_new', methods: ['POST'])]
@@ -39,7 +36,6 @@ class UserController extends AbstractController
             $validationErrors = $setterHelper->getValidationErrors();
 
             $violations = $validator->validate($user, groups: $setterHelper->getValidationGroups());
-            $validationErrors = $setterHelper->getValidationErrors();
 
             foreach ($violations as $violation) {
                 $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
@@ -47,26 +43,20 @@ class UserController extends AbstractController
             }
 
             if(count($validationErrors) > 0){
-                return $this->json([
-                    'status' => 'Failure',
-                    'message' => 'Validation Error',
-                    'errors' => $validationErrors
-                ]);
+                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
             }
 
             $setterHelper->runPostValidationTasks();
 
         }
-        catch(InvalidRequestException $e){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => $e->getMessage()
-            ]);
+        catch(InvalidRequestException){
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
         }
 
         // $user->setVerified(false);   //uncomment when mailing provider is available
+        // $user->setExpiryDate(new \DateTime('+1 days')); //uncomment when mailing provider is available
         $user->setVerified(true); //remove when mailing provider is available
+        $user->setExpiryDate(null); //remove when mailing provider is available
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -77,16 +67,10 @@ class UserController extends AbstractController
         catch(MailingHelperException){
             $entityManager->remove($user);
             $entityManager->flush();
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Server Error'
-            ]);
+            return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
         }
+        return $this->newApiResponse(data: ['message' => 'Account created successfully'], code: 201);
 
-        return $this->json([
-            'status' => 'Success',
-            'message' => 'Account created successfully'
-        ]);
     }
 
     #[Route('user_verify', name: 'user_verify', methods: ['GET'])]
@@ -106,6 +90,7 @@ class UserController extends AbstractController
             $user = $emailConfirmation->getCreator();
             $user->setEmail($emailConfirmation->getEmail());
             $user->setVerified(true);
+            $user->setExpiryDate(null);
             $entityManager->remove($emailConfirmation);
             $entityManager->flush();
             return $this->render(
@@ -123,45 +108,33 @@ class UserController extends AbstractController
         
     }
 
-    #[Route('user/{id}', name: 'user_get', methods: ['GET'])]
-    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $id): JsonResponse
+    #[Route('user/{userId}', name: 'user_get', methods: ['GET'])]
+    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $userId): JsonResponse
     {
         $allowedDetails = ['organizations'];
         $details = $request->query->get('details');
         $detailGroups = !is_null($details) ? explode(',', $details) : [];
         if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => 'Requested details are invalid'
-            ]);
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['details' => 'Requested details are invalid']], code: 400);
         }
 
         $range = $request->query->get('range');
         $detailGroups = array_map(fn($group) => 'user-' . $group, $detailGroups);
         $groups = array_merge(['user'], $detailGroups);
 
-        $user = $entityManager->getRepository(User::class)->find($id);
+        $user = $entityManager->getRepository(User::class)->find($userId);
         if(!($user instanceof User)){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => 'User not found'
-            ]);
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'User not found'], code: 404);
         }
         
         try{
             $responseData = $getterHelper->get($user, $groups, $range);
         }
-        catch(InvalidRequestException $e){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => $e->getMessage()
-            ]);
+        catch(InvalidRequestException){
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
         }
 
-        return $this->json($responseData);
+        return $this->newApiResponse(data: $responseData);
     }
 
     #[Route('user', name: 'user_modify', methods: ['PATCH'])]
@@ -171,11 +144,7 @@ class UserController extends AbstractController
         $user = $this->getUser();
 
         if(!($user instanceof User)){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'message' => 'Access Denied'
-            ]);
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
         }
 
         try{
@@ -190,35 +159,21 @@ class UserController extends AbstractController
             }            
 
             if(count($validationErrors) > 0){
-                return $this->json([
-                    'status' => 'Failure',
-                    'message' => 'Validation Error',
-                    'errors' => $validationErrors
-                ]);
+                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
             }
 
             $setterHelper->runPostValidationTasks();
         }
-        catch(InvalidRequestException $e){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => $e->getMessage()
-            ]);
+        catch(InvalidRequestException){
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
         }
         catch(MailingHelperException){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Server Error'
-            ]);
+            return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
         }
 
         $entityManager->flush();
 
-        return $this->json([
-            'status' => 'Success',
-            'message' => 'Account settings modified successfully'
-        ]);
+        return $this->newApiResponse(data: ['message' => 'Account settings modified successfully']);
     }
 
     #[Route('user', name: 'user_delete', methods: ['DELETE'])]
@@ -226,11 +181,7 @@ class UserController extends AbstractController
         $user = $this->getUser();
 
         if(!($user instanceof User)){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => 'Access Denied'
-            ]);
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
         }
 
         $orphanedOrganizations = $user->getOrganizationAssignments()->filter(function($element){
@@ -247,11 +198,7 @@ class UserController extends AbstractController
         $entityManager->remove($user);
         $entityManager->flush();
 
-
-        return $this->json([
-            'status' => 'Success',
-            'message' => 'Account removed successfully'
-        ]);
+        return $this->newApiResponse(data: ['message' => 'Account removed successfully']);
     }
 
     #[Route('users', name: 'users_get', methods: ['GET'])]
@@ -266,14 +213,10 @@ class UserController extends AbstractController
             $responseData = $getterHelper->getCollection($users, ['users'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->json([
-                'status' => 'Failure',
-                'message' => 'Invalid Request',
-                'errors' => $e->getMessage()
-            ]);
+            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
         }
 
-        return $this->json($responseData);
+        return $this->newApiResponse(data: $responseData);
     }
 
 

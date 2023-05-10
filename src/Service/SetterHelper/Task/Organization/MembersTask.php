@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Organization;
 
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\SetterHelperInterface;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /** @property Organization $object */
-class OrganizationMembersTask implements SetterTaskInterface
+class MembersTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -25,7 +26,9 @@ class OrganizationMembersTask implements SetterTaskInterface
     public function runPreValidation(array $members, string $modificationType)
     {
         if(!in_array($modificationType, self::MODIFICATION_TYPES)){
-            throw new InvalidRequestException('Invalid modification type. Allowed modifications types: ADD, REMOVE, OVERWRITE');
+            $modificationTypesString = join(', ', self::MODIFICATION_TYPES);
+            $this->validationErrors['modificationType'] = "Invalid modification type. Allowed modifications types: {$modificationTypesString}";
+            return;
         }
 
         switch($modificationType){
@@ -49,7 +52,8 @@ class OrganizationMembersTask implements SetterTaskInterface
     {
         foreach($members as $memberId){
             if(!is_int($memberId)){
-                throw new InvalidRequestException("Parameter members must be array of integers");
+                $this->requestErrors['members'] = "Parameter must be array of integers";
+                return;
             }
 
             $member = $this->object->getMembers()->findFirst(function($key, $element) use ($memberId){
@@ -57,12 +61,14 @@ class OrganizationMembersTask implements SetterTaskInterface
             });
             
             if(!$member){
-                throw new InvalidRequestException("Member with id = {$memberId} does not exist");
+                $this->requestErrors['members'][] = "Member with id = {$memberId} does not exist";
+                continue;
             }
             
             $adminCount = $this->object->getAdmins()->count();
             if($member->hasRoles(['ADMIN']) && $adminCount === 1){
-                throw new InvalidRequestException("Cannot remove member with id = {$memberId}, organization needs to have at least one admin");
+                $this->requestErrors['members'][] = "Cannot remove member with id = {$memberId}, organization needs to have at least one admin";
+                continue;
             }
 
             $this->object->removeMember($member);
@@ -71,30 +77,43 @@ class OrganizationMembersTask implements SetterTaskInterface
 
     private function addMembers(array $members):void
     {
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($members as $settings){
             $member = new OrganizationMember();
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter members must be array of settings arrays");
+                $this->requestErrors['members'][$loopIndx] = "Parameter must be array of member settings";
+                $loopIndx++;
+                continue;
             }
 
             $this->object->addMember($member);
-            $this->setterHelper->updateObjectSettings($member, $settings, ['Default', 'user']);
-            $this->validateMember($loop_indx, $member, $this->setterHelper->getValidationErrors()); 
-            $loop_indx++;
+            try{
+                $this->setterHelper->updateObjectSettings($member, $settings, ['Default', 'user']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['members'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+            $this->validateMember($loopIndx, $member, $this->setterHelper->getValidationErrors()); 
+            $loopIndx++;
         }
     }
 
     private function patchMembers(array $members):void
     {
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($members as $settings){
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter members must be array of settings arrays");
+                $this->requestErrors['members'][$loopIndx] = "Parameter must be array of member settings";
+                $loopIndx++;
+                continue;
             }
 
             if(!array_key_exists('id', $settings)){
-                throw new InvalidRequestException('Parameter id is required');
+                $this->requestErrors['members'][$loopIndx]['id'] = 'Parameter is required';
+                $loopIndx++;
+                continue;
             }
 
             $id = $settings['id'];
@@ -105,12 +124,22 @@ class OrganizationMembersTask implements SetterTaskInterface
             unset($settings['id']);
 
             if(!$member){
-                throw new InvalidRequestException("Member with id = {$id} does not exist");
+                $this->requestErrors['members'][$loopIndx]['id'] = "Member with id = {$id} does not exist";
+                $loopIndx++;
+                continue;
             }
 
-            $this->setterHelper->updateObjectSettings($member, $settings, [], ['roles']);
-            $this->validateMember($loop_indx, $member, $this->setterHelper->getValidationErrors()); 
-            $loop_indx++;
+            try{
+                $this->setterHelper->updateObjectSettings($member, $settings, [], ['roles']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['members'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+            
+            $this->validateMember($loopIndx, $member, $this->setterHelper->getValidationErrors()); 
+            $loopIndx++;
         }
     }
 
@@ -119,37 +148,61 @@ class OrganizationMembersTask implements SetterTaskInterface
         $organizationMembers = new ArrayCollection($this->object->getMembers()->getValues());
         $this->object->getMembers()->clear();
         
-        $loop_indx = 0;
+        $loopIndx = 0;
         foreach($members as $settings){
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter members must be array of settings arrays");
+                $this->requestErrors['members'][$loopIndx] = "Parameter must be array of member settings";
+                $loopIndx++;
+                continue;
             }
 
-            if(array_key_exists('id', $settings)){
-                $id = $settings['id'];
+            if(!array_key_exists('id', $settings)){
+                $this->requestErrors['members'][$loopIndx]['id'] = 'Parameter is required';
+                $loopIndx++;
+                continue;
+            }
+
+            $id = $settings['id'];
+            if(!is_null($id)){
                 $member = $organizationMembers->findFirst(function($key,$element) use ($id){
                     return $element->getId() == $id;
                 });
                 if(!$member){
-                    throw new InvalidRequestException("Member with id = {$id} does not exist");
+                    $this->requestErrors['members'][$loopIndx]['id'] = "Member with id = {$id} does not exist";
+                    $loopIndx++;
+                    continue;
                 }
-                unset($settings['id']);
+                
             }
             else{
                 $member = new OrganizationMember();
-                
             }
 
+            unset($settings['id']);
+
             $this->object->addMember($member);
-            $this->setterHelper->updateObjectSettings($member, $settings, ['Default', 'user']);
-            $this->validateMember($loop_indx, $member, $this->setterHelper->getValidationErrors()); 
-            $loop_indx++;
+
+            try{
+                $this->setterHelper->updateObjectSettings($member, $settings, ['Default', 'user']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['members'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
+            
+            $this->validateMember($loopIndx, $member, $this->setterHelper->getValidationErrors()); 
+            $loopIndx++;
+        }
+
+        if(!empty($this->requestErrors) || !empty($this->validationErrors)){
+            return;
         }
         
         $adminCount = $this->object->getAdmins()->count();
         if($adminCount < 1)
         {
-            throw new InvalidRequestException("Organization needs to have at least one admin");
+            $this->validationErrors['members'] = "Organization needs to have at least one admin";
         }
             
         

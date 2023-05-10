@@ -3,7 +3,6 @@
 namespace App\Service\SetterHelper\Util;
 
 use App\Exceptions\InvalidObjectException;
-use App\Exceptions\InvalidRequestException;
 use App\Service\AttributeHelper\AttributeHelper;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\ObjectHandlingHelper\ObjectHandlingHelper;
@@ -11,8 +10,11 @@ use App\Service\SetterHelper\Model\SetterMethod;
 use App\Service\SetterHelper\Task\SetterTaskInterface;
 use ReflectionClass;
 use ReflectionMethod;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
-class SetterManager{
+class SetterManager
+{
+    private $requestErrors = [];
 
     public function __construct(private string $setterAttribute, private ObjectHandlingHelper $objectHandlingHelper)
     {
@@ -42,8 +44,8 @@ class SetterManager{
             $targetParameter = (new DataHandlingHelper)->findLooseStringMatch($setterAttributeInstance->targetParameter ?? $targetProperty, $requestParameters);
 
             if($setterRequired && (is_null($targetParameter) || !in_array($targetParameter, $requestParameters))){
-                $targetParameter = $setterAttributeInstance->targetParameter ?? $targetProperty;
-                throw new InvalidRequestException("Parameter {$targetParameter} is required");
+                $targetParameter = $setterAttributeInstance->targetParameter ?? (new CamelCaseToSnakeCaseNameConverter())->normalize($targetProperty);
+                $this->requestErrors[$targetParameter] = "Parameter is required";
             }
 
             if(!$setterRequired && (is_null($targetParameter) || !in_array($targetParameter, $requestParameters))){
@@ -74,6 +76,11 @@ class SetterManager{
             throw new InvalidObjectException("Cannot find property matching object setter {$setter->name}");
         }
         return $propertyName;
+    }
+
+    public function getRequestErrors():array
+    {
+        return $this->requestErrors;
     }
 
 }

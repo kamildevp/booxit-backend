@@ -2,12 +2,13 @@
 
 namespace App\Service\SetterHelper\Util;
 
-use App\Exceptions\InvalidRequestException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
-use App\Service\SetterHelper\Model\ParameterContainer;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
-class RequestParser{
+class RequestParser
+{
+    private array $requestErrors = []; 
 
     public function parseRequestParameters(array $setterMethods, array $requestParameters):void
     {
@@ -21,14 +22,14 @@ class RequestParser{
             }
 
             $parameters = $this->parseTaskParameters($setterTask, $requestParameters, $setterMethod->getAliases());
-            $taskAliases = $this->getTaskAliases($parameters);
+            $taskAliases = $this->mapTaskAliases($parameters);
             $setterMethod->setAliases($taskAliases);
             $usedParameters = array_merge($usedParameters, $taskAliases);
         }
 
-        foreach($requestParameters as $parameter){
-            if(!in_array($parameter, $usedParameters)){
-                throw new InvalidRequestException("Request parameter {$parameter} is not allowed");
+        foreach($requestParameters as $parameterName){
+            if(!in_array($parameterName, $usedParameters)){
+                $this->requestErrors[$parameterName] = "Parameter is not allowed";
             }
         }
     }
@@ -40,45 +41,31 @@ class RequestParser{
 
         foreach($parameters as $parameter){
             $parameterName = $parameter->getName();
-            if(in_array($parameterName, $requestParameters)){
-                continue;
-            }
-
-            $setterAlias = $setterAliases[$parameterName] ?? null;
-            if(!is_null($setterAlias))
-            {
-                if(!in_array($setterAlias, $requestParameters))
-                {
-                    throw new InvalidRequestException("Alias defined for {$parameterName} not found in request parameters");
-                }
-                $parameter->setAlias($setterAlias);
-                continue;
-            }
+            $parameterName = $setterAliases[$parameterName] ?? (new CamelCaseToSnakeCaseNameConverter())->normalize($parameterName);
 
             $alias = (new DataHandlingHelper)->findLooseStringMatch($parameterName, $requestParameters);
             if(is_null($alias) && $parameter->isRequired())
             {
-                throw new InvalidRequestException("Parameter {$parameterName} is required");
+                $this->requestErrors[$parameterName] = "Parameter is required";
             }
 
             $parameter->setAlias($alias ?? $parameterName);
-
         }
         return $parameters;
     }
 
-    private function getTaskAliases(Collection $parameters):array
+    private function mapTaskAliases(Collection $parameters):array
     {
         $aliases = [];
         foreach($parameters as $parameter){
             $parameterName = $parameter->getName();
-            $alias = $parameter->getAlias();
-            if(is_null($alias)){
-                $aliases[$parameterName] = $parameterName;
-                continue;
-            }
-            $aliases[$parameterName] = $alias;
+            $aliases[$parameterName] = $parameter->getAlias();
         }
         return $aliases;
+    }
+
+    public function getRequestErrors():array
+    {
+        return $this->requestErrors;
     }
 }

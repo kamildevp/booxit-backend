@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\WorkingHours;
 
 use App\Entity\TimeWindow;
 use App\Entity\WorkingHours;
 use App\Exceptions\InvalidRequestException;
 use App\Service\SetterHelper\SetterHelperInterface;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 /** @property WorkingHours $object */
-class WorkingHoursTimeWindowsTask implements SetterTaskInterface
+class TimeWindowsTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -25,24 +26,50 @@ class WorkingHoursTimeWindowsTask implements SetterTaskInterface
         $timeWindowsCollection = new ArrayCollection($this->object->getTimeWindows()->getValues());
         $this->object->getTimeWindows()->clear();
 
-        foreach($timeWindows as $settings){
+        $loopIndx = 0;
+        foreach($timeWindows as $settings)
+        {
             if(!is_array($settings)){
-                throw new InvalidRequestException("Parameter time_windows parameter must be array of settings arrays");
+                $this->validationErrors['timeWindows'] = "Parameter must be array of time window settings arrays";
+                return;
             }
 
             $timeWindow = $timeWindowsCollection->current() ?  $timeWindowsCollection->current() : new TimeWindow();
 
-            $this->setterHelper->updateObjectSettings($timeWindow, $settings, ['Default']);
-            $this->object->addTimeWindow($timeWindow);
+            try{
+                $this->setterHelper->updateObjectSettings($timeWindow, $settings, ['Default']);
+            }
+            catch(InvalidRequestException){
+                $this->requestErrors['timeWindows'][$loopIndx] = $this->setterHelper->getRequestErrors();
+                $loopIndx++;
+                continue;
+            }
 
+            $validationErrors = $this->setterHelper->getValidationErrors();
+            if(!empty($validationErrors)){
+                $this->validationErrors['timeWindows'][$loopIndx] = $validationErrors;
+                $loopIndx++;
+                continue;
+            }
+
+            $this->object->addTimeWindow($timeWindow);
             $timeWindowsCollection->next();
+            $loopIndx++;
         }
 
-        $this->validateTimeWindows($this->object->getTimeWindows());
+        if(!empty($this->requestErrors) || !empty($this->validationErrors)){
+            return;
+        }
+
+        if(!$this->validateTimeWindows($this->object->getTimeWindows())){
+            $this->validationErrors['timeWindows'] = "Time windows are overlaping";
+            return;
+        }
     }
 
     /** @param Collection<int, TimeWindow>  $timeWindows*/
-    private function validateTimeWindows(Collection $timeWindows){
+    private function validateTimeWindows(Collection $timeWindows):bool
+    {
     
         foreach($timeWindows as $timeWindow){
             $timeWindowsOverlay = $timeWindows->exists(function($key, $element) use ($timeWindow){
@@ -58,10 +85,10 @@ class WorkingHoursTimeWindowsTask implements SetterTaskInterface
             });
 
             if($timeWindowsOverlay){
-                $day = $this->object->getDay();
-                throw new InvalidRequestException("Time windows defined for {$day} are overlaping");
+                return false;
             }
         }
+        return true;
     }
 
     

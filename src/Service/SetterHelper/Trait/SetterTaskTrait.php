@@ -4,7 +4,6 @@ namespace App\Service\SetterHelper\Trait;
 
 use App\Exceptions\InvalidActionException;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
-use App\Service\SetterHelper\Model\ParameterContainer;
 use App\Service\SetterHelper\Model\TaskParameter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -14,6 +13,8 @@ trait SetterTaskTrait
     private object $object;
     private array $validationGroups = [];
     private array $validationErrors = [];
+    private array $requestErrors = [];
+
     /** @var Collection<int, TaskParameter> */
     private Collection $parameters;
 
@@ -80,6 +81,17 @@ trait SetterTaskTrait
         }
 
         return $validationErrors;
+    }
+
+    public function getRequestErrors():array
+    {
+        $requestErrors = [];
+        foreach($this->requestErrors as $parameterName => $value){
+            $key = $this->getParameterAlias($parameterName);
+            $requestErrors[$key] = $value;
+        }
+
+        return $requestErrors;
     }
 
     public function runPreValidation():void

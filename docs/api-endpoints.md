@@ -1,45 +1,17 @@
-# API Requests
+# API Endpoints
 
-This documentation describes what requests can be made to API and possible responses to those requests.
+This documentation describes API endpoints and possible responses.
 
 ## Basic Info
 
 ### Requests
 Every request body except GET and file upload requests must be in json format and contain required parameters.
 Parameters may use snake or cammel case.
-If request requires user authorization appropriate header with JWT token must passed alongside the request:
+If request requires user authorization, appropriate header with JWT token must passed alongside the request:
 ```Authorization: Bearer {JWTToken}```
 
-Example request structure:
-```json
-{
-    "schedule_id": 1,
-    "date": "2023-04-24",
-    "phone_number": "292423411",
-    "email": "fake@fake.com",
-    "service_id": 1,
-    "start_time": "11:05;"
-}
-```
-## Responses
-Most responses have json format and share common structure of general parameters:
-- status - request status
-    * 'Success' - on successful request execution 
-    * 'Failure' - if request was not executed due to errors
-- message - details about request execution
-- errors - Details about errors during request execution
-
-Example response structure:
-```json
-{
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "email": "Value is not a valid email.",
-        "phone_number": "Value is not valid phone number"
-    }
-}
-```
+### Responses
+All json responses follow common [JSend](https://github.com/omniti-labs/jsend) format.
 
 ## Sections:
 ### 1. [User](#User)
@@ -47,11 +19,11 @@ Example response structure:
 ### 3. [Schedule](#Schedule)
 ### 4. [Reservation](#Reservation)
 
-## Organization
+## User
 
-This section describes organization related requests.
+This section describes user related endpoints.
 
-Possible requests:
+Endpoints:
 1. [New user](#New-user)
 2. [Login](#Login)
 3. [Refresh token](#Refresh-token)
@@ -59,6 +31,7 @@ Possible requests:
 5. [Modify user](#Modify-user)
 6. [Delete user](#Delete-user)
 7. [Get users](#Get-users)
+8. [Verify user](#Verify-user)
 
 
 ### New user
@@ -89,12 +62,14 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "email": "Value is not a valid email.",
-        "password": "Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit",
-        "name": "Minimum name length is 6 characters"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "email": "Value is not a valid email.",
+            "password": "Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit",
+            "name": "Minimum name length is 6 characters"
+        }
     }
 }
 ```
@@ -114,8 +89,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Account created successfully"
+    "status": "success",
+    "data": {
+        "message": "Account created successfully"
+    }
 }
 ```
 
@@ -152,8 +129,10 @@ After successful login following parameters are returned:
 ##### Response Body:
 ```json
 {
-    "code": 401,
-    "message": "Invalid credentials."
+    "status": "fail",
+    "data": {
+        "message": "Invalid credentials"
+    }
 }
 ```
 
@@ -171,13 +150,21 @@ After successful login following parameters are returned:
 ##### Response Body:
 ```json
 {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODMzMjI4MDksImV4cCI6MTY4MzMyNjQwOSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.H9TB1lT7CYmc0ZIwPK0J2OQ7_PNOKvyTp8sHJf2PG2ldQbSYBjBG2HXIN-xJK-Rb-XJYOeIRjZCQ6jTL6JNtOAFnaVHH22hutmd5b4RMD_y6f14W2vGnmqqersaK2PZIi1wkgZTifp_wbx6my5cKA8wLU9MMDHHja69YJR9rsztMff1Pu92kMXYlNFEKQXrMVAjFzHTVgDoAukdUClpNYY1h-u0dOEwYdbpM2r7XURIAmHTzslRQQQZ9A_wtFv5GgWA-gVNBtggjh9V2Oe1sPHR9n-eJIQm3gU-Bsb9n7XQ2eQZhmUsQhu_ZI5KnHoNEn_TrP4-wFdRB5SNuiLELUA",
-    "refresh_token": "4ece5a9572d18c2957e08465882cc43959252a1f43b73c71a296313f63b1db8751eea2a2a549c7ed7bbd45fe405b8622a4e0b1d2cd5445b455532854142d6870"
+    "status": "success",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODM2NTcwOTEsImV4cCI6MTY4MzY2MDY5MSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.uMkknj6fgtr4kXX4-wQYVpoBA7iNvjvqfB5-sx1DekUGdPfzWRaTejSV_H8Tyfoj_019dc3zKVpDdi1dqBwU4zpUSd28IGOMvLWZc3CFHAB60kfm4GV10rEYNp9ql0vLN75pYBkDYssliiQUE8sia0EoC42OBvTDTFKLwClPslP56jpE3mEPt13jdF3z6OQ7CzCCtYNs1bljhDq8TXfGZYJOd3KcXKMFkRUG7lby4W7B5FmKrxv_MmzAIShl1b0d1UZTHE3eoYCuANBucWjlOjiZ4B5vpgIHSp_b9LtT-kDda294CMX0WdYYurdCudtafdbWiG1KSP5UOa4JS3Qlbg",
+        "refresh_token": "b47c7ec2ec6c14c6bd8009379f098b61310d35e0ca9aeb2697a6988424ae4be9e0c812b5f9ea1402089d8142a9e7e3620568bcba7ced7f7146abe5a9f7531e24",
+        "user": {
+            "id": 12,
+            "email": "test@test.com",
+            "name": "new Name"
+        }
+    }
 }
 ```
 
 #### Additional info:
-- Login attempt will fail if user account not active (email is not verified)
+- Login attempt will fail if user account is not active (email is not verified)
 
 ### Refresh token
 Used to refresh token.
@@ -205,8 +192,10 @@ If token refresh is successful new token is returned.
 ##### Response Body:
 ```json
 {
-    "code": 401,
-    "message": "JWT Refresh Token Not Found"
+    "status": "fail",
+    "data": {
+        "message": "Invalid refresh token"
+    }
 }
 ```
 
@@ -216,16 +205,18 @@ If token refresh is successful new token is returned.
 ##### Request Body:
 ```json
 {
-    "email": "test@test.com",
-    "password": "password123"
+    "refresh_token": "b47c7ec2ec6c14c6bd8009379f098b61310d35e0ca9aeb2697a6988424ae4be9e0c812b5f9ea1402089d8142a9e7e3620568bcba7ced7f7146abe5a9f7531e24"
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODMzMjQ0MjMsImV4cCI6MTY4MzMyODAyMywicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.DEd3aEtdlaRMe3YipJR7TX1ijNMo3eD-9RnLkw4P-XcuIjpWzgvUF9rCproSM0uG55hrTzIi52KuO6jdQ0_ZUh9ZCjgIpQ8GAV_oJJYm6WOHWN6yyrvJ1NEW8XUxhWqAa5Pz1WR2nNDTjN3Whh3NAIXS_rxqHEK3_ivz_ZElfu5xuijprrvxIZO5n3YZegijEaeqz4Bu2oexJmK6Cg8UkEYF5xH6whjZZ3GT1-xMiZ1winziot11umfdS3ZF37A0tFB5Iq3nttW-whKxx95wQ3tyjyl-nzcPIh6VLM4ze4yQA8-2BmjSH0-NlYsnlGWbVYHRZxMSpIiu1tiYBTAjeQ",
-    "refresh_token": "4ece5a9572d18c2957e08465882cc43959252a1f43b73c71a296313f63b1db8751eea2a2a549c7ed7bbd45fe405b8622a4e0b1d2cd5445b455532854142d6870"
+    "status": "success",
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODM2NTczODgsImV4cCI6MTY4MzY2MDk4OCwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.pUNZMekPZLZdfPzbd4pfstoDilEQNPCXwsHoE7lND5fqZjUAiauoabmCY5Z0i96ZhoRMJCmnMuDpf7m-pVJVu98HZNss6ewlR7arOCRXaXsGKqux5c5KhMLvPQrmf555TVPF8I9AqFWTyK4wu7zgeE4LIkP3-_5mvyYf0Vrmwt-z1-bTL0D-BgV5fWTC3YHe5MZDfpi8FAye_6xZ5QkVvhwsofUbqqA2i1sWFzb5H46FcTIVF49gjNuSunBqkClIW1NdmWk1tqDDpvx-TrS3xGJg4z7QJn--BHMCHa9Wm3oIcgw0Owjp3yexQ7qWXgTBk13opWbfcauGiChxBsmNKA",
+        "refresh_token": "b47c7ec2ec6c14c6bd8009379f098b61310d35e0ca9aeb2697a6988424ae4be9e0c812b5f9ea1402089d8142a9e7e3620568bcba7ced7f7146abe5a9f7531e24"
+    }
 }
 ```
 
@@ -261,7 +252,10 @@ Route: /api/user/4
 ##### Response Body:
 ```json
 {
-    "name": "testName"
+    "status": "success",
+    "data": {
+        "name": "testName"
+    }
 }
 ```
 
@@ -272,28 +266,31 @@ Route: /api/user/4?details=organizations
 ##### Response Body:
 ```json
 {
-    "name": "testName",
-    "organizations": [
-        {
-            "organization": {
-                "id": 2,
-                "name": "MyOrganization"
-            },
-            "roles": [
-                "MEMBER",
-                "ADMIN"
-            ]
-        }
-    ]
+    "status": "success",
+    "data": {
+        "name": "testName",
+        "organizations": [
+            {
+                "organization": {
+                    "id": 1,
+                    "name": "MyOrganization"
+                },
+                "roles": [
+                    "MEMBER"
+                ]
+            }
+        ]
+    }
 }
 ```
 
 If user was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "User not found"
+    "status": "fail",
+    "data": {
+        "message": "User not found"
+    }
 }
 ```
 
@@ -326,9 +323,13 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter oldPassword is required"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "old_password": "Parameter is required"
+        }
+    }
 }
 ```
 
@@ -346,8 +347,10 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Account settings modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Account settings modified successfully"
+    }
 }
 ```
 
@@ -368,9 +371,10 @@ Authorization: logged in
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Access Denied"
+    "status": "fail",
+    "data": {
+        "message": "Access denied"
+    }
 }
 ```
 
@@ -379,8 +383,10 @@ Authorization: logged in
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Account removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Account removed successfully"
+    }
 }
 ```
 
@@ -412,20 +418,23 @@ Route: /api/users
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 2,
-        "name": "TestName2"
-    },
-    {
-        "id": 3,
-        "name": "TestName3"
-    },
-    {
-        "id": 4,
-        "name": "testName"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 2,
+            "name": "TestName2"
+        },
+        {
+            "id": 3,
+            "name": "TestName3"
+        },
+        {
+            "id": 4,
+            "name": "testName"
+        }
+    ]
+}
 ```
 
 #### Request With Filter Parameter Example:
@@ -434,19 +443,34 @@ Route: /api/users?filter=name3
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 3,
-        "name": "TestName3"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 3,
+            "name": "TestName3"
+        }
+    ]
+}
 ```
+
+### Verify user
+Used to verify user email address.
+
+Route: /api/user_verify?{query-string-with-signature}
+
+Request Method: GET
+
+Authorization: not required
+
+Should only be accessed by clicking on verification link sent in email message. Returns html view with information about verification result.
+
 
 ## Organization
 
-This section describes organization related requests.
+This section describes organization related endpoints.
 
-Possible requests:
+Endpoints:
 1. [New organization](#New-organization)
 2. [Get organization](#Get-organization)
 3. [Modify organization](#Modify-organization)
@@ -492,9 +516,13 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter description is required"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "description": "Parameter is required"
+        }
+    }
 }
 ```
 
@@ -512,8 +540,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Organization created successfully"
+    "status": "success",
+    "data": {
+        "message": "Organization created successfully"
+    }
 }
 ```
 
@@ -547,16 +577,19 @@ Optional query parameters:
 
 #### Basic Request Example:
 
-Route: /api/organization/2
+Route: /api/organization/1
 
 ##### Response Body:
 ```json
 {
-    "name": "MyOrganization",
-    "description": "",
-    "members_count": "1",
-    "services_count": "0",
-    "schedules_count": "0"
+    "status": "success",
+    "data": {
+        "name": "MyOrganization",
+        "description": "desc",
+        "members_count": "2",
+        "services_count": "4",
+        "schedules_count": "4"
+    }
 }
 ```
 
@@ -567,33 +600,49 @@ Route: /api/organization/2?details=members
 ##### Response Body:
 ```json
 {
-    "name": "MyOrganization",
-    "description": "",
-    "members_count": "1",
-    "services_count": "0",
-    "schedules_count": "0",
-    "members": [
-        {
-            "id": 30,
-            "user": {
-                "id": 23,
-                "name": "testName1"
+    "status": "success",
+    "data": {
+        "name": "MyOrganization",
+        "description": "desc",
+        "members_count": "2",
+        "services_count": "4",
+        "schedules_count": "4",
+        "members": [
+            {
+                "id": 1,
+                "user": {
+                    "id": 1,
+                    "email": "test1@test.com",
+                    "name": "testName"
+                },
+                "roles": [
+                    "MEMBER",
+                    "ADMIN"
+                ]
             },
-            "roles": [
-                "MEMBER",
-                "ADMIN"
-            ]
-        }
-    ]
+            {
+                "id": 2,
+                "user": {
+                    "id": 2,
+                    "email": "test2@test.com",
+                    "name": "testName"
+                },
+                "roles": [
+                    "MEMBER"
+                ]
+            }
+        ]
+    }
 }
 ```
 
 If organization was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Organization not found"
+    "status": "fail",
+    "data": {
+        "message": "Organization not found"
+    }
 }
 ```
 
@@ -622,10 +671,12 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "name": "Minimum name length is 6 characters"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "name": "Minimum name length is 6 characters"
+        }
     }
 }
 ```
@@ -643,8 +694,10 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Organization settings modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Organization settings modified successfully"
+    }
 }
 ```
 
@@ -662,9 +715,10 @@ Authorization: organization admin
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Access Denied"
+    "status": "fail",
+    "data": {
+        "message": "Access denied"
+    }
 }
 ```
 
@@ -673,8 +727,10 @@ Authorization: organization admin
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Organization removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Organization removed successfully"
+    }
 }
 ```
 
@@ -699,10 +755,11 @@ Required parameters:
 {
     "members": [
         {
-            "user_id":25
+            "user_id":6,
+            "roles": ["MEMBER"]
         },
         {
-            "user_id":26
+            "user_id":7
         }
     ]
 }
@@ -711,9 +768,17 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter roles is required"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "members": {
+                "1": {
+                    "roles": "Parameter is required"
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -725,11 +790,11 @@ Required parameters:
 {
     "members": [
         {
-            "user_id":25,
+            "user_id":6,
             "roles": ["ADMIN", "MEMBER"]
         },
         {
-            "user_id":26,
+            "user_id":7,
             "roles": ["MEMBER"]
         }
     ]
@@ -739,8 +804,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Members added successfully"
+    "status": "success",
+    "data": {
+        "message": "Members added successfully"
+    }
 }
 ```
 
@@ -761,16 +828,22 @@ Required parameters:
 ##### Request Body:
 ```json
 {
-    "members": [32,33]
+    "members": [8,33]
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Member with id = 33 does not exist"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "members": [
+                "Member with id = 33 does not exist"
+            ]
+        }
+    }
 }
 ```
 
@@ -787,8 +860,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Members removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Members removed successfully"
+    }
 }
 ```
 
@@ -813,12 +888,12 @@ Required parameters:
 {
     "members": [
         {
-            "id":33,
-            "roles": ["ADM", "MEMBER"]
+            "id":2,
+            "roles": ["MEMBER"]
         },
         {
-            "id":34,
-            "roles": ["MEMBER"]
+            "id":3,
+            "roles": ["ADM", "MEMBER"]
         }
     ]
 }
@@ -827,12 +902,14 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "members": {
-            {
-                "roles": "Role ADM is not valid member role. Allowed roles: MEMBER, ADMIN"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "members": {
+                "1": {
+                    "roles": "Role ADM is not valid member role. Allowed roles: MEMBER, ADMIN"
+                }
             }
         }
     }
@@ -847,12 +924,12 @@ Required parameters:
 {
     "members": [
         {
-            "id":33,
-            "roles": ["ADMIN", "MEMBER"]
+            "id":2,
+            "roles": ["MEMBER"]
         },
         {
-            "id":34,
-            "roles": ["MEMBER"]
+            "id":3,
+            "roles": ["ADMIN", "MEMBER"]
         }
     ]
 }
@@ -861,8 +938,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Members modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Members modified successfully"
+    }
 }
 ```
 
@@ -877,7 +956,7 @@ Authorization: organization admin
 
 Required parameters:
 - members - array of members settings:
-    - id - member id (optional - if specified settings will be applied to existing member, preserving member relations to other entities, otherwise its treated as new member)
+    - id - member id (if null new member will be added)
     - user_id - user id
     - roles - array of member roles, allowed roles: ADMIN, MEMBER
 
@@ -890,11 +969,26 @@ Members not specified in the request will be removed.
 {
     "members": [
         {
-            "id":33,
-            "roles": ["ADMIN", "MEMBER"]
+            "id": 1,
+            "user_id": 1,
+            "roles": [
+                "MEMBER",
+                "ADMIN"
+            ]
         },
         {
-            "roles": ["MEMBER"]
+            "id": 2,
+            "user_id": 2,
+            "roles": [
+                "MEMBER"
+            ]
+        },
+        {
+            "id": 3,
+            "roles": [
+                "ADMIN",
+                "MEMBER"
+            ]
         }
     ]
 }
@@ -903,9 +997,17 @@ Members not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter user_id is required"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "members": {
+                "2": {
+                    "user_id": "Parameter is required"
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -917,13 +1019,27 @@ Members not specified in the request will be removed.
 {
     "members": [
         {
-            "id":33,
-            "user_id": 27,
-            "roles": ["ADMIN", "MEMBER"]
+            "id": 1,
+            "user_id": 1,
+            "roles": [
+                "MEMBER",
+                "ADMIN"
+            ]
         },
         {
-            "user_id": 26,
-            "roles": ["MEMBER"]
+            "id": 2,
+            "user_id": 2,
+            "roles": [
+                "MEMBER"
+            ]
+        },
+        {
+            "id": null,
+            "user_id": 3,
+            "roles": [
+                "ADMIN",
+                "MEMBER"
+            ]
         }
     ]
 }
@@ -932,8 +1048,10 @@ Members not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Members overwritten successfully"
+    "status": "success",
+    "data": {
+        "message": "Members overwritten successfully"
+    }
 }
 ```
 
@@ -978,12 +1096,14 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "services": {
-            "1": {
-                "name": "Minimum name length is 6 characters"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "services": {
+                "1": {
+                    "name": "Minimum name length is 6 characters"
+                }
             }
         }
     }
@@ -1016,8 +1136,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services added successfully"
+    "status": "success",
+    "data": {
+        "message": "Services added successfully"
+    }
 }
 ```
 
@@ -1045,9 +1167,13 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter services parameter must be array of integers"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "services": "Parameter must be array of integers"
+        }
+    }
 }
 ```
 
@@ -1057,15 +1183,17 @@ Required parameters:
 ##### Request Body:
 ```json
 {
-    "services":[23,24]
+    "services":[6,7]
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Services removed successfully"
+    }
 }
 ```
 
@@ -1095,11 +1223,11 @@ Required parameters:
 {
     "services":[
         {
-            "id": 25,
+            "id": 3,
             "duration": "PT"
         },
         {
-            "id": 26,
+            "id": 5,
             "name": "te",
             "description": "description",
             "duration": "PT00H30M",
@@ -1112,16 +1240,18 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "services": {
-            {
-                "duration": "Invalid duration format"
-            },
-            {
-                "name": "Minimum name length is 6 characters"
-            }
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "services": [
+                {
+                    "duration": "Invalid duration format"
+                },
+                {
+                    "name": "Minimum name length is 6 characters"
+                }
+            ]
         }
     }
 }
@@ -1135,11 +1265,11 @@ Required parameters:
 {
     "services":[
             {
-                "id": 25,
+                "id": 3,
                 "duration": "PT01H"
             },
             {
-                "id": 26,
+                "id": 5,
                 "name": "testService2",
                 "description": "description",
                 "duration": "PT00H30M",
@@ -1152,8 +1282,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Services modified successfully"
+    }
 }
 ```
 
@@ -1168,7 +1300,7 @@ Authorization: organization admin
 
 Required parameters:
 - services - array of services settings:
-    - id - service id (optional - if specified settings will be applied to existing service, preserving service relations to other entities, otherwise its treated as new service)
+    - id - service id (if null new service will be created)
     - name - service name from 6 to 50 characters
     - description - service description from 0 to 255 characters
     - duration - service duration in valid DateInterval format (https://www.php.net/manual/en/class.dateinterval.php), for example: "PT01H30M"
@@ -1183,14 +1315,22 @@ Services not specified in the request will be removed.
 {
     "services":[
             {
-                "id": 25,
+                "id": 1,
                 "name": "2",
                 "description": "description",
                 "duration": "PT00H30M",
                 "estimated_price": "30 PLN"
             },
             {
-                "name": "testService2",
+                "id": 2,
+                "name": "TestService2",
+                "description": "",
+                "duration": "PT01H30M",
+                "estimated_price": "30 PLN"
+            },
+            {
+                "id": null,
+                "name": "testService3",
                 "description": "description",
                 "duration": "PT00H30M",
                 "estimated_price": "30 PLN"
@@ -1202,13 +1342,15 @@ Services not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "services": {
-            {
-                "name": "Minimum name length is 6 characters"
-            }
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "services": [
+                {
+                    "name": "Minimum name length is 6 characters"
+                }
+            ]
         }
     }
 }
@@ -1222,13 +1364,21 @@ Services not specified in the request will be removed.
 {
     "services":[
             {
-                "id": 25,
-                "name": "testService7",
+                "id": 1,
+                "name": "TestService1",
                 "description": "description",
                 "duration": "PT00H30M",
                 "estimated_price": "30 PLN"
             },
             {
+                "id": 2,
+                "name": "TestService2",
+                "description": "",
+                "duration": "PT01H30M",
+                "estimated_price": "30 PLN"
+            },
+            {
+                "id": null,
                 "name": "testService3",
                 "description": "description",
                 "duration": "PT00H30M",
@@ -1241,8 +1391,10 @@ Services not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services overwritten successfully"
+    "status": "success",
+    "data": {
+        "message": "Services overwritten successfully"
+    }
 }
 ```
 
@@ -1271,37 +1423,45 @@ Route: /api/organizations
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "Booxit",
-        "members_count": "2",
-        "services_count": "3",
-        "schedules_count": "5"
-    },
-    {
-        "id": 2,
-        "name": "MyCompany",
-        "members_count": "2",
-        "services_count": "0",
-        "schedules_count": "0"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "MyOrganization",
+            "members_count": "3",
+            "services_count": "3",
+            "schedules_count": "4"
+        },
+        {
+            "id": 3,
+            "name": "MyCompany",
+            "members_count": "1",
+            "services_count": "0",
+            "schedules_count": "0"
+        }
+    ]
+}
 ```
 
 #### Request With Filter Parameter Example:
 
-Route: /api/organizations?filter=booxit
+Route: /api/organizations?filter=org
 
 ##### Response Body:
 ```json
 [
     {
-        "id": 1,
-        "name": "Booxit",
-        "members_count": "2",
-        "services_count": "3",
-        "schedules_count": "5"
+        "status": "success",
+        "data": [
+            {
+                "id": 1,
+                "name": "MyOrganization",
+                "members_count": "3",
+                "services_count": "3",
+                "schedules_count": "4"
+            }
+        ]
     }
 ]
 ```
@@ -1326,62 +1486,83 @@ Optional query parameters:
 
 #### Basic Request Example:
 
-Route: /api/organization/2/members
+Route: /api/organization/1/members
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 35,
-        "user": {
-            "id": 26,
-            "name": "testName4"
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "user": {
+                "id": 1,
+                "email": "test1@test.com",
+                "name": "testName"
+            },
+            "roles": [
+                "MEMBER",
+                "ADMIN"
+            ]
         },
-        "roles": [
-            "MEMBER"
-        ]
-    },
-    {
-        "id": 33,
-        "user": {
-            "id": 27,
-            "name": "testName5"
+        {
+            "id": 2,
+            "user": {
+                "id": 2,
+                "email": "test2@test.com",
+                "name": "testName"
+            },
+            "roles": [
+                "MEMBER"
+            ]
         },
-        "roles": [
-            "ADMIN",
-            "MEMBER"
-        ]
-    }
-]
+        {
+            "id": 9,
+            "user": {
+                "id": 3,
+                "email": "test3@test.com",
+                "name": "testName"
+            },
+            "roles": [
+                "ADMIN",
+                "MEMBER"
+            ]
+        }
+    ]
+}
 ```
 
 #### Request With Range Parameter Example:
 
-Route: /api/organization/2/members?range=2-2
+Route: /api/organization/1/members?range=2-2
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 33,
-        "user": {
-            "id": 27,
-            "name": "testName5"
-        },
-        "roles": [
-            "ADMIN",
-            "MEMBER"
-        ]
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 2,
+            "user": {
+                "id": 2,
+                "email": "test2@test.com",
+                "name": "testName"
+            },
+            "roles": [
+                "MEMBER"
+            ]
+        }
+    ]
+}
 ```
 
 If organization was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Organization not found"
+    "status": "fail",
+    "data": {
+        "message": "Organization not found"
+    }
 }
 ```
 
@@ -1409,36 +1590,32 @@ Route: /api/organization/1/services
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "MyService",
-        "description": "",
-        "duration": "PT00H15M",
-        "estimated_price": "50PLN"
-    },
-    {
-        "id": 20,
-        "name": "testService2",
-        "description": "description",
-        "duration": "PT00H30M",
-        "estimated_price": "30 PLN"
-    },
-    {
-        "id": 21,
-        "name": "testService3",
-        "description": "description",
-        "duration": "PT00H20M",
-        "estimated_price": "40 PLN"
-    },
-    {
-        "id": 22,
-        "name": "testService4",
-        "description": "description",
-        "duration": "PT00H45M",
-        "estimated_price": "90 PLN"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "TestService1",
+            "description": "description",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 2,
+            "name": "MyService2",
+            "description": "",
+            "duration": "PT01H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 8,
+            "name": "testService3",
+            "description": "description",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        }
+    ]
+}
 ```
 
 #### Request With Filter And Range Parameters Example:
@@ -1447,30 +1624,34 @@ Route: /api/organization/1/services?filter=test&range=1-2
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 21,
-        "name": "testService3",
-        "description": "description",
-        "duration": "PT00H20M",
-        "estimated_price": "40 PLN"
-    },
-    {
-        "id": 22,
-        "name": "testService4",
-        "description": "description",
-        "duration": "PT00H45M",
-        "estimated_price": "90 PLN"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "TestService1",
+            "description": "description",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 8,
+            "name": "testService3",
+            "description": "description",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        }
+    ]
+}
 ```
 
 If organization was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Organization not found"
+    "status": "fail",
+    "data": {
+        "message": "Organization not found"
+    }
 }
 ```
 
@@ -1498,20 +1679,23 @@ Route: /api/organization/1/schedules
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "TestSchedule"
-    },
-    {
-        "id": 2,
-        "name": "TestSchedule2"
-    },
-    {
-        "id": 3,
-        "name": "MySchedule"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "MySchedule"
+        },
+        {
+            "id": 2,
+            "name": "TestSchedule2"
+        },
+        {
+            "id": 4,
+            "name": "MySchedule2"
+        }
+    ]
+}
 ```
 
 #### Request With Filter And Range Parameters Example:
@@ -1520,20 +1704,24 @@ Route: /api/organization/1/schedules?filter=test&range=1-1
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "TestSchedule"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "MySchedule"
+        }
+    ]
+}
 ```
 
 If organization was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Organization not found"
+    "status": "fail",
+    "data": {
+        "message": "Organization not found"
+    }
 }
 ```
 
@@ -1562,16 +1750,19 @@ curl -X POST -H "Authorization: Bearer {token}" -F banner=@image.png https://loc
 
 ##### Curl Request:
 ```bash
-curl -X POST -F banner=@myImage.png https://localhost/api/organization/2/banner
-
+curl -X POST -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODM2NjYyNTgsImV4cCI6MTY4MzY2OTg1OCwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdDFAdGVzdC5jb20ifQ.ow5Wi-XnJ5j2vjGWod7HiiV3z1dTMKlFjfPuZVa1ycG5e4t65HCOpHp6z05FUN0xkYvJsCmAV3xAyBlsME8hNSBcCsM3rO4kiMfEWsykwwST632RD9yq8e9DERP-YQHAUPAiNc9N_s8HMKUrFwutxZkHbuHPDovN9RD_RVNH--UlRee5qH8TPi3f1McJOXZ2FRho2tCfxDW0qc-DkR0vlthDv4wgAJZww3Y2gEFhMm4GX8xrf5lhElsse_544os5E_sbuBSwnNqyUnfdZC1A0yMRgvaxBwi6J1Am9o2bcFMZMPWQ90msgYAnRn6UfvK3LArKgUbSmmeJceNnSi-nPA" -F banner=@myFile.txt https://localhost/api/organization/1/banner
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter roles is required"
+    "status":"fail",
+    "data": {
+        "message":"Validation error",
+        "errors": {
+            "banner":"Invalid file type"
+        }
+    }
 }
 ```
 
@@ -1587,8 +1778,10 @@ curl -X POST -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJp
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Banner uploaded successfully"
+    "status":"success",
+    "data": {
+        "message":"Banner uploaded successfully"
+    }
 }
 ```
 
@@ -1603,7 +1796,7 @@ Authorization: not required
 
 #### Basic Request Example:
 
-Route: /api/organization/1/services
+Route: /api/organization/1/banner
 
 ##### Response:
 Image or empty response if organization banner has not been uploaded.
@@ -1611,9 +1804,9 @@ Image or empty response if organization banner has not been uploaded.
 
 ## Schedule
 
-This section describes schedule related requests.
+This section describes schedule related endpoints.
 
-Possible requests:
+Endpoints:
 1. [New schedule](#New-schedule)
 2. [Get schedule](#Get-schedule)
 3. [Modify schedule](#Modify-schedule)
@@ -1645,7 +1838,7 @@ Request Method: POST
 Authorization: organization admin
 
 Required parameters:
-- organization_id - schedule organization id
+- organization_id - organization id
 - name -  name, from 6 to 50 characters long
 - description - schedule description, from 0 to 500 characters long
 
@@ -1663,10 +1856,12 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "name": "Minimum name length is 6 characters"
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "name": "Minimum name length is 6 characters"
+        }
     }
 }
 ```
@@ -1686,8 +1881,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Schedule created successfully"
+    "status": "success",
+    "data": {
+        "message": "Schedule created successfully"
+    }
 }
 ```
 
@@ -1723,12 +1920,15 @@ Route: /api/schedule/1
 ##### Response Body:
 ```json
 {
-    "organization": {
-        "id": 1,
-        "name": "MyOrganization"
-    },
-    "name": "TestSchedule",
-    "description": "desc"
+    "status": "success",
+    "data": {
+        "organization": {
+            "id": 1,
+            "name": "MyOrganization"
+        },
+        "name": "MySchedule",
+        "description": ""
+    }
 }
 ```
 
@@ -1739,35 +1939,39 @@ Route: /api/schedule/1?details=services
 ##### Response Body:
 ```json
 {
-    "organization": {
-        "id": 1,
-        "name": "MyOrganization"
-    },
-    "name": "TestSchedule",
-    "description": "desc",
-    "services": [
-        {
+    "status": "success",
+    "data": {
+        "organization": {
             "id": 1,
-            "name": "TestService1",
-            "duration": "PT01H00M",
-            "estimated_price": "50 PLN"
+            "name": "MyOrganization"
         },
-        {
-            "id": 2,
-            "name": "TestService2",
-            "duration": "PT01H30M",
-            "estimated_price": "30 PLN"
-        }
-    ]
+        "name": "MySchedule",
+        "description": "",
+        "services": [
+            {
+                "id": 1,
+                "name": "TestService1",
+                "duration": "PT00H30M",
+                "estimated_price": "30 PLN"
+            },
+            {
+                "id": 2,
+                "name": "MyService2",
+                "duration": "PT01H30M",
+                "estimated_price": "30 PLN"
+            }
+        ]
+    }
 }
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
@@ -1797,10 +2001,12 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "name": "Minimum name length is 6 characters"
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "name": "Minimum name length is 6 characters"
+        }
     }
 }
 ```
@@ -1819,8 +2025,10 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Schedule settings modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Schedule settings modified successfully"
+    }
 }
 ```
 
@@ -1838,9 +2046,10 @@ Authorization: organization admin or member assigned to schedule with write acce
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Access Denied"
+    "status": "fail",
+    "data": {
+        "message": "Access denied"
+    }
 }
 ```
 
@@ -1849,8 +2058,10 @@ Authorization: organization admin or member assigned to schedule with write acce
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Schedule removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Schedule removed successfully"
+    }
 }
 ```
 
@@ -1880,9 +2091,16 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Service with id = 20 does not exist"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "services": [
+                "Service with id = 20 does not exist",
+                "Service with id = 13 does not exist"
+            ]
+        }
+    }
 }
 ```
 
@@ -1893,7 +2111,7 @@ Required parameters:
 ```json
 {
     "services": [
-        1,3
+        8,9
     ]
 }
 ```
@@ -1901,8 +2119,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services added successfully"
+    "status": "success",
+    "data": {
+        "message": "Services added successfully"
+    }
 }
 ```
 
@@ -1924,7 +2144,7 @@ Required parameters:
 ```json
 {
     "services": [
-        124,7
+        2,124
     ]
 }
 ```
@@ -1932,9 +2152,15 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Service with id = 124 is not assigned to schedule"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "services": [
+                "Service with id = 124 is not assigned to schedule"
+            ]
+        }
+    }
 }
 ```
 
@@ -1951,8 +2177,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Services removed successfully"
+    }
 }
 ```
 
@@ -1984,9 +2212,16 @@ Services not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Service with id = 124 does not exist"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "services": [
+                "Service with id = 124 does not exist",
+                "Service with id = 7 does not exist"
+            ]
+        }
+    }
 }
 ```
 
@@ -1997,7 +2232,7 @@ Services not specified in the request will be removed.
 ```json
 {
     "services": [
-        1,2
+        1,2,8,9
     ]
 }
 ```
@@ -2005,8 +2240,10 @@ Services not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Services overwritten successfully"
+    "status": "success",
+    "data": {
+        "message": "Services overwritten successfully"
+    }
 }
 ```
 
@@ -2034,7 +2271,7 @@ Required parameters:
         "access_type": "WR"
         },
         {
-        "member_id": 3,
+        "member_id": 9,
         "access_type": "WRITE"
         }
     ]
@@ -2044,9 +2281,17 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Invalid access type 'WR'. Allowed access types: READ, WRITE"
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "assignments": [
+                {
+                    "access_type": "Invalid access type. Allowed access types: READ, WRITE"
+                }
+            ]
+        }
+    }
 }
 ```
 
@@ -2062,7 +2307,7 @@ Required parameters:
         "access_type": "READ"
         },
         {
-        "member_id": 3,
+        "member_id": 9,
         "access_type": "WRITE"
         }
     ]
@@ -2072,8 +2317,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Assignments added successfully"
+    "status": "success",
+    "data": {
+        "message": "Assignments added successfully"
+    }
 }
 ```
 
@@ -2095,7 +2342,7 @@ Required parameters:
 ```json
 {
     "assignments": [
-        70,52
+        12,52
     ]
 }
 ```
@@ -2103,9 +2350,15 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Assignment with id = 70 does not exist"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "assignments": [
+                "Assignment with id = 52 does not exist"
+            ]
+        }
+    }
 }
 ```
 
@@ -2115,15 +2368,19 @@ Required parameters:
 ##### Request Body:
 ```json
 {
-    "assignments": [1,2]
+    "assignments": [
+        12,13
+    ]
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Assignments removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Assignments removed successfully"
+    }
 }
 ```
 
@@ -2149,11 +2406,11 @@ Required parameters:
 {
     "assignments": [
         {
-            "id": 9,
+            "id": 14,
             "access_type": "AD"
         },
         {
-            "id": 10,
+            "id": 15,
             "access_type": "READ"
         }
     ]
@@ -2163,9 +2420,17 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Invalid access type 'AD'. Allowed access types: READ, WRITE"
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "assignments": [
+                {
+                    "access_type": "Invalid access type. Allowed access types: READ, WRITE"
+                }
+            ]
+        }
+    }
 }
 ```
 
@@ -2177,11 +2442,11 @@ Required parameters:
 {
     "assignments": [
         {
-            "id": 9,
+            "id": 14,
             "access_type": "WRITE"
         },
         {
-            "id": 10,
+            "id": 15,
             "access_type": "READ"
         }
     ]
@@ -2191,8 +2456,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Assignments modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Assignments modified successfully"
+    }
 }
 ```
 
@@ -2205,7 +2472,7 @@ Request Method: PUT
 
 Authorization: organization admin
 Required parameters:
-- id - assignment id (optional if specified existing assignment will replaced, otherwise new assignment will be created)
+- id - assignment id (if null new assignment will be created)
 - member_id - member id
 - access_type - access type. Allowed values: READ, WRITE
 
@@ -2218,11 +2485,12 @@ Assignments not specified in the request will be removed.
 {
     "assignments": [
         {
-            "id": 9,
+            "id": 14,
+            "member_id": 2,
             "access_type": "WRITE"
         },
         {
-            "id": 10,
+            "id": 15,
             "access_type": "READ"
         }
     ]
@@ -2232,9 +2500,17 @@ Assignments not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Parameter member_id is required"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "assignments": {
+                "1": {
+                    "member_id": "Parameter is required"
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -2246,12 +2522,13 @@ Assignments not specified in the request will be removed.
 {
     "assignments": [
         {
-            "id": 9,
+            "id": null,
             "member_id": 2,
             "access_type": "WRITE"
         },
         {
-            "member_id": 3,
+            "id": 15,
+            "member_id": 9,
             "access_type": "READ"
         }
     ]
@@ -2261,8 +2538,10 @@ Assignments not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Assignments overwritten successfully"
+    "status": "success",
+    "data": {
+        "message": "Assignments overwritten successfully"
+    }
 }
 ```
 
@@ -2288,6 +2567,19 @@ Required parameters:
 {
     "working_hours": [
         {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        },
+        {
             "day": "tuesday",
             "time_windows": [
                 {
@@ -2299,7 +2591,35 @@ Required parameters:
                     "end_time": "17:00"
                 }
             ]
-        },
+        }
+    ]
+}
+```
+
+##### Response Body:
+```json
+{
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "working_hours": {
+                "1": {
+                    "time_windows": "Time windows are overlaping"
+                }
+            }
+        }
+    }
+}
+```
+
+
+#### Valid request example:
+
+##### Request Body:
+```json
+{
+    "working_hours": [
         {
             "day": "2023-05-18",
             "time_windows": [
@@ -2312,27 +2632,7 @@ Required parameters:
                     "end_time": "20:00"
                 }
             ]
-        }
-    ]
-}
-```
-
-##### Response Body:
-```json
-{
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Time windows defined for tuesday are overlaping"
-}
-```
-
-
-#### Valid request example:
-
-##### Request Body:
-```json
-{
-    "working_hours": [
+        },
         {
             "day": "tuesday",
             "time_windows": [
@@ -2345,19 +2645,6 @@ Required parameters:
                     "end_time": "17:00"
                 }
             ]
-        },
-        {
-            "day": "2023-05-18",
-            "time_windows": [
-                {
-                    "start_time": "08:00",
-                    "end_time": "10:00"
-                },
-                {
-                    "start_time": "15:00",
-                    "end_time": "20:00"
-                }
-            ]
         }
     ]
 }
@@ -2366,8 +2653,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Working hours added successfully"
+    "status": "success",
+    "data": {
+        "message": "Working hours added successfully"
+    }
 }
 ```
 
@@ -2401,9 +2690,15 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Working hours for monday are not defined"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "working_hours": [
+                "Working hours for monday are not defined"
+            ]
+        }
+    }
 }
 ```
 
@@ -2422,8 +2717,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Working hours removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Working hours removed successfully"
+    }
 }
 ```
 
@@ -2451,7 +2748,7 @@ Required parameters:
 {
     "working_hours": [
         {
-            "day": "sunday",
+            "day": "monday",
             "time_windows": [
                 {
                     "start_time": "12:00",
@@ -2479,9 +2776,17 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Working hours for sunday are not defined"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "working_hours": [
+                {
+                    "day": "Working hours for monday are not defined"
+                }
+            ]
+        }
+    }
 }
 ```
 
@@ -2521,8 +2826,10 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Working hours modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Working hours modified successfully"
+    }
 }
 ```
 
@@ -2580,9 +2887,21 @@ Working hours not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "12 is not valid time format. Supported time format: H:i"
+    "status": "fail",
+    "data": {
+        "message": "Validation Error",
+        "errors": {
+            "working_hours": [
+                {
+                    "time_windows": [
+                        {
+                            "start_time": "Value is not valid time format. Supported time format: H:i"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
 }
 ```
 
@@ -2596,23 +2915,23 @@ Working hours not specified in the request will be removed.
 {
     "working_hours": [
         {
-            "day": "tuesday",
+            "day": "friday",
             "time_windows": [
                 {
-                    "start_time": "12:00",
-                    "end_time": "17:00"
+                    "start_time": "08:00",
+                    "end_time": "18:00"
                 }
             ]
         },
         {
-            "day": "2023-05-18",
+            "day": "sunday",
             "time_windows": [
                 {
                     "start_time": "08:00",
                     "end_time": "10:00"
                 },
                 {
-                    "start_time": "15:00",
+                    "start_time": "12:00",
                     "end_time": "20:00"
                 }
             ]
@@ -2624,8 +2943,10 @@ Working hours not specified in the request will be removed.
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Working hours overwritten successfully"
+    "status": "success",
+    "data": {
+        "message": "Working hours overwritten successfully"
+    }
 }
 ```
 
@@ -2653,44 +2974,69 @@ Route: /api/schedule/1/services
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "TestService1",
-        "duration": "PT01H00M",
-        "estimated_price": "50 PLN"
-    },
-    {
-        "id": 3,
-        "name": "TestService3",
-        "duration": "PT00H30M",
-        "estimated_price": "10 PLN"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "name": "TestService1",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 2,
+            "name": "MyService2",
+            "duration": "PT01H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 8,
+            "name": "testService3",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 9,
+            "name": "MyService",
+            "duration": "PT00H20M",
+            "estimated_price": "70 PLN"
+        }
+    ]
+}
 ```
 
 #### Request With Range Parameter Example:
 
-Route: /api/schedule/1/services?range=1-1
+Route: /api/schedule/1/services?range=2-3
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 1,
-        "name": "TestService1",
-        "duration": "PT01H00M",
-        "estimated_price": "50 PLN"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 2,
+            "name": "MyService2",
+            "duration": "PT01H30M",
+            "estimated_price": "30 PLN"
+        },
+        {
+            "id": 8,
+            "name": "testService3",
+            "duration": "PT00H30M",
+            "estimated_price": "30 PLN"
+        }
+    ]
+}
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
@@ -2718,32 +3064,35 @@ Route: /api/schedule/1/assignments
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 9,
-        "member": {
-            "id": 2,
-            "user": {
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 15,
+            "member": {
+                "id": 9,
+                "user": {
+                    "id": 3,
+                    "email": "test3@test.com",
+                    "name": "testName"
+                }
+            },
+            "access_type": "READ"
+        },
+        {
+            "id": 16,
+            "member": {
                 "id": 2,
-                "email": "test2@test.com",
-                "name": "testName"
-            }
-        },
-        "access_type": "WRITE"
-    },
-    {
-        "id": 11,
-        "member": {
-            "id": 3,
-            "user": {
-                "id": 3,
-                "email": "test3@test.com",
-                "name": "testName"
-            }
-        },
-        "access_type": "READ"
-    }
-]
+                "user": {
+                    "id": 2,
+                    "email": "test2@test.com",
+                    "name": "testName"
+                }
+            },
+            "access_type": "WRITE"
+        }
+    ]
+}
 ```
 
 #### Request With Filter Parameter Example:
@@ -2752,28 +3101,32 @@ Route: /api/schedule/1/assignments?filter=test3@test
 
 ##### Response Body:
 ```json
-[
-    {
-        "id": 11,
-        "member": {
-            "id": 3,
-            "user": {
-                "id": 3,
-                "email": "test3@test.com",
-                "name": "testName"
-            }
-        },
-        "access_type": "READ"
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 15,
+            "member": {
+                "id": 9,
+                "user": {
+                    "id": 3,
+                    "email": "test3@test.com",
+                    "name": "testName"
+                }
+            },
+            "access_type": "READ"
+        }
+    ]
+}
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
@@ -2789,6 +3142,8 @@ Authorization: not required
 Optional query parameters:
 - filter - partial day name or date, used to filter working hours list
  (example query string: ?filter=monday)
+    
+    If filter is full date and working hours have not been found for this date, working hours for corresponding day of the week will be matched
 
 - range - returned collection elements range in format "{start}-{end}", used for limiting returned collection elements (example query string: ?range=1-5)
 
@@ -2801,61 +3156,81 @@ Route: /api/schedule/1/working_hours
 
 ##### Response Body:
 ```json
-[
-    {
-        "day": "tuesday",
-        "time_windows": [
-            {
-                "start_time": "12:00",
-                "end_time": "17:00"
-            }
-        ]
-    },
-    {
-        "day": "2023-05-18",
-        "time_windows": [
-            {
-                "start_time": "08:00",
-                "end_time": "10:00"
-            },
-            {
-                "start_time": "15:00",
-                "end_time": "20:00"
-            }
-        ]
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "day": "friday",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "18:00"
+                }
+            ]
+        },
+        {
+            "day": "sunday",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "12:00",
+                    "end_time": "20:00"
+                }
+            ]
+        },
+        {
+            "day": "2023-05-18",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "15:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
 ```
 
 #### Request With Filter Parameter Example:
 
-Route: /api/schedule/1/working_hours?filter=2023-05-18
+Route: /api/schedule/1/working_hours?filter=sunday
 
 ##### Response Body:
 ```json
-[
-    {
-        "day": "2023-05-18",
-        "time_windows": [
-            {
-                "start_time": "08:00",
-                "end_time": "10:00"
-            },
-            {
-                "start_time": "15:00",
-                "end_time": "20:00"
-            }
-        ]
-    }
-]
+{
+    "status": "success",
+    "data": [
+        {
+            "day": "sunday",
+            "time_windows": [
+                {
+                    "start_time": "08:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "start_time": "12:00",
+                    "end_time": "20:00"
+                }
+            ]
+        }
+    ]
+}
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
@@ -2874,57 +3249,90 @@ For example request "/api/schedule/1/free_terms/2023-05-20?range=7" will fetch f
 
 #### Basic Request Example:
 
-Route: /api/schedule/1/free_terms/2023-05-09
+Route: /api/schedule/1/free_terms/2023-05-14
 
 ##### Response Body:
 ```json
 {
-    "2023-05-09": [
-        {
-            "start_time": "12:00",
-            "end_time": "17:00"
-        }
-    ]
+    "status": "success",
+    "data": {
+        "2023-05-14": [
+            {
+                "start_time": "08:00",
+                "end_time": "10:00"
+            },
+            {
+                "start_time": "12:00",
+                "end_time": "15:00"
+            },
+            {
+                "start_time": "16:00",
+                "end_time": "20:00"
+            }
+        ]
+    }
 }
 ```
 
 #### Request With Range Parameter Example:
 
-Route: /api/schedule/1/free_terms/2023-05-09?range=7
+Route: /api/schedule/1/free_terms/2023-05-14?range=7
 
 ##### Response Body:
 ```json
 {
-    "2023-05-09": [
-        {
-            "start_time": "12:00",
-            "end_time": "17:00"
-        }
-    ],
-    "2023-05-10": [],
-    "2023-05-11": [],
-    "2023-05-12": [
-        {
-            "start_time": "10:00",
-            "end_time": "12:00"
-        },
-        {
-            "start_time": "13:00",
-            "end_time": "20:00"
-        }
-    ],
-    "2023-05-13": [],
-    "2023-05-14": [],
-    "2023-05-15": []
+    "status": "success",
+    "data": {
+        "2023-05-14": [
+            {
+                "start_time": "08:00",
+                "end_time": "10:00"
+            },
+            {
+                "start_time": "12:00",
+                "end_time": "15:00"
+            },
+            {
+                "start_time": "16:00",
+                "end_time": "20:00"
+            }
+        ],
+        "2023-05-15": [],
+        "2023-05-16": [
+            {
+                "start_time": "12:00",
+                "end_time": "17:00"
+            }
+        ],
+        "2023-05-17": [],
+        "2023-05-18": [
+            {
+                "start_time": "08:00",
+                "end_time": "10:00"
+            },
+            {
+                "start_time": "15:00",
+                "end_time": "20:00"
+            }
+        ],
+        "2023-05-19": [
+            {
+                "start_time": "08:00",
+                "end_time": "18:00"
+            }
+        ],
+        "2023-05-20": []
+    }
 }
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
@@ -2940,6 +3348,12 @@ Authorization: organization admin or member assigned to schedule
 Optional query parameters:
 - range - determines how many days starting from date are checked for reservations, must be integer from 1 to 7 (1 by default).
 For example request "/api/schedule/1/reservations/2023-05-20?range=7" will fetch reservations from seven days starting from 2023-05-20.
+- verified - used to fetch reservations with specific verified state
+    - when verified=1 only verified reservations will be returned
+    - when verified=0 only not verified reservations will be returned
+- confirmed - used to fetch reservations with specific confirmed state
+    - when confirmed=1 only confirmed reservations will be returned
+    - when confirmed=0 only not confirmed reservations will be returned
 
 #### Basic Request Example:
 
@@ -2948,24 +3362,27 @@ Route: /api/schedule/1/reservations/2023-05-12
 ##### Response Body:
 ```json
 {
-    "2023-05-12": [
-        {
-            "id": 1,
-            "email": "test@test.com",
-            "phone_number": "141416153",
-            "service": {
+    "status": "success",
+    "data": {
+        "2023-05-12": [
+            {
                 "id": 1,
-                "name": "TestService1",
-                "estimated_price": "50 PLN"
-            },
-            "time_window": {
-                "start_time": "08:00",
-                "end_time": "09:00"
-            },
-            "verified": false,
-            "confirmed": false
-        }
-    ]
+                "email": "test@test.com",
+                "phone_number": "141416153",
+                "service": {
+                    "id": 1,
+                    "name": "TestService1",
+                    "estimated_price": "30 PLN"
+                },
+                "time_window": {
+                    "start_time": "08:00",
+                    "end_time": "09:00"
+                },
+                "verified": false,
+                "confirmed": false
+            }
+        ]
+    }
 }
 ```
 
@@ -2976,66 +3393,72 @@ Route: /api/schedule/1/reservations/2023-05-12?range=4
 ##### Response Body:
 ```json
 {
-    "2023-05-12": [
-        {
-            "id": 1,
-            "email": "test@test.com",
-            "phone_number": "141416153",
-            "service": {
+    "status": "success",
+    "data": {
+        "2023-05-12": [
+            {
                 "id": 1,
-                "name": "TestService1",
-                "estimated_price": "50 PLN"
-            },
-            "time_window": {
-                "start_time": "08:00",
-                "end_time": "09:00"
-            },
-            "verified": false,
-            "confirmed": false
-        }
-    ],
-    "2023-05-13": [],
-    "2023-05-14": [
-        {
-            "id": 2,
-            "email": "test@test.com",
-            "phone_number": "141416153",
-            "service": {
-                "id": 1,
-                "name": "TestService1",
-                "estimated_price": "50 PLN"
-            },
-            "time_window": {
-                "start_time": "15:00",
-                "end_time": "16:00"
-            },
-            "verified": false,
-            "confirmed": false
-        }
-    ],
-    "2023-05-15": []
+                "email": "test@test.com",
+                "phone_number": "141416153",
+                "service": {
+                    "id": 1,
+                    "name": "TestService1",
+                    "estimated_price": "30 PLN"
+                },
+                "time_window": {
+                    "start_time": "08:00",
+                    "end_time": "09:00"
+                },
+                "verified": false,
+                "confirmed": false
+            }
+        ],
+        "2023-05-13": [],
+        "2023-05-14": [
+            {
+                "id": 2,
+                "email": "test@test.com",
+                "phone_number": "141416153",
+                "service": {
+                    "id": 1,
+                    "name": "TestService1",
+                    "estimated_price": "30 PLN"
+                },
+                "time_window": {
+                    "start_time": "15:00",
+                    "end_time": "16:00"
+                },
+                "verified": false,
+                "confirmed": false
+            }
+        ],
+        "2023-05-15": []
+    }
 }
 ```
 
 If schedule was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Schedule not found"
+    "status": "fail",
+    "data": {
+        "message": "Schedule not found"
+    }
 }
 ```
 
 ## Reservation
 
-This section describes reservation related requests.
+This section describes reservation related endpoints.
 
-Possible requests:
+Endpoints:
 1. [New reservation](#New-reservation)
 2. [Get reservation](#Get-reservation)
 3. [Modify reservation](#Modify-reservation)
 4. [Delete reservation](#Delete-reservation)
 5. [Confirm reservation](#Confirm-reservation)
+6. [Verify reservation](#Verify-reservation)
+7. [Cancel reservation](#Cancel-reservation)
 
 ### New reservation
 Used to create new reservation.
@@ -3059,7 +3482,7 @@ Required parameters:
 ##### Request Body:
 ```json
 {
-    "schedule_id": 100,
+    "schedule_id": 1,
     "date": "2023-04-2",
     "phone_number": "11",
     "email": "fake",
@@ -3071,25 +3494,28 @@ Required parameters:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "schedule_id": "Schedule not found",
-        "start_time": "Start time must be in format H:i",
-        "email": "Value is not a valid email.",
-        "phone_number": "Value is not valid phone number",
-        "date": "Value must be in format Y-m-d"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "start_time": "Start time must be in format H:i",
+            "email": "Value is not a valid email.",
+            "phone_number": "Value is not valid phone number",
+            "date": "Value must be in format Y-m-d"
+        }
     }
 }
 ```
 
-If parameters format is correct, but resulting reservation time window is not available following message will be returned:
+If parameters format is correct, but resulting reservation time window is not available, following message will be returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Validation Error",
-    "errors": {
-        "reservation": "Reservation time window is not available"
+    "status": "fail",
+    "data": {
+        "message": "Validation error",
+        "errors": {
+            "reservation": "Reservation time window is not available"
+        }
     }
 }
 ```
@@ -3100,19 +3526,21 @@ If parameters format is correct, but resulting reservation time window is not av
 ```json
 {
     "schedule_id": 1,
-    "date": "2023-04-24",
+    "date": "2023-05-12",
     "phone_number": "113242432",
     "email": "fake@fake.com",
     "service_id": 1,
-    "start_time": "11:50"
+    "start_time": "11:00"
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Reservation created successfully"
+    "status": "success",
+    "data": {
+        "message": "Reservation created successfully"
+    }
 }
 ```
 
@@ -3142,57 +3570,64 @@ Optional query parameters:
 
 #### Basic Request Example:
 
-Route: /api/reservation/8
+Route: /api/reservation/1
 
 ##### Response Body:
 ```json
 {
-    "date": "2023-04-24",
-    "email": "fake@fake.com",
-    "phone_number": "3231313123",
-    "time_window": {
-        "start_time": "11:10",
-        "end_time": "11:25"
-    },
-    "verified": false,
-    "confirmed": false
+    "status": "success",
+    "data": {
+        "date": "2023-05-12",
+        "email": "test@test.com",
+        "phone_number": "141416153",
+        "time_window": {
+            "start_time": "08:00",
+            "end_time": "09:00"
+        },
+        "verified": false,
+        "confirmed": true
+    }
 }
 ```
 
 #### Request With Details Example:
 
-Route: /api/reservation/8?details=organization,service
+Route: /api/reservation/1?details=organization,service
 
 ##### Response Body:
 ```json
 {
-    "organization": {
-        "id": 1,
-        "name": "Booxit"
-    },
-    "date": "2023-04-24",
-    "email": "fake@fake.com",
-    "phone_number": "3231313123",
-    "service": {
-        "id": 1,
-        "name": "MyService",
-        "estimated_price": "50zł"
-    },
-    "time_window": {
-        "start_time": "11:10",
-        "end_time": "11:25"
-    },
-    "verified": false,
-    "confirmed": false
+    "status": "success",
+    "data": {
+        "organization": {
+            "id": 1,
+            "name": "MyOrganization"
+        },
+        "date": "2023-05-12",
+        "email": "test@test.com",
+        "phone_number": "141416153",
+        "service": {
+            "id": 1,
+            "name": "TestService1",
+            "estimated_price": "30 PLN"
+        },
+        "time_window": {
+            "start_time": "08:00",
+            "end_time": "09:00"
+        },
+        "verified": false,
+        "confirmed": true
+    }
 }
 ```
 
 If reservation was not found, invalid request message is returned:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Reservation not found"
+    "status": "fail",
+    "data": {
+        "message": "Reservation not found"
+    }
 }
 ```
 
@@ -3225,9 +3660,13 @@ At least one of parameters is required:
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Request parameter schedule_id is not allowed"
+    "status": "fail",
+    "data": {
+        "message": "Invalid request",
+        "errors": {
+            "schedule_id": "Parameter is not allowed"
+        }
+    }
 }
 ```
 
@@ -3237,18 +3676,23 @@ At least one of parameters is required:
 ##### Request Body:
 ```json
 {
-    "date": "2023-04-24",
-    "start_time": "11:15"
+    "date": "2023-05-23",
+    "start_time": "15:20"
 }
 ```
 
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Reservation modified successfully"
+    "status": "success",
+    "data": {
+        "message": "Reservation modified successfully"
+    }
 }
 ```
+
+#### Additional info:
+- When reservation is modified information about modification is sent to email address associated with reservation.
 
 ### Delete reservation
 Used to delete reservation by organization member with appropriate credentials.
@@ -3264,9 +3708,10 @@ Authorization: organization admin or organization member assigned to reservation
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Access Denied"
+    "status": "fail",
+    "data": {
+        "message": "Access denied"
+    }
 }
 ```
 
@@ -3275,10 +3720,15 @@ Authorization: organization admin or organization member assigned to reservation
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Reservation removed successfully"
+    "status": "success",
+    "data": {
+        "message": "Reservation removed successfully"
+    }
 }
 ```
+
+#### Additional info:
+- When reservation is removed information about reservation removal is sent to email address associated with reservation.
 
 ### Confirm reservation
 Used to mark reservation as confirmed by organization member with appropriate credentials.
@@ -3294,9 +3744,10 @@ Authorization: organization admin or organization member assigned to reservation
 ##### Response Body:
 ```json
 {
-    "status": "Failure",
-    "message": "Invalid Request",
-    "errors": "Access Denied"
+    "status": "fail",
+    "data": {
+        "message": "Access denied"
+    }
 }
 ```
 
@@ -3305,7 +3756,31 @@ Authorization: organization admin or organization member assigned to reservation
 ##### Response Body:
 ```json
 {
-    "status": "Success",
-    "message": "Reservation confirmed"
+    "status": "success",
+    "data": {
+        "message": "Reservation confirmed"
+    }
 }
 ```
+
+### Verify reservation
+Used to verify reservation email address.
+
+Route: /api/reservation_verify?{query-string-with-signature}
+
+Request Method: GET
+
+Authorization: not required
+
+Should only be accessed by clicking on verification link sent in email message. Returns html view with information about verification result.
+
+### Cancel reservation
+Used to cancel reservation using cancellation link sent via email.
+
+Route: /api/reservation_cancel?{query-string-with-signature}
+
+Request Method: GET
+
+Authorization: not required
+
+Should only be accessed by clicking on cancellation link sent in email message. Returns html view with information about cancellation result.

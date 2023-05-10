@@ -20,4 +20,6 @@ interface SetterHelperInterface
     public function getValidationErrors():array;
 
     public function getPropertyRequestParameter(string $propertyName):string;
+
+    public function getRequestErrors():array;
 }

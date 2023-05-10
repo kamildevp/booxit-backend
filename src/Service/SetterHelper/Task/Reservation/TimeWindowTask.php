@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Service\SetterHelper\Task;
+namespace App\Service\SetterHelper\Task\Reservation;
 
 use App\Entity\Reservation;
 use App\Entity\Schedule;
 use App\Entity\TimeWindow;
+use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use DateTime;
 
 /** @property Reservation $object */
-class ReservationTimeWindowTask implements SetterTaskInterface
+class TimeWindowTask implements SetterTaskInterface
 {
     use SetterTaskTrait;
 
@@ -18,7 +19,7 @@ class ReservationTimeWindowTask implements SetterTaskInterface
         $timeFormat = Schedule::TIME_FORMAT;
         $startTimeObject = DateTime::createFromFormat($timeFormat, $startTime);
         if(!$startTimeObject){
-            $this->validationErrors['timeWindow'] = "Start time must be in format {$timeFormat}";
+            $this->validationErrors['startTime'] = "Start time must be in format {$timeFormat}";
             return;
         }
 

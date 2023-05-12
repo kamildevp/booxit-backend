@@ -102,7 +102,7 @@ Required parameters:
 ### Login
 Used to log in.
 
-Route: /api/login_check
+Route: /api/token/refresh
 
 Request Method: POST
 

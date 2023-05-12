@@ -102,7 +102,7 @@ Required parameters:
 ### Login
 Used to log in.
 
-Route: /api/token/refresh
+Route: /api/login_check
 
 Request Method: POST
 
@@ -169,7 +169,7 @@ After successful login following parameters are returned:
 ### Refresh token
 Used to refresh token.
 
-Route: /api/login_check
+Route: /api/token/refresh
 
 Request Method: POST
 

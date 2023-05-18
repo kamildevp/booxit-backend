@@ -122,6 +122,10 @@ class UserController extends AbstractApiController
         $detailGroups = array_map(fn($group) => 'user-' . $group, $detailGroups);
         $groups = array_merge(['user'], $detailGroups);
 
+        if($userId === 'logged_in'){
+            $user = $this->getUser();
+        }
+
         $user = $entityManager->getRepository(User::class)->find($userId);
         if(!($user instanceof User)){
             return $this->newApiResponse(status: 'fail', data: ['message' => 'User not found'], code: 404);

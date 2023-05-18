@@ -201,7 +201,7 @@ class UserController extends AbstractApiController
         return $this->newApiResponse(data: ['message' => 'Account removed successfully']);
     }
 
-    #[Route('users', name: 'users_get', methods: ['GET'])]
+    #[Route('user', name: 'users_get', methods: ['GET'])]
     public function getUsers(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request): JsonResponse
     {
         $filter = $request->query->get('filter');

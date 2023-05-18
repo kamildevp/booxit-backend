@@ -269,7 +269,7 @@ class OrganizationController extends AbstractApiController
         return $this->newApiResponse(data: ['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
     }
 
-    #[Route('organizations', name: 'organizations_get', methods: ['GET'])]
+    #[Route('organization', name: 'organizations_get', methods: ['GET'])]
     public function getOrganizations(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request): JsonResponse
     {
         $filter = $request->query->get('filter');

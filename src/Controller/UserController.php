@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\EmailConfirmation;
+use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\MailingHelperException;
@@ -88,6 +89,12 @@ class UserController extends AbstractApiController
         try{
             $verifyEmailHelper->validateEmailConfirmation($request->getUri(), $emailConfirmation->getId(), $emailConfirmation->getEmail());
             $user = $emailConfirmation->getCreator();
+
+            $refreshTokens = $entityManager->getRepository(RefreshToken::class)->findBy(['username' => $user->getEmail()]);
+            foreach($refreshTokens as $token){
+                $entityManager->remove($token);
+            }
+
             $user->setEmail($emailConfirmation->getEmail());
             $user->setVerified(true);
             $user->setExpiryDate(null);
@@ -144,7 +151,6 @@ class UserController extends AbstractApiController
     #[Route('user', name: 'user_modify', methods: ['PATCH'])]
     public function modify(SetterHelperInterface $setterHelper, ValidatorInterface $validator, EntityManagerInterface $entityManager, Request $request):JsonResponse
     {
-
         $user = $this->getUser();
 
         if(!($user instanceof User)){
@@ -197,6 +203,11 @@ class UserController extends AbstractApiController
 
         foreach($orphanedOrganizations as $organization){
             $entityManager->remove($organization);
+        }
+
+        $refreshTokens = $entityManager->getRepository(RefreshToken::class)->findBy(['username' => $user->getEmail()]);
+        foreach($refreshTokens as $token){
+            $entityManager->remove($token);
         }
 
         $entityManager->remove($user);

@@ -153,12 +153,7 @@ After successful login following parameters are returned:
     "status": "success",
     "data": {
         "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODM2NTcwOTEsImV4cCI6MTY4MzY2MDY5MSwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoidGVzdEB0ZXN0LmNvbSJ9.uMkknj6fgtr4kXX4-wQYVpoBA7iNvjvqfB5-sx1DekUGdPfzWRaTejSV_H8Tyfoj_019dc3zKVpDdi1dqBwU4zpUSd28IGOMvLWZc3CFHAB60kfm4GV10rEYNp9ql0vLN75pYBkDYssliiQUE8sia0EoC42OBvTDTFKLwClPslP56jpE3mEPt13jdF3z6OQ7CzCCtYNs1bljhDq8TXfGZYJOd3KcXKMFkRUG7lby4W7B5FmKrxv_MmzAIShl1b0d1UZTHE3eoYCuANBucWjlOjiZ4B5vpgIHSp_b9LtT-kDda294CMX0WdYYurdCudtafdbWiG1KSP5UOa4JS3Qlbg",
-        "refresh_token": "b47c7ec2ec6c14c6bd8009379f098b61310d35e0ca9aeb2697a6988424ae4be9e0c812b5f9ea1402089d8142a9e7e3620568bcba7ced7f7146abe5a9f7531e24",
-        "user": {
-            "id": 12,
-            "email": "test@test.com",
-            "name": "new Name"
-        }
+        "refresh_token": "b47c7ec2ec6c14c6bd8009379f098b61310d35e0ca9aeb2697a6988424ae4be9e0c812b5f9ea1402089d8142a9e7e3620568bcba7ced7f7146abe5a9f7531e24"
     }
 }
 ```
@@ -296,6 +291,7 @@ If user was not found, invalid request message is returned:
 
 #### Additional info:
 - User email will be returned only if request is made be authorized users (user himself or admin of user organization)
+- When userId = logged_in currently logged in user data will be returned
 
 ### Modify user
 Used to modify user settings
@@ -1402,7 +1398,7 @@ Services not specified in the request will be removed.
 ### Get organizations
 Used to fetch basic data of multiple organizations.
 
-Route: /api/organizations
+Route: /api/organization
 
 Request Method: GET
 
@@ -1419,7 +1415,7 @@ Optional query parameters:
 
 #### Basic Request Example:
 
-Route: /api/organizations
+Route: /api/organization
 
 ##### Response Body:
 ```json
@@ -1446,7 +1442,7 @@ Route: /api/organizations
 
 #### Request With Filter Parameter Example:
 
-Route: /api/organizations?filter=org
+Route: /api/organization?filter=org
 
 ##### Response Body:
 ```json

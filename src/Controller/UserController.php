@@ -116,7 +116,7 @@ class UserController extends AbstractApiController
     }
 
     #[Route('user/{userId}', name: 'user_get', methods: ['GET'])]
-    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $userId): JsonResponse
+    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, $userId): JsonResponse
     {
         $allowedDetails = ['organizations'];
         $details = $request->query->get('details');
@@ -129,11 +129,7 @@ class UserController extends AbstractApiController
         $detailGroups = array_map(fn($group) => 'user-' . $group, $detailGroups);
         $groups = array_merge(['user'], $detailGroups);
 
-        if($userId === 'logged_in'){
-            $user = $this->getUser();
-        }
-
-        $user = $entityManager->getRepository(User::class)->find($userId);
+        $user = $userId === 'logged_in' ? $this->getUser() : $entityManager->getRepository(User::class)->find(intval($userId));
         if(!($user instanceof User)){
             return $this->newApiResponse(status: 'fail', data: ['message' => 'User not found'], code: 404);
         }

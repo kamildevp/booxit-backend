@@ -1,7 +1,6 @@
 ## Booxit Backend
 <img src=https://project-static-assets.s3.amazonaws.com/APISpreadsheets/APIMemes/BackendRestAPIFrontEndBike.jpeg height=300 width=400>
 <br>
-<br>
 Dockerized back-end application built with Symfony Framework. Application purpose is to provide easy to use appointment planning and management platform, which handles reservation storage, free terms management, email notifications and does not require organization/service provider to be involved in reservation process.
  
 It provides users the ability to: 
@@ -14,10 +13,17 @@ It provides users the ability to:
 For detailed API endpoints description please refer to  [API documentation](docs/api-endpoints.md#API-Endpoints)
 
 
-## Setup
-While in main folder, where docker-compose.yml file is located
+## How to run locally (development mode)
 
-1. If not already done, [install Docker](https://docs.docker.com/engine/install/)
+Requirements:
+- [Docker](https://docs.docker.com/engine/install/) installed on your system
+- mailing service provider configured for application access
+
+While in main folder, where docker-compose.yml file is located
+1. Using your mailing provider information, set ```MAILER_DSN=smtp://user:pass@smtp.example.com:port``` in ```.env``` file. 
+<br>Example using gmail:
+ ```MAILER_DSN=smtp://mailer@gmail.com:example_password@smtp.gmail.com:465```
+
 2. Run `docker compose build --pull --no-cache` to build fresh images.
 3. Run `docker compose up` (the logs will be displayed in the current shell).
 4. Open `https://localhost` in your favorite web browser and [accept the auto-generated TLS certificate](https://stackoverflow.com/a/15076602/1352334).

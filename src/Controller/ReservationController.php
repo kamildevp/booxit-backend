@@ -24,7 +24,7 @@ class ReservationController extends AbstractApiController
         EntityManagerInterface $entityManager, 
         SetterHelperInterface $setterHelper, 
         ValidatorInterface $validator, 
-        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
+        MailingHelper $mailingHelper,
         Request $request
         ): JsonResponse
     {
@@ -60,7 +60,7 @@ class ReservationController extends AbstractApiController
         $entityManager->flush();
         
         try{
-            // $mailingHelper->newReservationVerification($reservation); //uncomment when mailing provider is available
+            $mailingHelper->newReservationVerification($reservation); 
         }
         catch(MailingHelperException){
             $entityManager->remove($reservation);
@@ -75,7 +75,7 @@ class ReservationController extends AbstractApiController
     public function verify(
         EntityManagerInterface $entityManager, 
         VerifyEmailHelperInterface $verifyEmailHelper, 
-        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
+        MailingHelper $mailingHelper, 
         Request $request
         )
     {
@@ -99,7 +99,7 @@ class ReservationController extends AbstractApiController
                 );
             }
 
-            // $mailingHelper->newReservationInformation($reservation, 'Reservation Verified', 'emails/reservationVerified.html.twig', true); //uncomment when mailing provider is available
+            $mailingHelper->newReservationInformation($reservation, 'Reservation Verified', 'emails/reservationVerified.html.twig', true);
 
             $reservation->setVerified(true);
             $reservation->setExpiryDate(null);
@@ -223,7 +223,7 @@ class ReservationController extends AbstractApiController
         EntityManagerInterface $entityManager, 
         SetterHelperInterface $setterHelper, 
         ValidatorInterface $validator, 
-        // MailingHelper $mailingHelper,
+        MailingHelper $mailingHelper,
         Request $request, 
         int $reservationId
         ): JsonResponse
@@ -274,7 +274,7 @@ class ReservationController extends AbstractApiController
         $entityManager->flush();
 
         try{
-            // $mailingHelper->newReservationInformation($reservation, 'Reservation Modified', 'emails/reservationModified.html.twig', true); //uncomment when mailing provider is available
+            $mailingHelper->newReservationInformation($reservation, 'Reservation Modified', 'emails/reservationModified.html.twig', true);
         }
         catch(MailingHelperException){
             return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
@@ -286,7 +286,7 @@ class ReservationController extends AbstractApiController
     #[Route('reservation/{reservationId}', name: 'reservation_delete', methods: ['DELETE'])]
     public function delete(
         EntityManagerInterface $entityManager, 
-        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
+        MailingHelper $mailingHelper,
         int $reservationId
         ): JsonResponse
     {
@@ -316,7 +316,7 @@ class ReservationController extends AbstractApiController
         $entityManager->flush();
 
         try{
-            // $mailingHelper->newReservationInformation($reservation, 'Reservation Removed', 'emails/reservationRemoved.html.twig', false); //uncomment when mailing provider is available
+            $mailingHelper->newReservationInformation($reservation, 'Reservation Removed', 'emails/reservationRemoved.html.twig', false); 
         }
         catch(MailingHelperException){
             return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);

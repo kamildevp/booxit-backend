@@ -26,7 +26,7 @@ class UserController extends AbstractApiController
         ValidatorInterface $validator, 
         SetterHelperInterface $setterHelper, 
         EntityManagerInterface $entityManager, 
-        // MailingHelper $mailingHelper, //uncomment when mailing provider is available
+        MailingHelper $mailingHelper,
         Request $request
         ): JsonResponse
     {
@@ -54,16 +54,14 @@ class UserController extends AbstractApiController
             return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
         }
 
-        // $user->setVerified(false);   //uncomment when mailing provider is available
-        // $user->setExpiryDate(new \DateTime('+1 days')); //uncomment when mailing provider is available
-        $user->setVerified(true); //remove when mailing provider is available
-        $user->setExpiryDate(null); //remove when mailing provider is available
+        $user->setVerified(false);
+        $user->setExpiryDate(new \DateTime('+1 days'));
 
         $entityManager->persist($user);
         $entityManager->flush();
 
         try{
-            // $mailingHelper->newEmailVerification($user, $user->getEmail()); //uncomment when mailing provider is available
+            $mailingHelper->newEmailVerification($user, $user->getEmail());
         }
         catch(MailingHelperException){
             $entityManager->remove($user);

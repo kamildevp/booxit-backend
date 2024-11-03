@@ -5,3 +5,5 @@ vendor/
 ###< lexik/jwt-authentication-bundle ###
 .env.local
 .vscode/
+.env
+docker/db/data/

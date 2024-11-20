@@ -6,10 +6,19 @@ use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
 use App\Exceptions\InvalidRequestException;
+use App\Response\BadRequestResponse;
+use App\Response\ForbiddenResponse;
+use App\Response\NotFoundResponse;
+use App\Response\ResourceCreatedResponse;
+use App\Response\ServerErrorResponse;
+use App\Response\SuccessResponse;
+use App\Response\UnauthorizedResponse;
+use App\Response\ValidationErrorResponse;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\SetterHelper\SetterHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use PDO;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -19,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class OrganizationController extends AbstractApiController
+class OrganizationController extends AbstractController
 {
     #[Route('organization', name: 'organization_new', methods: ['POST'])]
     public function new(
@@ -32,7 +41,7 @@ class OrganizationController extends AbstractApiController
         $user = $this->getUser();
 
         if(!($user instanceof User)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $organization = new Organization();
@@ -49,14 +58,14 @@ class OrganizationController extends AbstractApiController
             }
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
 
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $entityManager->persist($organization);
@@ -69,7 +78,7 @@ class OrganizationController extends AbstractApiController
         $entityManager->persist($organizationMember);
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Organization created successfully'], code: 201);
+        return new ResourceCreatedResponse($organization);
     }
 
     #[Route('organization/{organizationId}', name: 'organization_get', methods: ['GET'])]
@@ -79,7 +88,7 @@ class OrganizationController extends AbstractApiController
         $details = $request->query->get('details');
         $detailGroups = !is_null($details) ? explode(',', $details) : [];
         if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['details' => 'Requested details are invalid']], code: 400);
+            return new BadRequestResponse(['details' => 'Requested details are invalid']);
         }
 
         $range = $request->query->get('range');
@@ -88,17 +97,17 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         try{
             $responseData = $getterHelper->get($organization, $groups, $range);
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('organization/{organizationId}', name: 'organization_modify', methods: ['PATCH'])]
@@ -112,16 +121,16 @@ class OrganizationController extends AbstractApiController
     {
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
         
         try{
@@ -136,18 +145,18 @@ class OrganizationController extends AbstractApiController
             }            
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Organization settings modified successfully']);
+        return new SuccessResponse($organization);
     }
 
     #[Route('organization/{organizationId}', name: 'organization_delete', methods: ['DELETE'])]
@@ -155,23 +164,22 @@ class OrganizationController extends AbstractApiController
     {
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-
+            return new NotFoundResponse;
         }
 
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
         
         $entityManager->remove($organization);
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Organization removed successfully']);
+        return new SuccessResponse(['message' => 'Organization removed successfully']);
     }
 
     #[Route('organization/{organizationId}/members', name: 'organization_modifyMembers', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
@@ -184,16 +192,16 @@ class OrganizationController extends AbstractApiController
     {
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -205,20 +213,20 @@ class OrganizationController extends AbstractApiController
             $validationErrors = $setterHelper->getValidationErrors();
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $entityManager->flush();
 
         $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
 
-        return $this->newApiResponse(data: ['message' => "Members {$actionType[$request->getMethod()]} successfully"]);
+        return new SuccessResponse(['message' => "Members {$actionType[$request->getMethod()]} successfully"]);
     }
 
     #[Route('organization/{organizationId}/services', name: 'organization_modifyServices', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
@@ -230,17 +238,17 @@ class OrganizationController extends AbstractApiController
         ): JsonResponse
     {
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-                if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+        if(!($organization instanceof Organization)){
+            return new NotFoundResponse;
         }
 
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -253,20 +261,20 @@ class OrganizationController extends AbstractApiController
             $validationErrors = $setterHelper->getValidationErrors();
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
     
         $entityManager->flush();
 
         $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
 
-        return $this->newApiResponse(data: ['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
+        return new SuccessResponse(['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
     }
 
     #[Route('organization', name: 'organizations_get', methods: ['GET'])]
@@ -281,10 +289,10 @@ class OrganizationController extends AbstractApiController
             $responseData = $getterHelper->getCollection($organizations, ['organizations'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('organization/{organizationId}/members', name: 'organization_getMembers', methods: ['GET'])]
@@ -295,7 +303,7 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -312,10 +320,10 @@ class OrganizationController extends AbstractApiController
             $responseData = $getterHelper->getCollection($members, ['organization-members'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('organization/{organizationId}/services', name: 'organization_getServices', methods: ['GET'])]
@@ -326,7 +334,7 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -342,10 +350,10 @@ class OrganizationController extends AbstractApiController
             $responseData = $getterHelper->getCollection($services, ['organization-services'], $range);
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('organization/{organizationId}/schedules', name: 'organization_getSchedules', methods: ['GET'])]
@@ -356,7 +364,7 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -372,10 +380,10 @@ class OrganizationController extends AbstractApiController
             $responseData = $getterHelper->getCollection($schedules, ['organization-schedules'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('organization/{organizationId}/banner', name: 'organization_addBanner', methods: ['POST'])]
@@ -384,33 +392,33 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         $bannerFile = $request->files->get('banner');
         if(!$bannerFile){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['banner' => 'File not found']], code: 400);
+            return new BadRequestResponse(['banner' => 'File not found']);
         }
 
         $allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
         $mimeType = $bannerFile->getClientMimeType();
         if(!in_array($mimeType, $allowedTypes)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => ['banner' => 'Invalid file type']], code: 400);
+            return new ValidationErrorResponse(['banner' => 'Invalid file type']);
         }
 
         $maxSize = 10000000;
         $bannerSize = $bannerFile->getSize();
         if($bannerSize > $maxSize){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => ['banner' => 'Maximum file size is 10MB']], code: 400);
+            return new ValidationErrorResponse(['banner' => 'Maximum file size is 10MB']);
         }
 
         $fileName = uniqid() . '.' . $bannerFile->guessExtension();
@@ -428,13 +436,13 @@ class OrganizationController extends AbstractApiController
             }
         }
         catch(FileException){
-            return $this->newApiResponse(status: 'error', data: ['message' => 'File system error'], code: 500);
+            return new ServerErrorResponse('File system error');
         }
 
         $organization->setBanner($this->getParameter('organization_banner_directory') . '/' . $fileName);
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Banner uploaded successfully']);
+        return new SuccessResponse(['message' => 'Banner uploaded successfully']);
     }
 
     #[Route('organization/{organizationId}/banner', name: 'organization_getBanner', methods: ['GET'])]
@@ -443,7 +451,7 @@ class OrganizationController extends AbstractApiController
 
         $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
         if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $banner = $organization->getBanner();
@@ -452,7 +460,7 @@ class OrganizationController extends AbstractApiController
                 return new BinaryFileResponse($this->getParameter('storage_directory') . $banner);
             }
             catch (FileException){
-                return $this->newApiResponse(status: 'error', data: ['message' => 'File system error'], code: 500);
+                return new ServerErrorResponse('File system error');
             }
         }
         else{

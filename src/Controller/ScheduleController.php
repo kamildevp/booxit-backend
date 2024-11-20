@@ -5,19 +5,26 @@ namespace App\Controller;
 use App\Entity\Schedule;
 use App\Exceptions\AccessDeniedException;
 use App\Exceptions\InvalidRequestException;
+use App\Response\BadRequestResponse;
+use App\Response\ForbiddenResponse;
+use App\Response\NotFoundResponse;
+use App\Response\ResourceCreatedResponse;
+use App\Response\SuccessResponse;
+use App\Response\UnauthorizedResponse;
+use App\Response\ValidationErrorResponse;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\SetterHelper\SetterHelperInterface;
 use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class ScheduleController extends AbstractApiController
+class ScheduleController extends AbstractController
 {
     #[Route('schedule', name: 'schedule_new', methods: ['POST'])]
     public function new(
@@ -29,7 +36,7 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = new Schedule();
@@ -46,22 +53,22 @@ class ScheduleController extends AbstractApiController
             }
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation Error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
         catch(AccessDeniedException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         $entityManager->persist($schedule);
         $entityManager->flush();
 
-        return $this->newApiResponse( data: ['message' => 'Schedule created successfully'], code: 201);
+        return new ResourceCreatedResponse($schedule);
     }
 
     #[Route('schedule/{scheduleId}', name: 'schedule_get', methods: ['GET'])]
@@ -76,7 +83,7 @@ class ScheduleController extends AbstractApiController
         $details = $request->query->get('details');
         $detailGroups = !is_null($details) ? explode(',', $details) : [];
         if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['details' => 'Requested details are invalid']], code: 400);
+            return new BadRequestResponse(['details' => 'Requested details are invalid']);
         }
 
         $range = $request->query->get('range');
@@ -85,17 +92,17 @@ class ScheduleController extends AbstractApiController
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         try{
             $responseData = $getterHelper->get($schedule, $groups, $range);
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('schedule/{scheduleId}', name: 'schedule_modify', methods: ['PATCH'])]
@@ -109,12 +116,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $organization = $schedule->getOrganization();
@@ -127,7 +134,7 @@ class ScheduleController extends AbstractApiController
         $hasWriteAccess = $member && ($member->hasRoles(['ADMIN']) || ($assignment ? $assignment->getAccessType() === 'WRITE' : false));
 
         if(!$hasWriteAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
 
@@ -143,18 +150,18 @@ class ScheduleController extends AbstractApiController
             }            
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation Error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $entityManager->flush();
 
-        return $this->newApiResponse( data: ['message' => 'Schedule settings modified successfully']);
+        return new SuccessResponse($schedule);
     }
 
     #[Route('schedule/{scheduleId}', name: 'schedule_delete', methods: ['DELETE'])]
@@ -162,12 +169,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $organization = $schedule->getOrganization();
@@ -180,13 +187,13 @@ class ScheduleController extends AbstractApiController
         $hasWriteAccess = $member && ($member->hasRoles(['ADMIN']) || ($assignment ? $assignment->getAccessType() === 'WRITE' : false));
 
         if(!$hasWriteAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         $entityManager->remove($schedule);
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Schedule removed successfully']);
+        return new SuccessResponse(['message' => 'Schedule removed successfully']);
     }
 
     #[Route('schedule/{scheduleId}/services', name: 'schedule_modifyServices', methods: ['POST', 'PUT', 'DELETE'])]
@@ -199,12 +206,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $organization = $schedule->getOrganization();
@@ -216,7 +223,7 @@ class ScheduleController extends AbstractApiController
         $hasWriteAccess = $member && ($member->hasRoles(['ADMIN']) || ($assignment ? $assignment->getAccessType() === 'WRITE' : false));
 
         if(!$hasWriteAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -229,17 +236,17 @@ class ScheduleController extends AbstractApiController
             $validationErrors = $setterHelper->getValidationErrors();
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation Error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
     
         $entityManager->flush();
 
         $actionType = ['POST' => 'added', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
-        return $this->newApiResponse( data: ['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
+        return new SuccessResponse(['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
     }
 
     #[Route('schedule/{scheduleId}/assignments', name: 'schedule_modifyAssignments', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
@@ -252,12 +259,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $organization = $schedule->getOrganization();
@@ -266,7 +273,7 @@ class ScheduleController extends AbstractApiController
         $hasWriteAccess = $member ? $member->hasRoles(['ADMIN']) : false;
 
         if(!$hasWriteAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -279,17 +286,17 @@ class ScheduleController extends AbstractApiController
             $validationErrors = $setterHelper->getValidationErrors();
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation Error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
     
         $entityManager->flush();
 
         $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
-        return $this->newApiResponse( data: ['message' => "Assignments {$actionType[$request->getMethod()]} successfully"]);
+        return new SuccessResponse(['message' => "Assignments {$actionType[$request->getMethod()]} successfully"]);
     }
 
     #[Route('schedule/{scheduleId}/working_hours', name: 'schedule_modifyWorkingHours', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
@@ -302,12 +309,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $organization = $schedule->getOrganization();
@@ -319,7 +326,7 @@ class ScheduleController extends AbstractApiController
         $hasWriteAccess = $member && ($member->hasRoles(['ADMIN']) || ($assignment ? $assignment->getAccessType() === 'WRITE' : false));
 
         if(!$hasWriteAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -332,17 +339,17 @@ class ScheduleController extends AbstractApiController
             $validationErrors = $setterHelper->getValidationErrors();
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation Error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
     
         $entityManager->flush();
 
         $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
-        return $this->newApiResponse( data: ['message' => "Working hours {$actionType[$request->getMethod()]} successfully"]);
+        return new SuccessResponse(['message' => "Working hours {$actionType[$request->getMethod()]} successfully"]);
     }
 
     #[Route('schedule/{scheduleId}/services', name: 'schedule_getServices', methods: ['GET'])]
@@ -353,7 +360,7 @@ class ScheduleController extends AbstractApiController
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -369,10 +376,10 @@ class ScheduleController extends AbstractApiController
             $responseData = $getterHelper->getCollection($services, ['schedule-services'], $range);
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('schedule/{scheduleId}/assignments', name: 'schedule_getAssignments', methods: ['GET'])]
@@ -383,7 +390,7 @@ class ScheduleController extends AbstractApiController
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -400,10 +407,10 @@ class ScheduleController extends AbstractApiController
             $responseData = $getterHelper->getCollection($assignments, ['schedule-assignments'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('schedule/{scheduleId}/working_hours', name: 'schedule_getWorkingHours', methods: ['GET'])]
@@ -414,7 +421,7 @@ class ScheduleController extends AbstractApiController
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
         
         if(is_null($filter)){
@@ -439,10 +446,10 @@ class ScheduleController extends AbstractApiController
             $responseData = $getterHelper->getCollection($workingHours, ['schedule-working_hours'], $range);
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($getterHelper->getRequestErrors());
         }
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('schedule/{scheduleId}/free_terms/{date}', name: 'schedule_getFreeTerms', methods: ['GET'])]
@@ -458,19 +465,19 @@ class ScheduleController extends AbstractApiController
         $rangeRequest = $request->query->get('range'); 
         $range = !is_null($rangeRequest) ? (int)$rangeRequest : 1;
         if($range < 1 || $range > 7){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['range' => 'Parameter must be between 1 and 7']], code: 400);
+            return new BadRequestResponse(['range' => 'Parameter must be between 1 and 7']);
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
 
         $dataHandlingHelper = new DataHandlingHelper();
         if(!$dataHandlingHelper->validateDateTime($date, Schedule::DATE_FORMAT)){
             $dateFormat = Schedule::DATE_FORMAT;
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['date' => "Date format must be {$dateFormat}"]], code: 400);
+            return new BadRequestResponse(['date' => "Date format must be {$dateFormat}"]);
         }
 
         $dateTimeObject = DateTime::createFromFormat(Schedule::DATE_FORMAT, $date);
@@ -484,7 +491,7 @@ class ScheduleController extends AbstractApiController
             $dateTimeObject = $dateTimeObject->add(new DateInterval('P1D'));
         }
 
-        return $this->newApiResponse(data: $freeTerms);
+        return new SuccessResponse($freeTerms);
     }
 
     #[Route('schedule/{scheduleId}/reservations/{date}', name: 'schedule_getReservations', methods: ['GET'])]
@@ -498,12 +505,12 @@ class ScheduleController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $schedule = $entityManager->getRepository(Schedule::class)->find($scheduleId);
         if(!($schedule instanceof Schedule)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Schedule not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $requestErrors = [];
@@ -532,7 +539,7 @@ class ScheduleController extends AbstractApiController
         }
 
         if(!empty($requestErrors)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $requestErrors], code: 400);
+            return new BadRequestResponse($requestErrors);
         }
 
         $organization = $schedule->getOrganization();
@@ -543,7 +550,7 @@ class ScheduleController extends AbstractApiController
 
         $hasReadAccess = $member && ($member->hasRoles(['ADMIN']) || !is_null($assignment));
         if(!$hasReadAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         $dateTimeObject = DateTime::createFromFormat(Schedule::DATE_FORMAT, $date);
@@ -563,7 +570,7 @@ class ScheduleController extends AbstractApiController
             $dateTimeObject = $dateTimeObject->add(new DateInterval('P1D'));
         }
 
-        return $this->newApiResponse(data: $reservations);
+        return new SuccessResponse($reservations);
     }
 
 }

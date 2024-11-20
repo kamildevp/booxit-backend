@@ -6,10 +6,19 @@ use App\Entity\EmailConfirmation;
 use App\Entity\Reservation;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\MailingHelperException;
+use App\Response\BadRequestResponse;
+use App\Response\ForbiddenResponse;
+use App\Response\NotFoundResponse;
+use App\Response\ResourceCreatedResponse;
+use App\Response\ServerErrorResponse;
+use App\Response\SuccessResponse;
+use App\Response\UnauthorizedResponse;
+use App\Response\ValidationErrorResponse;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\SetterHelper\SetterHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,7 +26,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
-class ReservationController extends AbstractApiController
+class ReservationController extends AbstractController
 {
     #[Route('reservation', name: 'reservation_new', methods: ['POST'])]
     public function new(
@@ -43,14 +52,14 @@ class ReservationController extends AbstractApiController
             }
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
 
         }
         catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $reservation->setVerified(false);
@@ -65,10 +74,10 @@ class ReservationController extends AbstractApiController
         catch(MailingHelperException){
             $entityManager->remove($reservation);
             $entityManager->flush();
-            return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
+            return new ServerErrorResponse('Mailing provider error');
         }
 
-        return $this->newApiResponse(data: ['message' => 'Reservation created successfully']);
+        return new ResourceCreatedResponse($reservation);
     }
 
     #[Route('reservation_verify', name: 'reservation_verify', methods: ['GET'])]
@@ -183,14 +192,14 @@ class ReservationController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $allowedDetails = ['organization', 'schedule', 'service'];
         $details = $request->query->get('details');
         $detailGroups = !is_null($details) ? explode(',', $details) : [];
         if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['details' => 'Requested details are invalid']], code: 400);
+            return new BadRequestResponse(['details' => 'Requested details are invalid']);
         }
 
         $detailGroups = array_map(fn($group) => 'reservation-' . $group, $detailGroups);
@@ -198,7 +207,7 @@ class ReservationController extends AbstractApiController
 
         $reservation = $entityManager->getRepository(Reservation::class)->find($reservationId);
         if(!($reservation instanceof Reservation)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Reservation not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $schedule = $reservation->getSchedule();
@@ -210,12 +219,12 @@ class ReservationController extends AbstractApiController
 
         $hasAccess = $member && ($member->hasRoles(['ADMIN']) || !is_null($assignment));
         if(!$hasAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         $responseData = $getterHelper->get($reservation, $groups);
 
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
     #[Route('reservation/{reservationId}', name: 'reservation_modify', methods: ['PATCH'])]
@@ -230,12 +239,12 @@ class ReservationController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $reservation = $entityManager->getRepository(Reservation::class)->find($reservationId);
         if(!($reservation instanceof Reservation)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Reservation not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $schedule = $reservation->getSchedule();
@@ -247,7 +256,7 @@ class ReservationController extends AbstractApiController
 
         $hasAccess = $member && ($member->hasRoles(['ADMIN']) || !is_null($assignment));
         if(!$hasAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
 
         try{
@@ -262,13 +271,13 @@ class ReservationController extends AbstractApiController
             }            
 
             if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
+                return new ValidationErrorResponse($validationErrors);
             }
 
             $setterHelper->runPostValidationTasks();
         }
         catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
+            return new BadRequestResponse($setterHelper->getRequestErrors());
         }
 
         $entityManager->flush();
@@ -277,10 +286,10 @@ class ReservationController extends AbstractApiController
             $mailingHelper->newReservationInformation($reservation, 'Reservation Modified', 'emails/reservationModified.html.twig', true);
         }
         catch(MailingHelperException){
-            return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
+            return new ServerErrorResponse('Mailing provider error');
         }
 
-        return $this->newApiResponse(data: ['message' => 'Reservation modified successfully']);
+        return new SuccessResponse($reservation);
     }
 
     #[Route('reservation/{reservationId}', name: 'reservation_delete', methods: ['DELETE'])]
@@ -292,12 +301,12 @@ class ReservationController extends AbstractApiController
     {
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $reservation = $entityManager->getRepository(Reservation::class)->find($reservationId);
         if(!($reservation instanceof Reservation)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Reservation not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $schedule = $reservation->getSchedule();
@@ -309,7 +318,7 @@ class ReservationController extends AbstractApiController
 
         $hasAccess = $member && ($member->hasRoles(['ADMIN']) || !is_null($assignment));
         if(!$hasAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
         
         $entityManager->remove($reservation);
@@ -319,10 +328,10 @@ class ReservationController extends AbstractApiController
             $mailingHelper->newReservationInformation($reservation, 'Reservation Removed', 'emails/reservationRemoved.html.twig', false); 
         }
         catch(MailingHelperException){
-            return $this->newApiResponse(status: 'error', data: ['message' => 'Mailing provider error'], code: 500);
+            return new ServerErrorResponse('Mailing provider error');
         }
 
-        return $this->newApiResponse(data: ['message' => 'Reservation removed successfully']);
+        return new SuccessResponse(['message' => 'Reservation removed successfully']);
     }
 
     #[Route('reservation_confirm/{reservationId}', name: 'reservation_confirm', methods: ['POST'])]
@@ -330,12 +339,12 @@ class ReservationController extends AbstractApiController
     {    
         $currentUser = $this->getUser();
         if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
+            return new UnauthorizedResponse;
         }
 
         $reservation = $entityManager->getRepository(Reservation::class)->find($reservationId);
         if(!($reservation instanceof Reservation)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Reservation not found'], code: 404);
+            return new NotFoundResponse;
         }
 
         $schedule = $reservation->getSchedule();
@@ -347,12 +356,12 @@ class ReservationController extends AbstractApiController
 
         $hasAccess = $member && ($member->hasRoles(['ADMIN']) || !is_null($assignment));
         if(!$hasAccess){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
+            return new ForbiddenResponse;
         }
         
         $reservation->setConfirmed(true);
         $entityManager->flush();
 
-        return $this->newApiResponse(data: ['message' => 'Reservation confirmed']);
+        return new SuccessResponse($reservation);
     }
 }

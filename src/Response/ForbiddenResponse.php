@@ -3,17 +3,14 @@
 namespace App\Response;
 
 use App\Enum\ResponseStatus;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class ForbiddenResponse extends JsonResponse
+class ForbiddenResponse extends ClientErrorResponse
 {
+    public const RESPONSE_STATUS = 403;
+    public const RESPONSE_MESSAGE = 'Forbidden';
+
     public function __construct(array $headers = [])
     {
-        parent::__construct([
-            'status' => ResponseStatus::FAIL, 
-            'data' => [
-                'message' => 'Forbidden'
-            ]
-        ], 403, $headers);
+        return parent::__construct(self::RESPONSE_STATUS, self::RESPONSE_MESSAGE, null, $headers);
     }
 } 

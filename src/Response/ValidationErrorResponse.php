@@ -2,19 +2,13 @@
 
 namespace App\Response;
 
-use App\Enum\ResponseStatus;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-class ValidationErrorResponse extends JsonResponse
+class ValidationErrorResponse extends ClientErrorResponse
 {
+    public const RESPONSE_STATUS = 422;
+    public const RESPONSE_MESSAGE = 'Validation Error';
+
     public function __construct(mixed $errors = null, array $headers = [])
     {
-        parent::__construct([
-            'status' => ResponseStatus::FAIL, 
-            'data' => [
-                'message' => 'Validation Error',
-                'errors' => $errors
-            ]
-        ], 422, $headers);
+        return parent::__construct(self::RESPONSE_STATUS, self::RESPONSE_MESSAGE, $errors, $headers);
     }
 } 

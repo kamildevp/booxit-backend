@@ -2,18 +2,13 @@
 
 namespace App\Response;
 
-use App\Enum\ResponseStatus;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-class NotFoundResponse extends JsonResponse
+class NotFoundResponse extends ClientErrorResponse
 {
+    public const RESPONSE_STATUS = 404;
+    public const RESPONSE_MESSAGE = 'Not Found';
+
     public function __construct(array $headers = [])
     {
-        parent::__construct([
-            'status' => ResponseStatus::FAIL, 
-            'data' => [
-                'message' => 'Not Found',
-            ]
-        ], 404, $headers);
+        return parent::__construct(self::RESPONSE_STATUS, self::RESPONSE_MESSAGE, null, $headers);
     }
 } 

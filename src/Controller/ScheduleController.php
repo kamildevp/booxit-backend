@@ -12,6 +12,7 @@ use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Response\UnauthorizedResponse;
 use App\Response\ValidationErrorResponse;
+use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\SetterHelper\SetterHelperInterface;
@@ -26,6 +27,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ScheduleController extends AbstractController
 {
+    #[RestrictedAccess]
     #[Route('schedule', name: 'schedule_new', methods: ['POST'])]
     public function new(
         EntityManagerInterface $entityManager, 
@@ -34,10 +36,6 @@ class ScheduleController extends AbstractController
         Request $request
         ): JsonResponse
     {
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return new UnauthorizedResponse;
-        }
 
         $schedule = new Schedule();
 
@@ -105,6 +103,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}', name: 'schedule_modify', methods: ['PATCH'])]
     public function modify(
         EntityManagerInterface $entityManager, 
@@ -164,6 +163,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse($schedule);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}', name: 'schedule_delete', methods: ['DELETE'])]
     public function delete(EntityManagerInterface $entityManager, int $scheduleId): JsonResponse
     {
@@ -196,6 +196,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse(['message' => 'Schedule removed successfully']);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}/services', name: 'schedule_modifyServices', methods: ['POST', 'PUT', 'DELETE'])]
     public function modifyServices(
         EntityManagerInterface $entityManager, 
@@ -249,6 +250,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse(['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}/assignments', name: 'schedule_modifyAssignments', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
     public function modifyAssignments(
         EntityManagerInterface $entityManager, 
@@ -299,6 +301,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse(['message' => "Assignments {$actionType[$request->getMethod()]} successfully"]);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}/working_hours', name: 'schedule_modifyWorkingHours', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
     public function modifyWorkingHours(
         EntityManagerInterface $entityManager, 
@@ -494,6 +497,7 @@ class ScheduleController extends AbstractController
         return new SuccessResponse($freeTerms);
     }
 
+    #[RestrictedAccess]
     #[Route('schedule/{scheduleId}/reservations/{date}', name: 'schedule_getReservations', methods: ['GET'])]
     public function getReservations(
         EntityManagerInterface $entityManager, 

@@ -14,6 +14,7 @@ use App\Response\ServerErrorResponse;
 use App\Response\SuccessResponse;
 use App\Response\UnauthorizedResponse;
 use App\Response\ValidationErrorResponse;
+use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\SetterHelper\SetterHelperInterface;
@@ -150,6 +151,7 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[RestrictedAccess]
     #[Route('user', name: 'user_modify', methods: ['PATCH'])]
     public function modify(SetterHelperInterface $setterHelper, ValidatorInterface $validator, EntityManagerInterface $entityManager, Request $request):JsonResponse
     {
@@ -188,6 +190,7 @@ class UserController extends AbstractController
         return new SuccessResponse($user);
     }
 
+    #[RestrictedAccess]
     #[Route('user', name: 'user_delete', methods: ['DELETE'])]
     public function delete(EntityManagerInterface $entityManager){
         $user = $this->getUser();

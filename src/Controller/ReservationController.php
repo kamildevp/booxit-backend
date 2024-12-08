@@ -14,6 +14,7 @@ use App\Response\ServerErrorResponse;
 use App\Response\SuccessResponse;
 use App\Response\UnauthorizedResponse;
 use App\Response\ValidationErrorResponse;
+use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\SetterHelper\SetterHelperInterface;
@@ -182,6 +183,7 @@ class ReservationController extends AbstractController
         }
     }
 
+    #[RestrictedAccess]
     #[Route('reservation/{reservationId}', name: 'reservation_get', methods: ['GET'])]
     public function get(
         EntityManagerInterface $entityManager, 
@@ -227,6 +229,7 @@ class ReservationController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[RestrictedAccess]
     #[Route('reservation/{reservationId}', name: 'reservation_modify', methods: ['PATCH'])]
     public function modify(
         EntityManagerInterface $entityManager, 
@@ -292,6 +295,7 @@ class ReservationController extends AbstractController
         return new SuccessResponse($reservation);
     }
 
+    #[RestrictedAccess]
     #[Route('reservation/{reservationId}', name: 'reservation_delete', methods: ['DELETE'])]
     public function delete(
         EntityManagerInterface $entityManager, 
@@ -334,6 +338,7 @@ class ReservationController extends AbstractController
         return new SuccessResponse(['message' => 'Reservation removed successfully']);
     }
 
+    #[RestrictedAccess]
     #[Route('reservation_confirm/{reservationId}', name: 'reservation_confirm', methods: ['POST'])]
     public function confirm(EntityManagerInterface $entityManager, int $reservationId): JsonResponse
     {    

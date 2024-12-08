@@ -14,6 +14,7 @@ use App\Response\ServerErrorResponse;
 use App\Response\SuccessResponse;
 use App\Response\UnauthorizedResponse;
 use App\Response\ValidationErrorResponse;
+use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\GetterHelper\GetterHelperInterface;
 use App\Service\SetterHelper\SetterHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,6 +31,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class OrganizationController extends AbstractController
 {
+    #[RestrictedAccess]
     #[Route('organization', name: 'organization_new', methods: ['POST'])]
     public function new(
         SetterHelperInterface $setterHelper,
@@ -110,6 +112,7 @@ class OrganizationController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[RestrictedAccess]
     #[Route('organization/{organizationId}', name: 'organization_modify', methods: ['PATCH'])]
     public function modify(
         ValidatorInterface $validator, 
@@ -159,6 +162,7 @@ class OrganizationController extends AbstractController
         return new SuccessResponse($organization);
     }
 
+    #[RestrictedAccess]
     #[Route('organization/{organizationId}', name: 'organization_delete', methods: ['DELETE'])]
     public function delete(EntityManagerInterface $entityManager, int $organizationId): JsonResponse
     {
@@ -182,6 +186,7 @@ class OrganizationController extends AbstractController
         return new SuccessResponse(['message' => 'Organization removed successfully']);
     }
 
+    #[RestrictedAccess]
     #[Route('organization/{organizationId}/members', name: 'organization_modifyMembers', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
     public function modifyMembers(
         EntityManagerInterface $entityManager, 
@@ -229,6 +234,7 @@ class OrganizationController extends AbstractController
         return new SuccessResponse(['message' => "Members {$actionType[$request->getMethod()]} successfully"]);
     }
 
+    #[RestrictedAccess]
     #[Route('organization/{organizationId}/services', name: 'organization_modifyServices', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
     public function modifyServices(
         EntityManagerInterface $entityManager, 
@@ -386,6 +392,7 @@ class OrganizationController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[RestrictedAccess]
     #[Route('organization/{organizationId}/banner', name: 'organization_addBanner', methods: ['POST'])]
     public function addBanner(EntityManagerInterface $entityManager, Request $request, int $organizationId): JsonResponse
     {

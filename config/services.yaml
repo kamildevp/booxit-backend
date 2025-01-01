@@ -44,6 +44,8 @@ services:
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'
     App\Service\Auth\AuthServiceInterface: '@App\Service\Auth\AuthService'
+    App\Service\EntityHandler\EntityHandlerInterface: '@App\Service\EntityHandler\EntityHandler'
+
 
     acme_api.event.authentication_success_listener:
         class: App\EventListener\AuthenticationSuccessListener

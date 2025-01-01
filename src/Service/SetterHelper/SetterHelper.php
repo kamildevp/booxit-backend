@@ -43,7 +43,7 @@ class SetterHelper implements SetterHelperInterface
         $this->requestErrors = array_merge($this->requestErrors, $requestParser->getRequestErrors());
 
         if(!empty($this->requestErrors)){
-            throw new InvalidRequestException();
+            throw new InvalidRequestException("Invalid Request", $this->requestErrors);
         }
 
         $this->validationGroups = [];
@@ -73,7 +73,7 @@ class SetterHelper implements SetterHelperInterface
         }
 
         if(!empty($this->requestErrors)){
-            throw new InvalidRequestException("Invalid Request");
+            throw new InvalidRequestException("Invalid Request", $this->requestErrors);
         }
     }
 
@@ -112,6 +112,11 @@ class SetterHelper implements SetterHelperInterface
     public function getRequestErrors():array
     {
         return $this->requestErrors;
+    }
+
+    public function newInstance(): self
+    {
+        return new self($this->kernel);
     }
 
 }

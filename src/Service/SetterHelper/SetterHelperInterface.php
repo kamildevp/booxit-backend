@@ -4,10 +4,9 @@ namespace App\Service\SetterHelper;
 
 
 /**
- * Interface SetterTaskInterface
+ * Interface SetterHelperInterface
  * @throws InvalidRequestException when provided settings are invalid
  * @throws InvalidObjectException when processed object is configured incorrectly
- * @throws InvalidActionException when incorrect action was performed
  */
 interface SetterHelperInterface
 {
@@ -22,4 +21,6 @@ interface SetterHelperInterface
     public function getPropertyRequestParameter(string $propertyName):string;
 
     public function getRequestErrors():array;
+
+    public function newInstance(): self;
 }

@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Exceptions\InvalidRequestException;
+use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -19,6 +21,8 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
+    use RepositoryUtils;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
@@ -35,6 +39,14 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     public function remove(User $entity, bool $flush = false): void
     {
+        $orphanedOrganizations = $entity->getOrganizationAssignments()->filter(function($element){
+            return $element->hasRoles(['ADMIN']) && $element->getOrganization()->getAdmins()->count() < 2;
+        });
+
+        if(!$orphanedOrganizations->isEmpty()){
+            throw new InvalidRequestException("Invalid Request", ['general' => 'Cannot remove only Admin of existing organization']);
+        }
+
         $this->getEntityManager()->remove($entity);
 
         if ($flush) {

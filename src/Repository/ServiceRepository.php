@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Service;
+use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,6 +17,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ServiceRepository extends ServiceEntityRepository
 {
+    use RepositoryUtils;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Service::class);

@@ -5,10 +5,9 @@ namespace App\Response;
 use App\Enum\ResponseStatus;
 use App\Exceptions\DetailedException;
 use App\Response\Interface\ExceptionResponseInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Throwable;
 
-class ServerErrorResponse extends JsonResponse implements ExceptionResponseInterface
+class ServerErrorResponse extends ApiResponse implements ExceptionResponseInterface
 {
     public const RESPONSE_STATUS = 500;
     public const RESPONSE_MESSAGE = 'Server Error';

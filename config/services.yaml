@@ -67,8 +67,4 @@ services:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_expired, method: onJWTExpired }
 
-    acme_api.event.gesdinet.refresh_token_failure:
-        class: App\EventListener\JWTRefreshFailureListener
-        tags:
-            - { name: kernel.event_listener, event: gesdinet.refresh_token_failure, method: onJWTRefreshFailure }
 

@@ -3,9 +3,8 @@
 namespace App\Response;
 
 use App\Enum\ResponseStatus;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class SuccessResponse extends JsonResponse
+class SuccessResponse extends ApiResponse
 {
     public function __construct(mixed $data = null, int $statusCode = 200, array $headers = [])
     {

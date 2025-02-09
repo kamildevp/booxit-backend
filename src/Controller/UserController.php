@@ -2,241 +2,99 @@
 
 namespace App\Controller;
 
-use App\Entity\EmailConfirmation;
-use App\Entity\RefreshToken;
-use App\Entity\User;
-use App\Exceptions\InvalidRequestException;
-use App\Exceptions\MailingHelperException;
-use App\Response\BadRequestResponse;
-use App\Response\NotFoundResponse;
+use App\Enum\User\UserGetterGroup;
+use App\Enum\User\UserSetterGroup;
+use App\Enum\ViewType;
+use App\Exceptions\VerifyEmailException;
+use App\Repository\UserRepository;
 use App\Response\ResourceCreatedResponse;
-use App\Response\ServerErrorResponse;
 use App\Response\SuccessResponse;
-use App\Response\UnauthorizedResponse;
-use App\Response\ValidationErrorResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
+use App\Service\Entity\UserService;
+use App\Service\EntityHandler\EntityHandlerInterface;
 use App\Service\GetterHelper\GetterHelperInterface;
-use App\Service\MailingHelper\MailingHelper;
-use App\Service\SetterHelper\SetterHelperInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
-use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
 class UserController extends AbstractController
 {
 
     #[Route('user', name: 'user_new', methods: ['POST'])]
-    public function new(
-        ValidatorInterface $validator, 
-        SetterHelperInterface $setterHelper, 
-        EntityManagerInterface $entityManager, 
-        MailingHelper $mailingHelper,
-        Request $request
-        ): JsonResponse
+    public function new(UserService $userService, Request $request): JsonResponse
     {
-        $user = new User();
-
-        try{
-            $setterHelper->updateObjectSettings($user, $request->request->all(), ['Default']);
-            $validationErrors = $setterHelper->getValidationErrors();
-
-            $violations = $validator->validate($user, groups: $setterHelper->getValidationGroups());
-
-            foreach ($violations as $violation) {
-                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
-                $validationErrors[$requestParameterName] = $violation->getMessage();
-            }
-
-            if(count($validationErrors) > 0){
-                return new ValidationErrorResponse($validationErrors);
-            }
-
-            $setterHelper->runPostValidationTasks();
-
-        }
-        catch(InvalidRequestException){
-            return new BadRequestResponse($setterHelper->getRequestErrors());
-        }
-
-        $user->setVerified(false);
-        $user->setExpiryDate(new \DateTime('+1 days'));
-
-        $entityManager->persist($user);
-        $entityManager->flush();
-
-        try{
-            $mailingHelper->newEmailVerification($user, $user->getEmail());
-        }
-        catch(MailingHelperException){
-            $entityManager->remove($user);
-            $entityManager->flush();
-            return new ServerErrorResponse('Mailing provider error');
-        }
+        $user = $userService->createUser($request->request->all());
 
         return new ResourceCreatedResponse($user);
     }
 
-    #[Route('user_verify', name: 'user_verify', methods: ['GET'])]
-    public function verify(EntityManagerInterface $entityManager, VerifyEmailHelperInterface $verifyEmailHelper, Request $request)
+    #[Route('user/verify', name: 'user_verify', methods: ['GET'])]
+    public function verify(UserService $userService, Request $request)
     {
-        $id = (int)$request->get('id');
-        $emailConfirmation = $entityManager->getRepository(EmailConfirmation::class)->find($id);
-        if(!$emailConfirmation){
-            return $this->render(
-                'emailVerification.html.twig', 
-                ['header' => 'Verification Failed', 'description' => 'Verification link is invalid']
-            );
-        }
-
         try{
-            $verifyEmailHelper->validateEmailConfirmation($request->getUri(), $emailConfirmation->getId(), $emailConfirmation->getEmail());
-            $user = $emailConfirmation->getCreator();
-
-            $refreshTokens = $entityManager->getRepository(RefreshToken::class)->findBy(['username' => $user->getEmail()]);
-            foreach($refreshTokens as $token){
-                $entityManager->remove($token);
-            }
-
-            $user->setEmail($emailConfirmation->getEmail());
-            $user->setVerified(true);
-            $user->setExpiryDate(null);
-            $entityManager->remove($emailConfirmation);
-            $entityManager->flush();
-            return $this->render(
-                'emailVerification.html.twig', 
-                ['header' => 'Verification Completed', 'description' => 'Your email was verfied successfully']
-            );
-
-        } 
-        catch(VerifyEmailExceptionInterface $e) {
-            return $this->render(
-                'emailVerification.html.twig', 
-                ['header' => 'Verification Failed', 'description' => $e->getReason()]
-            );
+            $emailConfirmationId = (int)$request->get('id');
+            $userService->verifyUserEmail($emailConfirmationId, $request->getUri());
+            $view = ViewType::EMAIL_VERIFICATION_SUCCESS->getView();
         }
-        
+        catch(VerifyEmailException $e){
+            $view = ViewType::EMAIL_VERIFICATION_FAIL->getView();
+            $view->setParam('description', $e->getMessage());
+        }
+
+        return $this->render($view->getTemplate(), $view->getParams());
+    }
+
+    #[RestrictedAccess]
+    #[Route('user/me', name: 'user_me_get', methods: ['GET'])]
+    public function me(GetterHelperInterface $getterHelper): JsonResponse
+    {
+        $user = $this->getUser();
+        $responseData = $getterHelper->get($user, [UserGetterGroup::ALL->value]);
+
+        return new SuccessResponse($responseData);
     }
 
     #[Route('user/{userId}', name: 'user_get', methods: ['GET'])]
-    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, $userId): JsonResponse
+    public function get(UserRepository $userRepository, GetterHelperInterface $getterHelper, int $userId): JsonResponse
     {
-        $allowedDetails = ['organizations'];
-        $details = $request->query->get('details');
-        $detailGroups = !is_null($details) ? explode(',', $details) : [];
-        if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return new BadRequestResponse(['details' => 'Requested details are invalid']);
-        }
-
-        $range = $request->query->get('range');
-        $detailGroups = array_map(fn($group) => 'user-' . $group, $detailGroups);
-        $groups = array_merge(['user'], $detailGroups);
-
-        $user = $userId === 'logged_in' ? $this->getUser() : $entityManager->getRepository(User::class)->find(intval($userId));
-        if(!($user instanceof User)){
-            return new NotFoundResponse;
-        }
-        
-        try{
-            $responseData = $getterHelper->get($user, $groups, $range);
-        }
-        catch(InvalidRequestException){
-            return new BadRequestResponse($getterHelper->getRequestErrors());
-        }
+        $user = $userRepository->findOrFail($userId);
+        $responseData = $getterHelper->get($user, [UserGetterGroup::PUBLIC->value]);
 
         return new SuccessResponse($responseData);
     }
 
     #[RestrictedAccess]
-    #[Route('user', name: 'user_modify', methods: ['PATCH'])]
-    public function modify(SetterHelperInterface $setterHelper, ValidatorInterface $validator, EntityManagerInterface $entityManager, Request $request):JsonResponse
+    #[Route('user/me', name: 'user_me_patch', methods: ['PATCH'])]
+    public function modify(EntityHandlerInterface $entityHandler, GetterHelperInterface $getterHelper, UserRepository $userRepository, Request $request): JsonResponse
     {
         $user = $this->getUser();
+        $entityHandler->parseParamsToEntity($user, $request->request->all(), [UserSetterGroup::PATCH->value]);
+        $userRepository->save($user, true);
+        $responseData = $getterHelper->get($user, [UserGetterGroup::ALL->value]);
 
-        if(!($user instanceof User)){
-            return new UnauthorizedResponse;
-        }
-
-        try{
-            $setterHelper->updateObjectSettings($user, $request->request->all(), [], ['Default']);
-            $validationErrors = $setterHelper->getValidationErrors();
-            
-            $violations = $validator->validate($user, groups: $setterHelper->getValidationGroups());
-
-            foreach ($violations as $violation) {
-                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
-                $validationErrors[$requestParameterName] = $violation->getMessage();
-            }            
-
-            if(count($validationErrors) > 0){
-                return new ValidationErrorResponse($validationErrors);
-            }
-
-            $setterHelper->runPostValidationTasks();
-        }
-        catch(InvalidRequestException){
-            return new BadRequestResponse($setterHelper->getRequestErrors());
-        }
-        catch(MailingHelperException){
-            return new ServerErrorResponse('Mailing provider error');
-        }
-
-        $entityManager->flush();
-
-        return new SuccessResponse($user);
+        return new SuccessResponse($responseData);
     }
 
     #[RestrictedAccess]
-    #[Route('user', name: 'user_delete', methods: ['DELETE'])]
-    public function delete(EntityManagerInterface $entityManager){
+    #[Route('user', name: 'user_me_delete', methods: ['DELETE'])]
+    public function delete(UserRepository $userRepository){
         $user = $this->getUser();
 
-        if(!($user instanceof User)){
-            return new UnauthorizedResponse;
-        }
-
-        $orphanedOrganizations = $user->getOrganizationAssignments()->filter(function($element){
-            return $element->hasRoles(['ADMIN']) && $element->getOrganization()->getAdmins()->count() < 2;
-        })
-        ->map(function($element){
-            return $element->getOrganization();
-        });
-
-        foreach($orphanedOrganizations as $organization){
-            $entityManager->remove($organization);
-        }
-
-        $refreshTokens = $entityManager->getRepository(RefreshToken::class)->findBy(['username' => $user->getEmail()]);
-        foreach($refreshTokens as $token){
-            $entityManager->remove($token);
-        }
-
-        $entityManager->remove($user);
-        $entityManager->flush();
-
-        return new SuccessResponse(['message' => 'Account removed successfully']);
+        $userRepository->remove($user, true);
+        
+        return new SuccessResponse(['message' => 'User removed successfully']);
     }
 
     #[Route('user', name: 'users_get', methods: ['GET'])]
-    public function getUsers(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request): JsonResponse
+    public function getUsers(UserRepository $userRepository, GetterHelperInterface $getterHelper, Request $request): JsonResponse
     {
-        $filter = $request->query->get('filter');
-        $range = $request->query->get('range');
+        $page = $request->query->get('page', 1);
+        $paginationResult = $userRepository->paginate($page);
+        $formattedItems = $getterHelper->getCollection($paginationResult->getItems(), [UserGetterGroup::PUBLIC->value]);
+        $paginationResult->setItems($formattedItems);
 
-        $users = $entityManager->getRepository(User::class)->findByPartialIdentifier($filter ?? '');
-        
-        try{
-            $responseData = $getterHelper->getCollection($users, ['users'], $range);
-        }
-        catch(InvalidRequestException $e){
-            return new BadRequestResponse($getterHelper->getRequestErrors());
-        }
-
-        return new SuccessResponse($responseData);
+        return new SuccessResponse($paginationResult);
     }
 
 

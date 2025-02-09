@@ -8,32 +8,38 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
+                property: id
+        login_user_provider:
+            entity:
+                class: App\Entity\User
                 property: email
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
+            provider: app_user_provider
             security: false
         
         login:
-            pattern: ^/api/login_check
+            pattern: ^/api/auth/login
             user_checker: App\Security\UserChecker
             stateless: true
+            provider: login_user_provider
             json_login:
-                check_path: /api/login_check
+                check_path: /api/auth/login
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
                 username_path: email
 
-
         refresh:
-            pattern: ^/api/token/refresh
+            pattern: ^/api/auth/refresh
             stateless: true
-            refresh_jwt:
-                check_path: /api/token/refresh
-
+            provider: app_user_provider
+            custom_authenticators:
+                - App\Security\RefreshTokenAuthenticator
         api:
             pattern:   ^/api
             stateless: true
+            provider: app_user_provider
             jwt: ~
 
         main:

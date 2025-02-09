@@ -8,7 +8,7 @@ use App\Response\Interface\ExceptionResponseInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Throwable;
 
-class ClientErrorResponse extends JsonResponse implements ExceptionResponseInterface
+class ClientErrorResponse extends ApiResponse implements ExceptionResponseInterface
 {
     public const RESPONSE_STATUS = 400;
 

@@ -2,10 +2,11 @@
 
 namespace App\Entity;
 
+use App\Enum\User\UserGetterGroup;
+use App\Enum\User\UserSetterGroup;
 use App\Repository\UserRepository;
 use App\Service\GetterHelper\Attribute\Getter;
 use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\GetterHelper\CustomAccessRule\EmailAccessRule;
 use App\Service\SetterHelper\Task\User\EmailTask;
 use App\Service\SetterHelper\Task\User\PasswordTask;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -82,25 +83,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, orphanRemoval: true)]
+    private Collection $refreshTokens;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
         $this->organizationAssignments = new ArrayCollection();
+        $this->refreshTokens = new ArrayCollection();
     }
 
-    #[Getter(groups: ['login', 'users', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: [
+        UserGetterGroup::PUBLIC->value,
+        UserGetterGroup::ORGANIZATION_MEMBERS->value, 
+        UserGetterGroup::ORGANIZATION_ADMINS->value, 
+        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
+    ])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class, groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: [
+        UserGetterGroup::ORGANIZATION_MEMBERS->value,
+        UserGetterGroup::ORGANIZATION_ADMINS->value,
+        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
+    ])]
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    #[Setter(setterTask: EmailTask::class)]
+    #[Setter(setterTask: EmailTask::class, groups: [
+        UserSetterGroup::ALL->value,
+        UserSetterGroup::PATCH->value
+    ])]
     public function setEmail(string $email): self
     {
         $this->email = $email;
@@ -119,13 +136,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
 
-    #[Getter(groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
+    #[Getter(groups: [
+        UserGetterGroup::PUBLIC->value,
+        UserGetterGroup::ORGANIZATION_MEMBERS->value,
+        UserGetterGroup::ORGANIZATION_ADMINS->value,
+        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
+    ])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
+    #[Setter(groups: [
+        UserSetterGroup::ALL->value,
+        UserSetterGroup::PATCH->value
+    ])]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -231,7 +256,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[Getter(propertyNameAlias: 'organizations', groups: ['user-organizations'])]
+    #[Getter(propertyNameAlias: 'organizations', groups: [UserGetterGroup::USER_ORGANIZATIONS->value])]
     /**
      * @return Collection<int, OrganizationMember>
      */
@@ -280,6 +305,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setExpiryDate(?\DateTimeInterface $expiryDate): self
     {
         $this->expiryDate = $expiryDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, RefreshToken>
+     */
+    public function getRefreshTokens(): Collection
+    {
+        return $this->refreshTokens;
+    }
+
+    public function addRefreshToken(RefreshToken $refreshToken): self
+    {
+        if (!$this->refreshTokens->contains($refreshToken)) {
+            $this->refreshTokens->add($refreshToken);
+            $refreshToken->setAppUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRefreshToken(RefreshToken $refreshToken): self
+    {
+        if ($this->refreshTokens->removeElement($refreshToken)) {
+            // set the owning side to null (unless already changed)
+            if ($refreshToken->getAppUser() === $this) {
+                $refreshToken->setAppUser(null);
+            }
+        }
 
         return $this;
     }

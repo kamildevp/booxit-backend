@@ -2,8 +2,8 @@
 
 namespace App\EventListener;
 
+use App\Response\UnauthorizedResponse;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationFailureEvent;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AuthenticationFailureListener
 {
@@ -12,15 +12,7 @@ class AuthenticationFailureListener
      */
     public function onAuthenticationFailureResponse(AuthenticationFailureEvent $event)
     {
-        $responseData = [
-            'status' => 'fail',
-            'data' => [
-                'message' => 'Invalid credentials'
-            ]
-        ];
-
-        $response = new JsonResponse($responseData, 401);
-
+        $response = new UnauthorizedResponse('Invalid or expired token');
         $event->setResponse($response);
     }
 }

@@ -3,10 +3,12 @@
 namespace App\Service\SetterHelper\Task\User;
 
 use App\Entity\User;
+use App\Message\EmailVerification;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\SetterHelper\Task\SetterTaskInterface;
 use App\Service\SetterHelper\Trait\SetterTaskTrait;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 /** @property User $object */
 class EmailTask implements SetterTaskInterface
@@ -14,7 +16,11 @@ class EmailTask implements SetterTaskInterface
     use SetterTaskTrait;
     private ?string $oldEmail;
 
-    public function __construct(private EntityManagerInterface $entityManager, private MailingHelper $mailingHelper)
+    public function __construct(
+        private EntityManagerInterface $entityManager, 
+        private MailingHelper $mailingHelper,
+        private MessageBusInterface $bus 
+    )
     {
 
     }
@@ -33,7 +39,7 @@ class EmailTask implements SetterTaskInterface
                 return;
         }
 
-        $this->mailingHelper->newEmailVerification($this->object, $this->object->getEmail()); 
+        $this->bus->dispatch(new EmailVerification($this->object->getId(), true));
         $this->object->setEmail($this->oldEmail);
     }
 

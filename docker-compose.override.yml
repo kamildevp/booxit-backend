@@ -17,3 +17,7 @@ services:
   database:
     ports: 
     - "${DATABASE_PORT:-32770}:5432"
+
+  rabbitmq:
+    ports: 
+    - "${RABBITMQ_MANAGEMENT_PORT:-32411}:15672"

@@ -8,12 +8,14 @@ use App\Entity\User;
 use App\Enum\User\UserSetterGroup;
 use App\Exceptions\MailingHelperException;
 use App\Exceptions\VerifyEmailException;
+use App\Message\EmailVerification;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\MailingHelper\MailingHelper;
 use App\Service\EntityHandler\EntityHandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
@@ -27,7 +29,8 @@ class UserService
         protected EntityManagerInterface $entityManager, 
         protected EntityHandlerInterface $entityHandler,
         protected MailingHelper $mailingHelper,   
-        protected VerifyEmailHelperInterface $verifyEmailHelper 
+        protected VerifyEmailHelperInterface $verifyEmailHelper,
+        protected MessageBusInterface $bus 
     )
     {
         $this->userRepository = $this->entityManager->getRepository(User::class);
@@ -43,14 +46,7 @@ class UserService
         $user->setVerified(false);
         $user->setExpiryDate(new \DateTime('+1 days'));
         $this->userRepository->save($user, true);
-
-        try{
-            $this->mailingHelper->newEmailVerification($user, $user->getEmail());
-        }
-        catch(MailingHelperException $e){
-            $this->userRepository->remove($user, true);
-            throw $e;
-        }
+        $this->bus->dispatch(new EmailVerification($user->getId(), true));
 
         return $user;
     }

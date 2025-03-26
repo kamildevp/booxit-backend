@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     zip \
-    unzip
+    unzip \
+    librabbitmq-dev
 
 ADD entrypoint.sh /var/docker/
 
@@ -16,6 +17,8 @@ RUN apt-get update && \
     docker-php-ext-install -j"$(nproc)" pdo_pgsql && \
     apt-get install -y --no-install-recommends \
         libpq5 && \
+    pecl install amqp && \
+    docker-php-ext-enable amqp && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
         libpq-dev && \
     rm -rf /var/lib/apt/lists/*
@@ -29,3 +32,7 @@ CMD [ "php-fpm" ]
 FROM app_base AS app_dev
 
 RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+FROM app_base AS app_consumer
+
+RUN apt-get update && apt-get install -y supervisor

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repository\Model;
+namespace App\Repository\Pagination\Model;
 
 use JsonSerializable;
 

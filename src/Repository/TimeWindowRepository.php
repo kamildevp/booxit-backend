@@ -15,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method TimeWindow[]    findAll()
  * @method TimeWindow[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class TimeWindowRepository extends ServiceEntityRepository
+class TimeWindowRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     use RepositoryUtils;
 

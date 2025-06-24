@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\EmailConfirmation;
+use App\Entity\User;
 use App\Repository\Trait\RepositoryUtils;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method EmailConfirmation[]    findAll()
  * @method EmailConfirmation[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class EmailConfirmationRepository extends ServiceEntityRepository
+class EmailConfirmationRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     use RepositoryUtils;
 
@@ -41,6 +43,21 @@ class EmailConfirmationRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function findActiveUserEmailConfirmationByType(User $user, string $type): ?EmailConfirmation
+   {
+       return $this->createQueryBuilder('e')
+           ->andWhere('e.creator = :user')
+           ->andWhere('e.type = :type')
+           ->andWhere('e.expiryDate > :expiry_date')
+           ->setParameter('user', $user)
+           ->setParameter('type', $type)
+           ->setParameter('expiry_date', new DateTime())
+           ->getQuery()
+           ->getOneOrNullResult()
+       ;
+   }
+
 
 //    /**
 //     * @return EmailConfirmation[] Returns an array of EmailConfirmation objects

@@ -2,14 +2,20 @@
 
 namespace App\Repository\Trait;
 
+use App\DTO\FiltersDTOInterface;
+use App\DTO\OrderDTOInterface;
+use App\DTO\PaginationDTO;
 use App\Exceptions\EntityNotFoundException;
-use App\Repository\Model\PaginationResult;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
+use App\Repository\Pagination\Model\PaginationResult;
+use App\Repository\Pagination\PaginationBuilder;
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 
 trait RepositoryUtils
 {
-    const ENTRIES_PER_PAGE = 20; 
+    const DEFAULT_ENTRIES_PER_PAGE = 20; 
+    const MAX_ENTRIES_PER_PAGE = 100;
 
     public function findOrFail($id, $lockMode = null, $lockVersion = null): object
     {
@@ -21,22 +27,44 @@ trait RepositoryUtils
         return $entity;
     }
 
-    public function paginate(int $page, $perPage = self::ENTRIES_PER_PAGE, ?QueryBuilder $qb = null): PaginationResult
+    public function paginate(PaginationDTO $paginationDTO, ?FiltersDTOInterface $filtersDTO = null, ?OrderDTOInterface $orderDTO = null, ?QueryBuilder $qb = null): PaginationResult
     {
-        $offset = ($page - 1) * $perPage;
-        $qb = ($qb ?? $this->createQueryBuilder('e'))
-            ->setFirstResult($offset)
-            ->setMaxResults($perPage);
-        $paginator = new Paginator($qb);
-        $total = count($paginator);
+        $qb = ($qb ?? $this->createQueryBuilder('e'));
         
-        $result = new PaginationResult();
-        $result->setItems(iterator_to_array($paginator));
-        $result->setPage($page);
-        $result->setPerPage($perPage);
-        $result->setPagesCount(ceil($total / $perPage));
-        $result->setTotal($total);
+        if($filtersDTO != null){
+            $this->applyFilters($qb, $filtersDTO);
+        }
 
-        return $result;
+        if($orderDTO != null){
+            $this->applyOrder($qb, $orderDTO);
+        }
+        
+        $paginationBuilder = new PaginationBuilder(self::MAX_ENTRIES_PER_PAGE);
+        return $paginationBuilder->paginate($qb, $paginationDTO);
+    }
+
+    private function applyFilters(QueryBuilder $qb, FiltersDTOInterface $filtersDTO): void
+    {
+        $filtersBuilder = new FiltersBuilder();
+        $filtersBuilder->applyFilters($qb, $this->getEntityName(), $filtersDTO);
+    }
+
+    private function applyOrder(QueryBuilder $qb, OrderDTOInterface $orderDTO): void
+    {
+        $orderBuilder = new OrderBuilder();
+        $orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO);
+    }
+
+    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludedIds = [])
+    {
+        $qb = $this->createQueryBuilder('e');
+        $qb->where("e.$fieldName = :value")->setParameter('value', $value);
+
+        if(!empty($excludedIds)){
+            $qb->where('e.id NOT IN (:ids)')
+            ->setParameter('ids', $excludedIds);
+        }
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

@@ -15,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method WorkingHours[]    findAll()
  * @method WorkingHours[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class WorkingHoursRepository extends ServiceEntityRepository
+class WorkingHoursRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     use RepositoryUtils;
 

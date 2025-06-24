@@ -15,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method OrganizationMember[]    findAll()
  * @method OrganizationMember[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class OrganizationMemberRepository extends ServiceEntityRepository
+class OrganizationMemberRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     use RepositoryUtils;
 

@@ -15,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method ScheduleAssignment[]    findAll()
  * @method ScheduleAssignment[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ScheduleAssignmentRepository extends ServiceEntityRepository
+class ScheduleAssignmentRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     use RepositoryUtils;
 

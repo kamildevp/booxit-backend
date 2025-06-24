@@ -2,10 +2,12 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\EmailConfirmation;
 use App\Entity\User;
 use App\Exceptions\MailingHelperException;
 use App\Message\EmailVerification;
-use App\Repository\UserRepository;
+use App\Repository\EmailConfirmationRepository;
+use App\Service\EmailConfirmation\Exception\ResolveVerificationHandlerException;
 use App\Service\MailingHelper\MailingHelper;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -13,29 +15,31 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 class EmailVerificationHandler
 {
-    protected UserRepository $userRepository;
+    protected EmailConfirmationRepository $emailConfirmationRepository;
 
     public function __construct(
         protected MailingHelper $mailingHelper,
         protected EntityManagerInterface $entityManager, 
     )
     {
-        $this->userRepository = $this->entityManager->getRepository(User::class);
+        $this->emailConfirmationRepository = $this->entityManager->getRepository(EmailConfirmation::class);
     }
 
     public function __invoke(EmailVerification $message)
     {
-        $user = $this->userRepository->find($message->getUserId());
-        if(!$user){
+        $emailConfirmation = $this->emailConfirmationRepository->find($message->getEmailConfirmationId());
+        if(!$emailConfirmation){
             return;
         }
 
         try{
-            $this->mailingHelper->newEmailVerification($user, $user->getEmail());
+            $this->mailingHelper->sendEmailVerification($emailConfirmation);
         }
-        catch(MailingHelperException){
+        catch(MailingHelperException | ResolveVerificationHandlerException){
             if($message->shouldUserBeRemovedOnFailure()){
-                $this->userRepository->remove($user, true);
+                $user = $emailConfirmation->getCreator();
+                $userRepository = $this->entityManager->getRepository(User::class);
+                $userRepository->remove($user, true);
             }
         }
     }

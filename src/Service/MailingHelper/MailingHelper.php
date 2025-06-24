@@ -7,31 +7,34 @@ use App\Entity\Reservation;
 use App\Entity\Schedule;
 use App\Entity\User;
 use App\Exceptions\MailingHelperException;
+use App\Repository\EmailConfirmationRepository;
 use App\Service\DataHandlingHelper\DataHandlingHelper;
+use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
-class MailingHelper{
+class MailingHelper
+{
+    private EmailConfirmationRepository $emailConfirmationRepository;
 
-    public function __construct(private VerifyEmailHelperInterface $verifyEmailHelper, private MailerInterface $mailer, private EntityManagerInterface $entityManager)
+    public function __construct(
+        private EmailConfirmationHandlerInterface $emailConfirmationHandler, 
+        private MailerInterface $mailer, 
+        private EntityManagerInterface $entityManager
+    )
     {
-        
+        $this->emailConfirmationRepository = $this->entityManager->getRepository(EmailConfirmation::class);
     }
 
-    public function newEmailVerification(User $user, string $email){
+    public function sendEmailVerification(EmailConfirmation $emailConfirmation){
         $expiryDate = new \DateTime('+1 days');
         try{
-            $emailConfirmation = $this->newEmailConfirmation($user, $email, 'user_verify', $expiryDate, []);
-            $this->entityManager->persist($emailConfirmation);
-            $this->entityManager->flush();
+            $url = $this->emailConfirmationHandler->generateSignature($emailConfirmation);
 
-            $url = $this->generateSignature($emailConfirmation);
-
-            $email = (new TemplatedEmail())->to($email)
+            $email = (new TemplatedEmail())->to($emailConfirmation->getEmail())
             ->subject('Email Verification')
             ->htmlTemplate('emails/emailVerification.html.twig')
             ->context([
@@ -115,25 +118,25 @@ class MailingHelper{
         }
     }
 
-    public function newEmailConfirmation(?User $user, string $email, string $verificationRoute, \DateTime $expiryDate, array $extraParams)
+    public function newEmailConfirmation(
+        ?User $user, 
+        string $email, 
+        \DateTime $expiryDate, 
+        array $extraParams,
+        string $verificationHandler,
+        string $type
+    ): EmailConfirmation
     {
         $emailConfirmation = new EmailConfirmation();
         $emailConfirmation->setCreator($user);
         $emailConfirmation->setEmail($email);
-        $emailConfirmation->setVerificationRoute($verificationRoute);
         $emailConfirmation->setExpiryDate($expiryDate);
         $emailConfirmation->setParams($extraParams);
+        $emailConfirmation->setVerificationHandler($verificationHandler);
+        $emailConfirmation->setType($type);
+
+        $this->emailConfirmationRepository->save($emailConfirmation, true);
 
         return $emailConfirmation;
-    }
-
-    public function generateSignature(EmailConfirmation $emailConfirmation){
-        $signatureComponents = $this->verifyEmailHelper->generateSignature(
-            $emailConfirmation->getVerificationRoute(),
-            $emailConfirmation->getId(),
-            $emailConfirmation->getEmail(),
-            ['id' => $emailConfirmation->getId()] 
-        );
-        return $signatureComponents->getSignedUrl();
     }
 }

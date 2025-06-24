@@ -53,17 +53,10 @@ services:
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'
     App\Service\EntityHandler\EntityHandlerInterface: '@App\Service\EntityHandler\EntityHandler'
-
-
-    acme_api.event.authentication_success_listener:
-        class: App\EventListener\AuthenticationSuccessListener
-        tags:
-            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccessResponse, priority: -1}
-
-    acme_api.event.authentication_failure_listener:
-            class: App\EventListener\AuthenticationFailureListener
-            tags:
-                - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_failure, method: onAuthenticationFailureResponse }
+    App\Service\EmailConfirmation\EmailConfirmationHandlerInterface: 
+        class: 'App\Service\EmailConfirmation\EmailConfirmationHandler'
+        arguments:
+            $secret: '%env(APP_SECRET)%'
 
     acme_api.event.jwt_invalid_listener:
         class: App\EventListener\JWTInvalidListener

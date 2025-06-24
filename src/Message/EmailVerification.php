@@ -5,14 +5,14 @@ namespace App\Message;
 class EmailVerification
 {
     public function __construct(
-        private int $userId,
+        private int $emailConfirmationId,
         private bool $removeUserOnFail = false
     ) {
     }
 
-    public function getUserId(): int
+    public function getEmailConfirmationId(): int
     {
-        return $this->userId;
+        return $this->emailConfirmationId;
     }
 
     public function shouldUserBeRemovedOnFailure(): bool

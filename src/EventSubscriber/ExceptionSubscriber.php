@@ -11,6 +11,7 @@ use App\Exceptions\UnauthorizedException;
 use App\Kernel;
 use App\Response\BadRequestResponse;
 use App\Response\ForbiddenResponse;
+use App\Response\HttpErrorResponse;
 use App\Response\Interface\ExceptionResponseInterface;
 use App\Response\NotFoundResponse;
 use App\Response\ServerErrorResponse;
@@ -18,6 +19,8 @@ use App\Response\UnauthorizedResponse;
 use App\Response\ValidationErrorResponse;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use TypeError;
 
@@ -31,6 +34,8 @@ class ExceptionSubscriber implements EventSubscriberInterface
         MailingHelperException::class => ServerErrorResponse::class,
         RequestValidationException::class => ValidationErrorResponse::class,
         EntityNotFoundException::class => NotFoundResponse::class,
+        NotFoundHttpException::class => NotFoundResponse::class,
+        HttpException::class => HttpErrorResponse::class
     ];
 
     private string $environment;

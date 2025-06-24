@@ -15,20 +15,23 @@ class EmailConfirmation
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'emailConfirmations')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?User $creator = null;
 
     #[ORM\Column(length: 255)]
     private ?string $email = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $verificationRoute = null;
 
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private array $params = [];
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $expiryDate = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $verificationHandler = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $type = null;
 
     public function getId(): ?int
     {
@@ -59,18 +62,6 @@ class EmailConfirmation
         return $this;
     }
 
-    public function getVerificationRoute(): ?string
-    {
-        return $this->verificationRoute;
-    }
-
-    public function setVerificationRoute(string $verificationRoute): self
-    {
-        $this->verificationRoute = $verificationRoute;
-
-        return $this;
-    }
-
     public function getParams(): array
     {
         return $this->params;
@@ -91,6 +82,30 @@ class EmailConfirmation
     public function setExpiryDate(\DateTimeInterface $expiryDate): self
     {
         $this->expiryDate = $expiryDate;
+
+        return $this;
+    }
+
+    public function getVerificationHandler(): ?string
+    {
+        return $this->verificationHandler;
+    }
+
+    public function setVerificationHandler(string $verificationHandler): static
+    {
+        $this->verificationHandler = $verificationHandler;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
 
         return $this;
     }

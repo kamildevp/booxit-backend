@@ -2,13 +2,14 @@
 
 namespace App\Service\Auth;
 
+use App\Entity\RefreshToken;
 use App\Entity\User;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 
 interface AuthServiceInterface
 {
-    public function validateAccess(AbstractController $controller, string $methodName, Request $request): void;
+    public function createUserRefreshToken(User $user): RefreshToken;
 
-    public function getAuthorizedUserOrFail(): User;
+    public function refreshUserToken(string $refreshTokenValue): RefreshToken;
+
+    public function getRefreshTokenUsedByCurrentUser(): ?RefreshToken;
 }

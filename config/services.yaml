@@ -7,6 +7,8 @@ parameters:
     timezone: '%env(APP_TIMEZONE)%'
     storage_directory: '%kernel.project_dir%/storage/'
     organization_banner_directory: 'organization/banner'
+    defaultRefreshTokenTTL: 259200
+    
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -23,6 +25,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Service\Auth\AuthServiceInterface:
+        class: 'App\Service\Auth\AuthService'
+        arguments:
+            $refreshTokenTTL: '%env(int:default:defaultRefreshTokenTTL:REFRESH_TOKEN_TTL)%'
+
+    App\Service\Auth\RouteGuardInterface: '@App\Service\Auth\RouteGuard'
+
     App\Service\SetterHelper\Task\:
         resource: '../src/Service/SetterHelper/Task/'
         public: true
@@ -43,7 +52,6 @@ services:
 
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'
-    App\Service\Auth\AuthServiceInterface: '@App\Service\Auth\AuthService'
     App\Service\EntityHandler\EntityHandlerInterface: '@App\Service\EntityHandler\EntityHandler'
 
 

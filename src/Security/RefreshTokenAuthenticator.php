@@ -5,8 +5,7 @@ namespace App\Security;
 use App\Exceptions\TokenRefreshFailedException;
 use App\Model\PostAuthRefreshToken;
 use App\Response\UnauthorizedResponse;
-use App\Service\Auth\AuthService;
-use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Authentication\AuthenticationSuccessHandler;
+use App\Service\Auth\AuthServiceInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -21,8 +20,8 @@ class RefreshTokenAuthenticator extends AbstractAuthenticator
 {
     
     public function __construct(
-        private AuthService $authService,
-        private AuthenticationSuccessHandler $lexikAuthSuccessHandler
+        private AuthServiceInterface $authService,
+        private AuthenticationSuccessHandler $authSuccessHandler
     )
     {
         
@@ -36,10 +35,12 @@ class RefreshTokenAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $refreshTokenValue = $request->get('refresh_token');
-        if (empty($refreshTokenValue)) {
+        $requestParams = $request->toArray();
+        if (!array_key_exists('refresh_token', $requestParams) || empty($requestParams['refresh_token'])) {
             throw new CustomUserMessageAuthenticationException('Missing refresh token');
         }
+
+        $refreshTokenValue = $requestParams['refresh_token'];
 
         try{
             $refreshToken = $this->authService->refreshUserToken($refreshTokenValue);
@@ -55,6 +56,7 @@ class RefreshTokenAuthenticator extends AbstractAuthenticator
         }));
 
         $passport->setAttribute('refresh_token', $refreshToken->getValue());
+        $passport->setAttribute('refresh_token_id', $refreshToken->getId());
 
         return $passport;
     }
@@ -62,18 +64,20 @@ class RefreshTokenAuthenticator extends AbstractAuthenticator
     public function createToken(Passport $passport, string $firewallName): TokenInterface
     {
         $refreshTokenValue = $passport->getAttribute('refresh_token');
+        $refreshTokenId = $passport->getAttribute('refresh_token_id');
 
         return new PostAuthRefreshToken(
             $passport->getUser(),
             $firewallName,
             $passport->getUser()->getRoles(),
-            $refreshTokenValue
+            $refreshTokenValue,
+            $refreshTokenId
         );
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return $this->lexikAuthSuccessHandler->onAuthenticationSuccess($request, $token);
+        return $this->authSuccessHandler->onAuthenticationSuccess($request, $token);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response

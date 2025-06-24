@@ -26,8 +26,8 @@ security:
             provider: login_user_provider
             json_login:
                 check_path: /api/auth/login
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                success_handler: App\Security\AuthenticationSuccessHandler
+                failure_handler: App\Security\AuthenticationFailureHandler
                 username_path: email
 
         refresh:

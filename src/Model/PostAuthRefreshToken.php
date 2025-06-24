@@ -11,7 +11,8 @@ class PostAuthRefreshToken extends PostAuthenticationToken
         UserInterface $user,
         string $firewallName,
         array $roles,
-        private string $refreshTokenValue
+        private string $refreshTokenValue,
+        private int $refreshTokenId
     ) {
         parent::__construct($user, $firewallName, $roles);
     }
@@ -21,12 +22,17 @@ class PostAuthRefreshToken extends PostAuthenticationToken
         return $this->refreshTokenValue;
     }
 
+    public function getRefreshTokenId(): int
+    {
+        return $this->refreshTokenId;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function __serialize(): array
     {
-        return [$this->refreshTokenValue, parent::__serialize()];
+        return [$this->refreshTokenValue, $this->refreshTokenId, parent::__serialize()];
     }
 
     /**
@@ -34,7 +40,7 @@ class PostAuthRefreshToken extends PostAuthenticationToken
      */
     public function __unserialize(array $data): void
     {
-        [$this->refreshTokenValue, $parentData] = $data;
+        [$this->refreshTokenValue, $this->refreshTokenId, $parentData] = $data;
         parent::__unserialize($parentData);
     }
 }

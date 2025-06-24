@@ -2,25 +2,14 @@
 
 namespace App\EventListener;
 
+use App\Response\UnauthorizedResponse;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTInvalidEvent;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class JWTInvalidListener
 {
-    /**
-     * @param JWTInvalidEvent $event
-     */
     public function onJWTInvalid(JWTInvalidEvent $event)
     {
-        $responseData = [
-            'status' => 'fail',
-            'data' => [
-                'message' => 'Invalid JWT token'
-            ]
-        ];
-
-        $response = new JsonResponse($responseData, 401);
-
+        $response = new UnauthorizedResponse('Invalid JWT token');
         $event->setResponse($response);
     }
 }

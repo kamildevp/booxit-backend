@@ -4,87 +4,31 @@ namespace App\Service\Auth;
 
 use App\Entity\RefreshToken;
 use App\Entity\User;
+use App\Exceptions\InvalidObjectException;
 use App\Exceptions\RefreshTokenCompromisedException;
 use App\Exceptions\TokenRefreshFailedException;
-use App\Exceptions\UnauthorizedException;
 use App\Model\RefreshTokenPayload;
 use App\Repository\RefreshTokenRepository;
-use App\Service\Auth\AccessRule\AccessRuleInterface;
-use App\Service\Auth\Attribute\RestrictedAccess;
 use DateInterval;
 use DateTime;
-use InvalidArgumentException;
+use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use ReflectionAttribute;
-use ReflectionClass;
-use ReflectionMethod;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Lexik\Bundle\JWTAuthenticationBundle\Security\Authenticator\Token\JWTPostAuthenticationToken;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class AuthService implements AuthServiceInterface
 {
-    const REFRESH_TOKEN_TTL = 259200;
-
-    private ?UserInterface $user = null;
-
     public function __construct(
         private Security $security, 
         private RefreshTokenRepository $refreshTokenRepository, 
-        private JWTTokenManagerInterface $jwtTokenManager
+        private JWTEncoderInterface $jwtEncoder,
+        private int $refreshTokenTTL
     )
     {
-        $this->user = $this->security->getUser();
+
     }
 
-    public function validateAccess(AbstractController $controller, string $methodName, Request $request): void
-    {
-        $this->validateLocationAccess($request, $controller);
-        $this->validateLocationAccess($request, $controller, $methodName);
-    }
-
-    public function getAuthorizedUserOrFail(): User
-    {
-        if(!($this->user instanceof User)){
-            throw new UnauthorizedException;
-        }
-
-        return $this->user;
-    }
-
-    private function validateLocationAccess(Request $request, AbstractController $controller, ?string $methodName = null): void
-    {
-        $restrictedAccessAttributes = $this->getRestrictedAccessAttributes($controller, $methodName);
-
-        foreach($restrictedAccessAttributes as $attribute){
-            $accessRule = $this->resolveAccessRule($attribute);
-            $accessRule->validateAccess($this->user, $request);
-        }
-    }
-
-    private function getRestrictedAccessAttributes(AbstractController $controller, ?string $methodName = null): array
-    {
-        $reflection = $methodName ? new ReflectionMethod($controller, $methodName) : new ReflectionClass($controller);
-        return $reflection->getAttributes(RestrictedAccess::class);
-    }
-
-    /**
-     * @param ReflectionAttribute<RestrictedAccess> $attribute
-     */
-    private function resolveAccessRule(ReflectionAttribute $attribute): AccessRuleInterface
-    {
-        $accessRuleClass = $attribute->newInstance()->accessRule;
-        $accessRule = new $accessRuleClass;
-        if(!($accessRule instanceof AccessRuleInterface)){
-            throw new InvalidArgumentException('Access Rule must implement AccessRuleInterface');
-        }
-
-        return $accessRule;
-    }
-
-    public function createUserRefreshToken(User $user): string
+    public function createUserRefreshToken(User $user): RefreshToken
     {
         $refreshToken = new RefreshToken();
         $refreshToken->setAppUser($user);
@@ -93,7 +37,7 @@ class AuthService implements AuthServiceInterface
         $this->regenerateRefreshToken($refreshToken);
         $this->refreshTokenRepository->save($refreshToken, true);
         
-        return $refreshToken->getValue();
+        return $refreshToken;
     }
 
     public function refreshUserToken(string $refreshTokenValue): RefreshToken
@@ -113,9 +57,11 @@ class AuthService implements AuthServiceInterface
 
     private function generateRefreshTokenValue(User $user, int $refreshTokenId, DateTime $expiryDate): string
     {
-        return $this->jwtTokenManager->createFromPayload($user, [
+        return $this->jwtEncoder->encode([
+            'id' => $user->getId(),
+            'roles' => $user->getRoles(),
             'refresh_token_id' => $refreshTokenId,
-            'exp' => $expiryDate->getTimestamp()
+            'exp' => $expiryDate->getTimestamp(),
         ]);
     }
 
@@ -130,7 +76,7 @@ class AuthService implements AuthServiceInterface
 
     private function regenerateRefreshToken(RefreshToken $refreshToken): void
     {
-        $expiryDate = $this->generateRefreshTokenExpiryDate(self::REFRESH_TOKEN_TTL);
+        $expiryDate = $this->generateRefreshTokenExpiryDate($this->refreshTokenTTL);
         $refreshToken->setExpiresAt($expiryDate);
         $value = $this->generateRefreshTokenValue($refreshToken->getAppUser(), $refreshToken->getId(), $expiryDate);
         $refreshToken->setValue($value);
@@ -156,7 +102,7 @@ class AuthService implements AuthServiceInterface
     private function parseRefreshToken(string $refreshToken): RefreshTokenPayload
     {
         try{
-            $tokenPayload = $this->jwtTokenManager->parse($refreshToken);
+            $tokenPayload = $this->jwtEncoder->decode($refreshToken);
         }
         catch(JWTDecodeFailureException $e){
             throw new TokenRefreshFailedException();
@@ -167,5 +113,21 @@ class AuthService implements AuthServiceInterface
         }
 
         return new RefreshTokenPayload((int)$tokenPayload['id'], (int)$tokenPayload['refresh_token_id']);
+    }
+
+    public function getRefreshTokenUsedByCurrentUser(): ?RefreshToken
+    {
+        $token = $this->security->getToken();
+        if(!$token instanceof JWTPostAuthenticationToken){
+            $class = JWTPostAuthenticationToken::class;
+            throw new InvalidObjectException("Token must be instance of $class");
+        }
+
+        $payload = $this->jwtEncoder->decode($token->getCredentials());
+        if(!array_key_exists('refresh_token_id', $payload) || !is_int($payload['refresh_token_id'])){
+            return null;
+        }
+
+        return $this->refreshTokenRepository->find((int)$payload['refresh_token_id']);
     }
 }

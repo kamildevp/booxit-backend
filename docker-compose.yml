@@ -49,6 +49,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-booxit-rabbit}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-pass}
+    volumes:
+      - ./docker/rabbitmq:/etc/rabbitmq
     networks:
       - default
     healthcheck:

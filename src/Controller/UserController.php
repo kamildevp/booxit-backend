@@ -2,100 +2,139 @@
 
 namespace App\Controller;
 
-use App\Enum\User\UserGetterGroup;
-use App\Enum\User\UserSetterGroup;
-use App\Enum\ViewType;
-use App\Exceptions\VerifyEmailException;
+use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
+use App\DTO\PaginationDTO;
+use App\DTO\User\UserChangePasswordDTO;
+use App\DTO\User\UserCreateDTO;
+use App\DTO\User\UserListFiltersDTO;
+use App\DTO\User\UserListOrderDTO;
+use App\DTO\User\UserPatchDTO;
+use App\DTO\User\UserResetPasswordDTO;
+use App\DTO\User\UserResetPasswordRequestDTO;
+use App\Entity\User;
+use App\Enum\User\UserNormalizerGroup;
 use App\Repository\UserRepository;
+use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
+use App\Response\ValidationFailedResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
+use App\Service\Auth\AuthServiceInterface;
 use App\Service\Entity\UserService;
-use App\Service\EntityHandler\EntityHandlerInterface;
-use App\Service\GetterHelper\GetterHelperInterface;
+use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
 
     #[Route('user', name: 'user_new', methods: ['POST'])]
-    public function new(UserService $userService, Request $request): JsonResponse
+    public function create(
+        UserService $userService, 
+        #[MapRequestPayload] UserCreateDTO $dto,
+        EntitySerializerInterface $entitySerializer,   
+    ): ResourceCreatedResponse
     {
-        $user = $userService->createUser($request->request->all());
-
-        return new ResourceCreatedResponse($user);
+        $user = $userService->createUser($dto);
+        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
+        
+        return new ResourceCreatedResponse($responseData);
     }
 
-    #[Route('user/verify', name: 'user_verify', methods: ['GET'])]
-    public function verify(UserService $userService, Request $request)
+    #[Route('user/verify', name: 'user_verify', methods: ['POST'])]
+    public function verify(UserService $userService, #[MapRequestPayload] VerifyEmailConfirmationDTO $dto)
     {
-        try{
-            $emailConfirmationId = (int)$request->get('id');
-            $userService->verifyUserEmail($emailConfirmationId, $request->getUri());
-            $view = ViewType::EMAIL_VERIFICATION_SUCCESS->getView();
-        }
-        catch(VerifyEmailException $e){
-            $view = ViewType::EMAIL_VERIFICATION_FAIL->getView();
-            $view->setParam('description', $e->getMessage());
-        }
+        $verified = $userService->verifyUserEmail($dto);
 
-        return $this->render($view->getTemplate(), $view->getParams());
+        return $verified ? 
+            new SuccessResponse(['message' => 'Verification Successful']) : 
+            new ValidationFailedResponse('Verification Failed');
     }
 
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_get', methods: ['GET'])]
-    public function me(GetterHelperInterface $getterHelper): JsonResponse
+    public function me(EntitySerializerInterface $entitySerializer): ApiResponse
     {
         $user = $this->getUser();
-        $responseData = $getterHelper->get($user, [UserGetterGroup::ALL->value]);
+        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
 
         return new SuccessResponse($responseData);
     }
 
-    #[Route('user/{userId}', name: 'user_get', methods: ['GET'])]
-    public function get(UserRepository $userRepository, GetterHelperInterface $getterHelper, int $userId): JsonResponse
+    #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function get(EntitySerializerInterface $entitySerializer, User $user): ApiResponse
     {
-        $user = $userRepository->findOrFail($userId);
-        $responseData = $getterHelper->get($user, [UserGetterGroup::PUBLIC->value]);
+        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PUBLIC->value]);
 
         return new SuccessResponse($responseData);
     }
 
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_patch', methods: ['PATCH'])]
-    public function modify(EntityHandlerInterface $entityHandler, GetterHelperInterface $getterHelper, UserRepository $userRepository, Request $request): JsonResponse
+    public function patch(UserService $userService, EntitySerializerInterface $entitySerializer, #[MapRequestPayload] UserPatchDTO $dto): ApiResponse
     {
         $user = $this->getUser();
-        $entityHandler->parseParamsToEntity($user, $request->request->all(), [UserSetterGroup::PATCH->value]);
-        $userRepository->save($user, true);
-        $responseData = $getterHelper->get($user, [UserGetterGroup::ALL->value]);
+        $user = $userService->patchUser($user, $dto);
+
+        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
 
         return new SuccessResponse($responseData);
+    }
+
+    #[RestrictedAccess]
+    #[Route('user/change_password', name: 'user_change_password', methods: ['PATCH'])]
+    public function changePassword(AuthServiceInterface $authService, UserService $userService, #[MapRequestPayload] UserChangePasswordDTO $dto): ApiResponse
+    {
+        $user = $this->getUser();
+        $userRefreshToken = $authService->getRefreshTokenUsedByCurrentUser();
+        $userService->changeUserPassword($user, $dto->password, $dto->logoutOtherSessions, $userRefreshToken);
+
+        return new SuccessResponse(['message' => 'Password changed successfully']);
     }
 
     #[RestrictedAccess]
     #[Route('user', name: 'user_me_delete', methods: ['DELETE'])]
     public function delete(UserRepository $userRepository){
         $user = $this->getUser();
-
         $userRepository->remove($user, true);
         
         return new SuccessResponse(['message' => 'User removed successfully']);
     }
 
     #[Route('user', name: 'users_get', methods: ['GET'])]
-    public function getUsers(UserRepository $userRepository, GetterHelperInterface $getterHelper, Request $request): JsonResponse
+    public function listUsers(
+        UserRepository $userRepository, 
+        EntitySerializerInterface $entitySerializer, 
+        #[MapQueryString] PaginationDTO $paginationDTO = new PaginationDTO,
+        #[MapQueryString] UserListFiltersDTO $filtersDTO = new UserListFiltersDTO,
+        #[MapQueryString] UserListOrderDTO $orderDTO = new UserListOrderDTO
+    ): ApiResponse
     {
-        $page = $request->query->get('page', 1);
-        $paginationResult = $userRepository->paginate($page);
-        $formattedItems = $getterHelper->getCollection($paginationResult->getItems(), [UserGetterGroup::PUBLIC->value]);
+        $paginationResult = $userRepository->paginate($paginationDTO, $filtersDTO, $orderDTO);
+        $formattedItems = $entitySerializer->normalize($paginationResult->getItems(), [UserNormalizerGroup::PUBLIC->value]);
         $paginationResult->setItems($formattedItems);
 
         return new SuccessResponse($paginationResult);
     }
 
+    #[Route('user/reset_password_request', name: 'user_reset_password_request', methods: ['POST'])]
+    public function resetPasswordRequest(UserService $userService, #[MapRequestPayload] UserResetPasswordRequestDTO $dto): ApiResponse
+    {
+        $userService->handleResetUserPasswordRequest($dto);
+
+        return new SuccessResponse(['message' => 'If user with specified email exists, password reset link was sent to specified email']);
+    }
+
+    #[Route('user/reset_password', name: 'user_reset_password', methods: ['PATCH'])]
+    public function resetPassword(UserService $userService, #[MapRequestPayload] UserResetPasswordDTO $dto)
+    {
+        $result = $userService->resetUserPassword($dto);
+
+        return $result ? 
+            new SuccessResponse(['message' => 'Password reset successful']) : 
+            new ValidationFailedResponse('Password reset failed');
+    }
 
 }

@@ -2,13 +2,12 @@
 
 namespace App\Entity;
 
-use App\Enum\User\UserGetterGroup;
-use App\Enum\User\UserSetterGroup;
+use App\Enum\User\UserNormalizerGroup;
+use App\Repository\Filter\EntityFilter\Attribute\Filter;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Order\EntityOrder\Attribute\Order;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\UserRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\User\EmailTask;
-use App\Service\SetterHelper\Task\User\PasswordTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -16,50 +15,32 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
 
-#[UniqueEntity(
-    fields: ['email'],
-    message: 'This email is already taken')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        max: 180,
-        maxMessage: 'Max length of email is 180 characters'
-    )]
-    #[Assert\Email(
-        message: 'Value is not a valid email.',
-    )]
+    #[Groups([UserNormalizerGroup::PRIVATE->value])]
+    #[Order('email', new BaseFieldOrder)]
+    #[Filter('email', new FieldContains)] 
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
+
+    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+
+    #[Order('name', new BaseFieldOrder)]
+    #[Filter('name', new FieldContains)] 
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[Assert\NotBlank(
-        groups: ['plainPassword'], 
-        message: 'Password cannot be blank'
-    )]
-    #[Assert\Regex(
-        groups: ['plainPassword'],
-        pattern: '/^(?=.*[A-Z])(?=.*\d)[A-Z\d!@#$%?&*]{8,}$/i',
-        message: 'Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit'
-    )]
     private ?string $plainPassword = null;
 
     /**
@@ -71,7 +52,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = ['ROLE_USER'];
 
-    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;
 
     #[ORM\Column]
@@ -93,31 +74,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->refreshTokens = new ArrayCollection();
     }
 
-    #[Getter(groups: [
-        UserGetterGroup::PUBLIC->value,
-        UserGetterGroup::ORGANIZATION_MEMBERS->value, 
-        UserGetterGroup::ORGANIZATION_ADMINS->value, 
-        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
-    ])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups: [
-        UserGetterGroup::ORGANIZATION_MEMBERS->value,
-        UserGetterGroup::ORGANIZATION_ADMINS->value,
-        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
-    ])]
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    #[Setter(setterTask: EmailTask::class, groups: [
-        UserSetterGroup::ALL->value,
-        UserSetterGroup::PATCH->value
-    ])]
     public function setEmail(string $email): self
     {
         $this->email = $email;
@@ -135,22 +101,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (string) $this->email;
     }
 
-
-    #[Getter(groups: [
-        UserGetterGroup::PUBLIC->value,
-        UserGetterGroup::ORGANIZATION_MEMBERS->value,
-        UserGetterGroup::ORGANIZATION_ADMINS->value,
-        UserGetterGroup::SCHEDULE_ASSIGNMENTS->value
-    ])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter(groups: [
-        UserSetterGroup::ALL->value,
-        UserSetterGroup::PATCH->value
-    ])]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -195,7 +150,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see UserInterface
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
@@ -206,7 +161,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->plainPassword;
     }
 
-    #[Setter(targetParameter: 'password',  setterTask: PasswordTask::class)]
     public function setPlainPassword(string $plainPassword): self
     {
         $this->plainPassword = $plainPassword;
@@ -256,7 +210,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[Getter(propertyNameAlias: 'organizations', groups: [UserGetterGroup::USER_ORGANIZATIONS->value])]
     /**
      * @return Collection<int, OrganizationMember>
      */

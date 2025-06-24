@@ -53,6 +53,7 @@ services:
     App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
     App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'
     App\Service\EntityHandler\EntityHandlerInterface: '@App\Service\EntityHandler\EntityHandler'
+    App\Service\EntitySerializer\EntitySerializerInterface: '@App\Service\EntitySerializer\EntitySerializer'
     App\Service\EmailConfirmation\EmailConfirmationHandlerInterface: 
         class: 'App\Service\EmailConfirmation\EmailConfirmationHandler'
         arguments:
@@ -68,4 +69,8 @@ services:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_expired, method: onJWTExpired }
 
+    App\ValueResolver\EntityValueResolver:
+        arguments: ['@doctrine.orm.entity_manager']
+        tags:
+            - { name: controller.argument_value_resolver, priority: 150 }
 

@@ -11,3 +11,8 @@ docker/db/data/
 # supervisor logs
 supervisord.log
 supervisord.pid
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

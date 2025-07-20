@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface RouteGuardInterface
 {
-    public function validateAccess(AbstractController $controller, string $methodName, Request $request): void;
+    public function validateAccess(AbstractController $controller, Request $request, ?string $methodName = null): void;
 
     public function getAuthorizedUserOrFail(): User;
 }

@@ -21,8 +21,8 @@ class ControllerSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
 
         if (is_array($controller) || is_object($controller)) {
-            [$controllerObject, $methodName] = is_array($controller) ? $controller : [$controller, '__invoke'];
-            $this->routeGuard->validateAccess($controllerObject, $methodName, $request);
+            [$controllerInstance, $methodName] = is_array($controller) ? $controller : [$controller, null];
+            $this->routeGuard->validateAccess($controllerInstance, $request, $methodName);
         }
 
     }

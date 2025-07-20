@@ -9,13 +9,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class AuthenticatedRule implements AccessRuleInterface
 {
-    public function validateAccess(?UserInterface $user, Request $request): bool
+    public function validateAccess(?UserInterface $user, Request $request): void
     {
-        $valid = $user instanceof User;
-        if(!$valid){
+        if(!$user instanceof User){
             throw new UnauthorizedException;
         }
-
-        return $valid;
     }
 }

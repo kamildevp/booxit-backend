@@ -26,10 +26,10 @@ class RouteGuard implements RouteGuardInterface
         $this->user = $this->security->getUser();
     }
 
-    public function validateAccess(AbstractController $controller, string $methodName, Request $request): void
+    public function validateAccess(AbstractController $controller, Request $request, ?string $methodName = null): void
     {
         $this->validateLocationAccess($request, $controller);
-        $this->validateLocationAccess($request, $controller, $methodName);
+        $this->validateLocationAccess($request, $controller, $methodName ?? '_invoke');
     }
 
     public function getAuthorizedUserOrFail(): User

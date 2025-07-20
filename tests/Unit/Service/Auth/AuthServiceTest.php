@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\App\Service\Auth;
+namespace App\Tests\Unit\Service\Auth;
 
 use App\Entity\RefreshToken;
 use App\Entity\User;
@@ -8,9 +8,7 @@ use App\Exceptions\InvalidObjectException;
 use App\Exceptions\TokenRefreshFailedException;
 use App\Repository\RefreshTokenRepository;
 use App\Service\Auth\AuthService;
-use App\Service\Auth\AuthServiceInterface;
 use DateTime;
-use DateTimeInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Authenticator\Token\JWTPostAuthenticationToken;

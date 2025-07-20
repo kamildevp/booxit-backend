@@ -13,18 +13,13 @@ use App\Exceptions\VerifyEmailConfirmationException;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
-use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
-use App\Service\MailingHelper\MailingHelper;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
 use App\Exceptions\InvalidActionException;
-use App\Service\Auth\AuthServiceInterface;
 use DateTime;
-use Symfony\Bundle\SecurityBundle\Security;
 
 class UserService
 {

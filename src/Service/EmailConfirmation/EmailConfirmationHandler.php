@@ -14,7 +14,7 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
     )
     {}
 
-    public function generateSignature(EmailConfirmation $emailConfirmation, array $extraParams = []): string
+    public function generateSignedUrl(EmailConfirmation $emailConfirmation, array $extraParams = []): string
     {
         $user = $emailConfirmation->getCreator();
         $extraParams['id'] = $emailConfirmation->getId();
@@ -67,7 +67,7 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
         return true;
     }
 
-    public function createToken(string $userId, string $email): string
+    private function createToken(int $userId, string $email): string
     {
         $encodedData = json_encode([$userId, $email]);
 
@@ -77,12 +77,12 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
     
     public function resolveVerificationHandlerUrl(string $verificationHandler): string
     {
-        $url = $_ENV['VERIFICATION_HANDLER_'. strtoupper($verificationHandler)];
+        $envVarName = 'VERIFICATION_HANDLER_'. strtoupper($verificationHandler);
         
-        if(!$url){
+        if(!array_key_exists($envVarName, $_ENV)){
             throw new ResolveVerificationHandlerException('Verification Handler is not defined');
         }
 
-        return $url;
+        return $_ENV[$envVarName];
     }
 }

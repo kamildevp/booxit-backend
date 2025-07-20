@@ -32,7 +32,7 @@ class MailingHelper
     public function sendEmailVerification(EmailConfirmation $emailConfirmation){
         $expiryDate = new \DateTime('+1 days');
         try{
-            $url = $this->emailConfirmationHandler->generateSignature($emailConfirmation);
+            $url = $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation);
 
             $email = (new TemplatedEmail())->to($emailConfirmation->getEmail())
             ->subject('Email Verification')

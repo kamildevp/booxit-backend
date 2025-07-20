@@ -23,7 +23,6 @@ class EmailConfirmationService
     public function __construct(
         protected EntityManagerInterface $entityManager, 
         protected EmailConfirmationHandlerInterface $emailConfirmationHandler,
-        protected MailingHelper $mailingHelper,
         protected MessageBusInterface $bus,
     )
     {
@@ -40,15 +39,14 @@ class EmailConfirmationService
     ){
         $expiryDate = $expiryDate ?? new DateTime(self::DEFAULT_EMAIL_CONFIRMATION_EXPIRY);
 
-        $emailConfirmation = $this->mailingHelper->newEmailConfirmation(
-            $user, 
-            $email, 
-            $expiryDate, 
-            [],
-            $verificationHandler,
-            $type
-        );
+        $emailConfirmation = new EmailConfirmation();
+        $emailConfirmation->setCreator($user);
+        $emailConfirmation->setEmail($email);
+        $emailConfirmation->setExpiryDate($expiryDate);
+        $emailConfirmation->setVerificationHandler($verificationHandler);
+        $emailConfirmation->setType($type);
 
+        $this->emailConfirmationRepository->save($emailConfirmation, true);
         $this->bus->dispatch(new EmailVerification($emailConfirmation->getId(), $removeUserOnFail));
     }
 

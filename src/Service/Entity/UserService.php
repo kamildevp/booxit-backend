@@ -60,11 +60,12 @@ class UserService
 
     public function patchUser(User $user, UserPatchDTO $dto): User
     {
-        $user = $this->entitySerializer->parseToEntity($dto->toArray(['email']), $user);
+        $userEmail = $user->getEmail();
+        $user = $this->entitySerializer->parseToEntity($dto->toArray(), $user);
 
         $this->userRepository->save($user, true);
 
-        if($user->getEmail() != $dto->email){
+        if($userEmail != $dto->email){
             $this->emailConfirmationService->setupEmailConfirmation(
                 $user, 
                 $dto->email, 

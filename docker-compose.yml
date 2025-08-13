@@ -10,6 +10,9 @@ services:
     build:
       context: ./docker/php
       target: app_base
+    depends_on:
+      database:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       - ./:/var/www
@@ -42,6 +45,11 @@ services:
       - ./docker/db/data:/var/lib/postgresql/data:rw
     networks:
       - default
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   rabbitmq:
     hostname: ${RABBIT_CONTAINER_HOSTNAME:-booxit-backend-rabbitmq}

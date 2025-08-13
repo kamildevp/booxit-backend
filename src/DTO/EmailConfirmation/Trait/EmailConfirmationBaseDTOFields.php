@@ -4,13 +4,10 @@ namespace App\DTO\EmailConfirmation\Trait;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-trait EmailConfirmationBaseDTOFields {
-    #[Assert\NotBlank]
-    #[Assert\Type('int')]
+trait EmailConfirmationBaseDTOFields 
+{
     public readonly int $id;
 
-    #[Assert\NotBlank]
-    #[Assert\Type('int')]
     public readonly int $expires;
 
     #[Assert\NotBlank]

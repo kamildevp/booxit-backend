@@ -2,8 +2,6 @@
 
 namespace App\DTO;
 
-use App\DTO\Type\Undefined;
-
 abstract class AbstractDTO
 {
     public function toArray(array $skipKeys = []): array

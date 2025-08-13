@@ -11,7 +11,7 @@ class UserResetPasswordRequestDTO extends AbstractDTO
     use VerificationHandlerFieldDTO;
 
     #[Assert\Email(
-        message: 'Value is not a valid email',
+        message: 'Parameter is not a valid email',
     )]
     public readonly string $email;
 

@@ -7,13 +7,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 class PaginationDTO extends AbstractDTO {
 
     public function __construct(
-        #[Assert\NotBlank]
-        #[Assert\Type('int')]
         #[Assert\GreaterThan(0)]
         public int $page = 1,
 
-        #[Assert\NotBlank]
-        #[Assert\Type('int')]
         #[Assert\GreaterThan(0)]
         public int $perPage = 20,
     )

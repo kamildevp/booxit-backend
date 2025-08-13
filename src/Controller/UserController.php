@@ -95,7 +95,7 @@ class UserController extends AbstractController
     }
 
     #[RestrictedAccess]
-    #[Route('user', name: 'user_me_delete', methods: ['DELETE'])]
+    #[Route('user/me', name: 'user_me_delete', methods: ['DELETE'])]
     public function delete(UserRepository $userRepository){
         $user = $this->getUser();
         $userRepository->remove($user, true);
@@ -103,8 +103,8 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'User removed successfully']);
     }
 
-    #[Route('user', name: 'users_get', methods: ['GET'])]
-    public function listUsers(
+    #[Route('user', name: 'user_list', methods: ['GET'])]
+    public function list(
         UserRepository $userRepository, 
         EntitySerializerInterface $entitySerializer, 
         #[MapQueryString] PaginationDTO $paginationDTO = new PaginationDTO,

@@ -30,7 +30,6 @@ class MailingHelper
     }
 
     public function sendEmailVerification(EmailConfirmation $emailConfirmation){
-        $expiryDate = new \DateTime('+1 days');
         try{
             $url = $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation);
 
@@ -38,7 +37,7 @@ class MailingHelper
             ->subject('Email Verification')
             ->htmlTemplate('emails/emailVerification.html.twig')
             ->context([
-                'expiration_date' => $expiryDate,
+                'expiration_date' => $emailConfirmation->getExpiryDate(),
                 'url' => $url
             ]);
             $this->mailer->send($email);

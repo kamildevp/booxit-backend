@@ -13,7 +13,7 @@ class EntityNotFoundException extends RuntimeException
     public function __construct(string $entityClass = "", int $code = 0, Throwable|null $previous = null)
     {
         $entityName = !empty($entityClass) ? (new ReflectionClass($entityClass))->getShortName() : '';
-        $message = !empty($entityName) ? $entityName . ' not Found' : 'Not Found';
+        $message = !empty($entityName) ? $entityName . ' not found' : 'Not found';
         
         parent::__construct($message, $code, $previous);
     }

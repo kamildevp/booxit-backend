@@ -55,14 +55,15 @@ trait RepositoryUtils
         $orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO);
     }
 
-    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludedIds = [])
+    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [])
     {
         $qb = $this->createQueryBuilder('e');
         $qb->where("e.$fieldName = :value")->setParameter('value', $value);
 
-        if(!empty($excludedIds)){
-            $qb->where('e.id NOT IN (:ids)')
-            ->setParameter('ids', $excludedIds);
+        $loopIndx = 0;
+        foreach($excludeBy as $column => $columnValue){
+            $qb->andWhere("e.$column NOT IN (:exval$loopIndx)")->setParameter("exval$loopIndx", $columnValue);
+            $loopIndx++;
         }
 
         return $qb->getQuery()->getOneOrNullResult();

@@ -16,6 +16,7 @@ trait RepositoryUtils
 {
     const DEFAULT_ENTRIES_PER_PAGE = 20; 
     const MAX_ENTRIES_PER_PAGE = 100;
+    const DEFAULT_ORDER_MAP = ['id' => 'asc'];
 
     public function findOrFail($id, $lockMode = null, $lockVersion = null): object
     {
@@ -52,7 +53,7 @@ trait RepositoryUtils
     private function applyOrder(QueryBuilder $qb, OrderDTOInterface $orderDTO): void
     {
         $orderBuilder = new OrderBuilder();
-        $orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO);
+        $orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, self::DEFAULT_ORDER_MAP);
     }
 
     public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [])

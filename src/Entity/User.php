@@ -12,7 +12,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -22,6 +21,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[Order('id', new BaseFieldOrder)]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

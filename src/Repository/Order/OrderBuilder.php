@@ -11,12 +11,14 @@ use ReflectionProperty;
 
 class OrderBuilder {
 
-    public function applyOrder(QueryBuilder $qb, string $entityClass, OrderDTOInterface $orderDTO): void
+    public function applyOrder(QueryBuilder $qb, string $entityClass, OrderDTOInterface $orderDTO, array $defaultOrderMap): void
     {
         $availableOrderDefs = $this->getAvailableOrderDefs($entityClass);
+        $orderMap = $orderDTO->getOrderMap();
+        $orderMap = empty($orderMap) ? $defaultOrderMap : $orderMap;
 
         $orderIndx = 0;
-        foreach($orderDTO->getOrderMap() as $parameterName => $orderDir)
+        foreach($orderMap as $parameterName => $orderDir)
         {
             $orderDef = array_key_exists($parameterName, $availableOrderDefs) ? $availableOrderDefs[$parameterName] : null;
             $order = $orderDef['order'];

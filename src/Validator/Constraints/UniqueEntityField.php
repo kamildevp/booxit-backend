@@ -14,7 +14,7 @@ class UniqueEntityField extends Constraint
     public function __construct(
         public string $entityClass,
         public string $fieldName,
-        public array $ignoredIds = [],
+        public array $ignore = [],
         public $message = '{{ entityClass }} with provided {{ fieldName }} already exists',
         ?array $groups = null,
         mixed $payload = null,

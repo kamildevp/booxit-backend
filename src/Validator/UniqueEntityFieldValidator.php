@@ -11,10 +11,16 @@ use App\Validator\Constraints\UniqueEntityField;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Mapping\MappingException;
 use InvalidArgumentException;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class UniqueEntityFieldValidator extends ConstraintValidator
 {
-    public function __construct(private EntityManagerInterface $entityManager) {}
+    public function __construct(
+        private EntityManagerInterface $entityManager, 
+        private RequestStack $requestStack,
+        private Security $security,
+    ) {}
 
     public function validate(mixed $value, Constraint $constraint): void
     {
@@ -42,9 +48,11 @@ class UniqueEntityFieldValidator extends ConstraintValidator
             throw new InvalidArgumentException("Provided entity class repository must implement " . RepositoryUtilsInterface::class);
         }
 
-        $matchingEntities = $repository->findOneByFieldValue($constraint->fieldName, $value, $constraint->ignoredIds);
 
-        if (!empty($matchingEntities)) {
+        $excludeBy = $this->mapExcludeByParams($constraint->ignore);
+        $matchingEntity = $repository->findOneByFieldValue($constraint->fieldName, $value, $excludeBy);
+
+        if (!empty($matchingEntity)) {
             $shortName = (new \ReflectionClass($constraint->entityClass))->getShortName();
             $this->context->buildViolation($constraint->message)
                 ->setParameter('{{ entityClass }}', $shortName)
@@ -52,5 +60,22 @@ class UniqueEntityFieldValidator extends ConstraintValidator
                 ->setParameter('{{ value }}', $value)
                 ->addViolation();
         }
+    }
+
+    protected function mapExcludeByParams(array $ignore): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $mappedParams = [];
+        /** @var ?User $currentUser */
+        $currentUser = $this->security->getUser();
+        
+        foreach($ignore as $column => $routeAttribute){
+            if($routeAttribute == 'currentUser' && $currentUser == null){
+                continue;
+            }
+            $column = $routeAttribute == 'currentUser' ? 'id' : $column;
+            $mappedParams[$column] = $routeAttribute == 'currentUser' ? $currentUser->getId() : $request->attributes->get($routeAttribute);
+        }
+        return $mappedParams;
     }
 }

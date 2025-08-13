@@ -16,8 +16,8 @@ trait UserBaseFieldsDTO {
     public readonly string $name;
 
     #[Assert\Email(
-        message: 'Value is not a valid email',
+        message: 'Parameter is not a valid email',
     )]
-    #[CustomAssert\UniqueEntityField(User::class, 'email')]
+    #[CustomAssert\UniqueEntityField(User::class, 'email', ['currentUser'])]
     public readonly string $email;
 }

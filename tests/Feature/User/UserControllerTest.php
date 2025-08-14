@@ -91,7 +91,7 @@ class UserControllerTest extends BaseWebTestCase
 
     public function testMe(): void
     {
-        $expectedResponseData = $this->normalize($this->user, [UserNormalizerGroup::PRIVATE->value]);
+        $expectedResponseData = $this->normalize($this->user, UserNormalizerGroup::PRIVATE->normalizationGroups());
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/user/me');
 
@@ -105,7 +105,7 @@ class UserControllerTest extends BaseWebTestCase
         ], true);
 
         $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
-        $expectedResponseData = $this->normalize($user, [UserNormalizerGroup::PUBLIC->value]);
+        $expectedResponseData = $this->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
         $userId = $user->getId();
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/user/$userId");
 
@@ -121,7 +121,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserPatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedFieldValues, bool $mailSent): void
     {
-        $normalizedUser = $this->normalize($this->user, [UserNormalizerGroup::PRIVATE->value]);
+        $normalizedUser = $this->normalize($this->user, UserNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedUser, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/me', $params);
@@ -187,7 +187,7 @@ class UserControllerTest extends BaseWebTestCase
 
         $offset = ($page - 1) * $perPage;
         $items = $this->userRepository->findBy([], ['id' => 'ASC'], $perPage, $offset);
-        $formattedItems = $this->normalize($items, [UserNormalizerGroup::PUBLIC->value]);
+        $formattedItems = $this->normalize($items, UserNormalizerGroup::PUBLIC->normalizationGroups());
 
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }

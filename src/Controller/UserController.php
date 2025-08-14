@@ -38,7 +38,7 @@ class UserController extends AbstractController
     ): ResourceCreatedResponse
     {
         $user = $userService->createUser($dto);
-        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
+        $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PRIVATE->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);
     }
@@ -58,7 +58,7 @@ class UserController extends AbstractController
     public function me(EntitySerializerInterface $entitySerializer): ApiResponse
     {
         $user = $this->getUser();
-        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
+        $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PRIVATE->normalizationGroups());
 
         return new SuccessResponse($responseData);
     }
@@ -66,7 +66,7 @@ class UserController extends AbstractController
     #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function get(EntitySerializerInterface $entitySerializer, User $user): ApiResponse
     {
-        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PUBLIC->value]);
+        $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
 
         return new SuccessResponse($responseData);
     }
@@ -78,7 +78,7 @@ class UserController extends AbstractController
         $user = $this->getUser();
         $user = $userService->patchUser($user, $dto);
 
-        $responseData = $entitySerializer->normalize($user, [UserNormalizerGroup::PRIVATE->value]);
+        $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PRIVATE->normalizationGroups());
 
         return new SuccessResponse($responseData);
     }
@@ -113,7 +113,7 @@ class UserController extends AbstractController
     ): ApiResponse
     {
         $paginationResult = $userRepository->paginate($paginationDTO, $filtersDTO, $orderDTO);
-        $formattedItems = $entitySerializer->normalize($paginationResult->getItems(), [UserNormalizerGroup::PUBLIC->value]);
+        $formattedItems = $entitySerializer->normalize($paginationResult->getItems(), UserNormalizerGroup::PUBLIC->normalizationGroups());
         $paginationResult->setItems($formattedItems);
 
         return new SuccessResponse($paginationResult);

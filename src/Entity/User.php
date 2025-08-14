@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\Timestampable;
 use App\Enum\User\UserNormalizerGroup;
 use App\Repository\Filter\EntityFilter\Attribute\Filter;
 use App\Repository\Filter\EntityFilter\FieldContains;
@@ -12,7 +13,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation\Timestampable;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -21,6 +21,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Table(name: '`user`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    use Timestampable;
+
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
     #[Order('id', new BaseFieldOrder)]
     #[ORM\Id]
@@ -67,16 +69,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, orphanRemoval: true)]
     private Collection $refreshTokens;
-
-    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    #[Timestampable(on: 'create')]
-    public ?\DateTimeImmutable $createdAt = null;
-
-    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    #[Timestampable(on: 'update')]
-    public ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct()
     {

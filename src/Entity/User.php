@@ -16,12 +16,15 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    use Timestampable;
+    use Timestampable, SoftDeleteableEntity;
 
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
     #[Order('id', new BaseFieldOrder)]

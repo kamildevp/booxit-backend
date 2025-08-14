@@ -42,7 +42,7 @@ class UserControllerTest extends BaseWebTestCase
     {
         $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/user', $params);
         $this->assertIsInt($responseData['id']);
-        $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, ['id']);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
         $this->assertCount(1, $this->mailerTransport->getSent());
     }
 

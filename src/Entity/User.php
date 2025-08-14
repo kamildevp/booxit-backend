@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation\Timestampable;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -35,7 +36,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
 
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
-
     #[Order('name', new BaseFieldOrder)]
     #[Filter('name', new FieldContains)] 
     #[ORM\Column(length: 50)]
@@ -55,6 +55,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;
 
+    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 
@@ -66,6 +67,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, orphanRemoval: true)]
     private Collection $refreshTokens;
+
+    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Timestampable(on: 'create')]
+    public ?\DateTimeImmutable $createdAt = null;
+
+    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Timestampable(on: 'update')]
+    public ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct()
     {

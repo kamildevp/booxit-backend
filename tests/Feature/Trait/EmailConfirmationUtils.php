@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Tests\Feature\Trait;
+
+use App\Entity\EmailConfirmation;
+use App\Enum\EmailConfirmationType;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\UriSigner;
+
+trait EmailConfirmationUtils
+{
+    protected function prepareEmailConfirmationVerifyParams(EmailConfirmationType $type): array
+    {
+        $emailConfirmationRepository = $this->container->get(EntityManagerInterface::class)->getRepository(EmailConfirmation::class);
+        $emailConfirmation = $emailConfirmationRepository->findOneBy(['type' => $type->value]);
+
+        $encodedData = json_encode([$emailConfirmation->getCreator()->getId(), $emailConfirmation->getEmail()]);
+        $token = base64_encode(hash_hmac('sha256', $encodedData, $this->secret, true));
+        
+        $verifyParams = [
+            'expires' => $emailConfirmation->getExpiryDate()->getTimestamp(),
+            'id' => $emailConfirmation->getId(),
+            'token' => $token,
+        ];
+
+        $signer = $this->container->get(UriSigner::class);
+        $url = $_ENV['VERIFICATION_HANDLER_TEST'] . '?' . http_build_query($verifyParams);
+        $signedUrl = $signer->sign($url);
+        $query = [];
+        parse_str(parse_url($signedUrl)['query'], $query);
+        $signature = $query['_hash'];
+
+        return [
+            ...$verifyParams, 
+            'signature' => $signature, 
+            'type' => $emailConfirmation->getType()
+        ];
+    }
+}

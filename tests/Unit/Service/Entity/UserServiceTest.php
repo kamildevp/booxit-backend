@@ -93,6 +93,27 @@ class UserServiceTest extends TestCase
         $this->assertSame($userMock, $result);
     }
 
+    public function testPatchUser(): void
+    {
+        $dto = new UserPatchDTO('new test', 'user@example.com', 'handler');
+        $userMock = $this->createMock(User::class);
+
+        $userMock->method('getEmail')->willReturn('user@example.com');
+
+        $this->serializerMock
+            ->method('parseToEntity')
+            ->with($dto->toArray(), $userMock)
+            ->willReturn($userMock);
+
+        $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
+
+        $this->emailConfirmationServiceMock
+            ->expects($this->never())
+            ->method('setupEmailConfirmation');
+
+        $this->userService->patchUser($userMock, $dto);
+    }
+
     public function testPatchUserTriggersEmailConfirmationIfChanged(): void
     {
         $dto = new UserPatchDTO('test', 'new@example.com', 'handler');
@@ -102,7 +123,7 @@ class UserServiceTest extends TestCase
 
         $this->serializerMock
             ->method('parseToEntity')
-            ->with($dto->toArray(['email']), $userMock)
+            ->with($dto->toArray(), $userMock)
             ->willReturn($userMock);
 
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);

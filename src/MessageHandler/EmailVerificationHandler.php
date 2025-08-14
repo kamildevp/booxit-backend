@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Exceptions\MailingHelperException;
 use App\Message\EmailVerification;
 use App\Repository\EmailConfirmationRepository;
+use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use App\Service\EmailConfirmation\Exception\ResolveVerificationHandlerException;
 use App\Service\MailingHelper\MailingHelper;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,6 +21,7 @@ class EmailVerificationHandler
     public function __construct(
         protected MailingHelper $mailingHelper,
         protected EntityManagerInterface $entityManager, 
+        protected EmailConfirmationHandlerInterface $emailConfirmationHandler, 
     )
     {
         $this->emailConfirmationRepository = $this->entityManager->getRepository(EmailConfirmation::class);
@@ -32,10 +34,24 @@ class EmailVerificationHandler
             return;
         }
 
-        try{
-            $this->mailingHelper->sendEmailVerification($emailConfirmation);
+        try
+        {
+            $url = $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation);
+
+            $this->mailingHelper->sendTemplatedEmail(
+                [$emailConfirmation->getEmail()],
+                'Email Verification',
+                'emails/emailVerification.html.twig',
+                [
+                    'expiration_date' => $emailConfirmation->getExpiryDate(),
+                    'url' => $url
+                ]
+            );
         }
-        catch(MailingHelperException | ResolveVerificationHandlerException){
+        catch(MailingHelperException | ResolveVerificationHandlerException)
+        {
+            $this->emailConfirmationRepository->remove($emailConfirmation);
+
             if($message->shouldUserBeRemovedOnFailure()){
                 $user = $emailConfirmation->getCreator();
                 $userRepository = $this->entityManager->getRepository(User::class);

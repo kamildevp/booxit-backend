@@ -20,6 +20,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test User',
                     'email' => 'user@example.com',
+                    'verified' => false,
                 ]
             ]
         ];

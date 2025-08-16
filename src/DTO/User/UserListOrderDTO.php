@@ -3,11 +3,12 @@
 namespace App\DTO\User;
 
 use App\DTO\ListOrderDTO;
+use App\Enum\TimestampsColumns;
 
-class UserListOrderDTO extends ListOrderDTO {
-
+class UserListOrderDTO extends ListOrderDTO 
+{
     public function getOrderableColumns(): array
     {
-        return ['name'];
+        return array_merge(TimestampsColumns::values(), ['name']);
     }
 }

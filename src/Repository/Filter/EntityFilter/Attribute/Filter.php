@@ -5,7 +5,7 @@ namespace App\Repository\Filter\EntityFilter\Attribute;
 use Attribute;
 use App\Repository\Filter\EntityFilter\EntityFilterInterface;
 
-#[Attribute(Attribute::TARGET_PROPERTY)]
+#[Attribute(Attribute::TARGET_PROPERTY|Attribute::IS_REPEATABLE)]
 class Filter
 {
 

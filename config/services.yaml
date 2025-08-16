@@ -32,6 +32,13 @@ services:
 
     App\Service\Auth\RouteGuardInterface: '@App\Service\Auth\RouteGuard'
 
+    App\Serializer\DateTimeNormalizer:
+        decorates: 'serializer.normalizer.datetime'
+        arguments:
+            $defaultNormalizer: '@App\Serializer\DateTimeNormalizer.inner'
+            $timezone: '%timezone%'
+        tags: [ 'serializer.normalizer' ]
+
     App\Service\SetterHelper\Task\:
         resource: '../src/Service/SetterHelper/Task/'
         public: true

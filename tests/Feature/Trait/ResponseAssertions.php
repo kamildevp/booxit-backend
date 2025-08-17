@@ -29,4 +29,10 @@ trait ResponseAssertions
     {
         $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
+
+    public function assertPathIsProtected(string $path, string $method): void
+    {
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 401);
+        $this->assertEquals('Unauthorized', $responseData['message']);
+    }
 }

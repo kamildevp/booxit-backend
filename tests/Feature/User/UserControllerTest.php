@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Feature\BaseWebTestCase;
 use App\Tests\Feature\Trait\EmailConfirmationUtils;
+use App\Tests\Feature\User\DataProvider\UserAuthDataProvider;
 use App\Tests\Feature\User\DataProvider\UserChangePasswordDataProvider;
 use App\Tests\Feature\User\DataProvider\UserCreateDataProvider;
 use App\Tests\Feature\User\DataProvider\UserListDataProvider;
@@ -284,5 +285,11 @@ class UserControllerTest extends BaseWebTestCase
     public function testResetPasswordValidation(array $params, array $expectedErrors): void
     {
         $this->assertPathValidation($this->client, 'PATCH', '/api/user/reset_password', $params, $expectedErrors);
+    }
+
+    #[DataProviderExternal(UserAuthDataProvider::class, 'protectedPaths')]
+    public function testAuthRequirementForProtectedPaths(string $path, string $method): void
+    {
+        $this->assertPathIsProtected($path, $method);
     }
 }

@@ -14,6 +14,7 @@ use DateTime;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Authenticator\Token\JWTPostAuthenticationToken;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\SecurityBundle\Security;
 
 class AuthService implements AuthServiceInterface
@@ -62,6 +63,7 @@ class AuthService implements AuthServiceInterface
             'roles' => $user->getRoles(),
             'refresh_token_id' => $refreshTokenId,
             'exp' => $expiryDate->getTimestamp(),
+            'jti' => Uuid::uuid4()->toString(),
         ]);
     }
 

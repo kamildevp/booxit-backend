@@ -5,6 +5,7 @@ namespace App\Tests\Feature\User;
 use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
+use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
 use App\Entity\User;
 use App\Enum\EmailConfirmationType;
@@ -126,7 +127,7 @@ class UserControllerTest extends BaseWebTestCase
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/me', $params);
 
-        $this->assertEquals($expectedResponseData, $responseData);
+        $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, ['updated_at']);
         $this->assertCount($mailSent ? 1 : 0, $this->mailerTransport->getSent());
     }
 
@@ -196,7 +197,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testListFilters(array $filters, array $expectedItemData): void
     {
         $this->dbTool->loadFixtures([
-            UserFixtures::class
+            UserSortingFixtures::class
         ]);
 
         $path = '/api/user?' . http_build_query($filters);
@@ -210,7 +211,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testListSorting(array $sorting, array $orderedItems): void
     {
         $this->dbTool->loadFixtures([
-            UserFixtures::class
+            UserSortingFixtures::class
         ]);
 
         $path = '/api/user?' . http_build_query($sorting);

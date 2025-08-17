@@ -8,39 +8,36 @@ class UserListDataProvider extends ListDataProvider
 {
     public static function filtersDataCases()
     {
-        return [
+        return array_merge([
             [
                 [
-                    'name' => 'User 31'
+                    'name' => 'A'
                 ],
                 [
-                    'name' => 'Test User 31'
-                ]
+                    'name' => 'Sorted A User'
+                ],
             ],
-        ];
+        ], parent::getTimestampsFiltersDataCases());
     }
 
     public static function sortingDataCases()
     {
-        return [
+        return array_merge([
             [
                 [
                     'order' => 'name',
                     'order_dir' => 'asc',
                 ],
-                [
-                    [
-                        'name' => 'Sort A User'
-                    ],
-                    [
-                        'name' => 'Sort B User'
-                    ],
-                    [
-                        'name' => 'Sort C User'
-                    ],
-                ]
+                parent::getSortedColumnValueSequence('name', 'string')
             ],
-        ];
+            [
+                [
+                    'order' => 'name',
+                    'order_dir' => 'desc',
+                ],
+                parent::getSortedColumnValueSequence('name', 'string', 'desc')
+            ],
+        ], parent::getTimestampsSortingDataCases());
     }
 
     public static function validationDataCases()

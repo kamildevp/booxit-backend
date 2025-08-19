@@ -1,0 +1,90 @@
+nelmio_api_doc:
+    documentation:
+        paths:
+            /api/auth/login:
+                post:
+                    tags:
+                        - Auth
+                    operationId: postCredentialsItem
+                    summary: Get auth tokens
+                    requestBody:
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/LoginCredentials'
+                    responses:
+                        '200':
+                            description: Auth tokens
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: success
+                                            data:
+                                                $ref: '#/components/schemas/AuthTokens'
+                        '401':
+                            description: Invalid credentials response
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: fail
+                                            data:
+                                                type: object
+                                                properties:
+                                                    message:
+                                                        type: string
+                                                        example: Invalid credentials
+                                                    errors: 
+                                                        type: object
+                                                        example: null
+            /api/auth/refresh:
+                post:
+                    tags:
+                        - Auth
+                    operationId: postRefreshCredentialsItem
+                    summary: Refresh auth tokens
+                    requestBody:
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/RefreshCredentials'
+                    responses:
+                        '200':
+                            description: Refreshed auth tokens
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: success
+                                            data:
+                                                $ref: '#/components/schemas/AuthTokens'
+                        '401':
+                            description: Invalid token response
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: fail
+                                            data:
+                                                type: object
+                                                properties:
+                                                    message:
+                                                        type: string
+                                                        example: Invalid or expired refresh token
+                                                    errors: 
+                                                        type: object
+                                                        example: null
+

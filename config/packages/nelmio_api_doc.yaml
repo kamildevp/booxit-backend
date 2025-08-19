@@ -1,3 +1,7 @@
+imports:
+    - { resource: ../docs/components.yaml }
+    - { resource: ../docs/paths.yaml }
+
 nelmio_api_doc:
     documentation:
         info:

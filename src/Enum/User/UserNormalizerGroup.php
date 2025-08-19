@@ -2,22 +2,13 @@
 
 namespace App\Enum\User;
 
-use App\Enum\NormalizerGroup;
+use App\Enum\Interface\NormalizerGroupInterface;
+use App\Enum\Trait\NormalizerGroupTrait;
 
-enum UserNormalizerGroup: string
+enum UserNormalizerGroup: string implements NormalizerGroupInterface
 {
+    use NormalizerGroupTrait;
+
     case PUBLIC = 'user-public';
     case PRIVATE = 'user-private';
-
-    public function normalizationGroups(): array
-    {
-        return [...$this->appendGroups(), $this->value];
-    }
-
-    protected function appendGroups(): array
-    {
-        return [
-            NormalizerGroup::TIMESTAMP->value,
-        ];
-    }
 }

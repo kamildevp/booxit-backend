@@ -7,6 +7,8 @@ use App\Exceptions\UnauthorizedException;
 use App\Service\Auth\AccessRule\AccessRuleInterface;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use InvalidArgumentException;
+use Nelmio\ApiDocBundle\Controller\DocumentationController;
+use Nelmio\ApiDocBundle\Controller\SwaggerUiController;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionMethod;
@@ -27,10 +29,10 @@ class RouteGuard implements RouteGuardInterface
         $this->user = $this->security->getUser();
     }
 
-    public function validateAccess(AbstractController|RedirectController $controller, Request $request, ?string $methodName = null): void
+    public function validateAccess(AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, Request $request, ?string $methodName = null): void
     {
         $this->validateLocationAccess($request, $controller);
-        $this->validateLocationAccess($request, $controller, $methodName ?? '_invoke');
+        $this->validateLocationAccess($request, $controller, $methodName ?? '__invoke');
     }
 
     public function getAuthorizedUserOrFail(): User
@@ -42,7 +44,7 @@ class RouteGuard implements RouteGuardInterface
         return $this->user;
     }
 
-    private function validateLocationAccess(Request $request, AbstractController|RedirectController $controller, ?string $methodName = null): void
+    private function validateLocationAccess(Request $request, AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, ?string $methodName = null): void
     {
         $restrictedAccessAttributes = $this->getRestrictedAccessAttributes($controller, $methodName);
 
@@ -52,7 +54,7 @@ class RouteGuard implements RouteGuardInterface
         }
     }
 
-    private function getRestrictedAccessAttributes(AbstractController|RedirectController $controller, ?string $methodName = null): array
+    private function getRestrictedAccessAttributes(AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, ?string $methodName = null): array
     {
         $reflection = $methodName ? new ReflectionMethod($controller, $methodName) : new ReflectionClass($controller);
         return $reflection->getAttributes(RestrictedAccess::class);

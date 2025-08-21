@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Documentation\Response;
+
+use App\Enum\ResponseStatus;
+use OpenApi\Attributes as OA;
+
+#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
+class ClientErrorResponseDoc extends OA\Response
+{
+    public function __construct(
+        int $statusCode = 400, 
+        ?string $message = null,
+        ?string $description = null, 
+        ?array $errorsExample = null, 
+        array $headers = []
+    )
+    {
+        $dataProperty =  new OA\Property(property: 'data', type: 'object', properties: [
+                new OA\Property(property: "message", type: "string", example: $message),
+                new OA\Property(property: 'errors', type: 'object', example: $errorsExample),
+        ]);
+
+        $content = new OA\JsonContent(
+            type: "object",
+            properties: [
+                new OA\Property(property: "status", type: "string", example: ResponseStatus::FAIL->value),
+                $dataProperty
+            ]
+        );
+
+        parent::__construct( 
+            response: $statusCode,
+            description: $description,
+            content: $content,
+            headers: $headers
+        );
+    }
+}

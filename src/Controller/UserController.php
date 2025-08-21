@@ -2,14 +2,12 @@
 
 namespace App\Controller;
 
-use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\PaginatorResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
-use App\Documentation\Response\ValidationFailedResponseDoc;
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\PaginationDTO;
 use App\DTO\User\UserChangePasswordDTO;
@@ -21,10 +19,8 @@ use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
 use App\Entity\User;
 use App\Enum\User\UserNormalizerGroup;
-use App\Repository\Pagination\Model\PaginationResult;
 use App\Repository\UserRepository;
 use App\Response\ApiResponse;
-use App\Response\AuthSuccessResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Response\ValidationFailedResponse;
@@ -32,8 +28,6 @@ use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Auth\AuthServiceInterface;
 use App\Service\Entity\UserService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
-use Nelmio\ApiDocBundle\Attribute\Model;
-use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;

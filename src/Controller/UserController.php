@@ -2,6 +2,14 @@
 
 namespace App\Controller;
 
+use App\Documentation\Response\ForbiddenResponseDoc;
+use App\Documentation\Response\NotFoundResponseDoc;
+use App\Documentation\Response\PaginatorResponseDoc;
+use App\Documentation\Response\ServerErrorResponseDoc;
+use App\Documentation\Response\SuccessResponseDoc;
+use App\Documentation\Response\UnauthorizedResponseDoc;
+use App\Documentation\Response\ValidationErrorResponseDoc;
+use App\Documentation\Response\ValidationFailedResponseDoc;
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\PaginationDTO;
 use App\DTO\User\UserChangePasswordDTO;
@@ -13,8 +21,10 @@ use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
 use App\Entity\User;
 use App\Enum\User\UserNormalizerGroup;
+use App\Repository\Pagination\Model\PaginationResult;
 use App\Repository\UserRepository;
 use App\Response\ApiResponse;
+use App\Response\AuthSuccessResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Response\ValidationFailedResponse;
@@ -22,14 +32,25 @@ use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Auth\AuthServiceInterface;
 use App\Service\Entity\UserService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
+use Nelmio\ApiDocBundle\Attribute\Model;
+use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
+use OpenApi\Attributes as OA;
 
+#[ServerErrorResponseDoc]
+#[OA\Tag('User')]
 class UserController extends AbstractController
 {
-
+    #[SuccessResponseDoc(
+        statusCode: 201,
+        description: 'Created User',
+        dataModel: User::class,
+        dataModelGroups: UserNormalizerGroup::PRIVATE
+    )]
+    #[ValidationErrorResponseDoc]
     #[Route('user', name: 'user_new', methods: ['POST'])]
     public function create(
         UserService $userService, 
@@ -43,6 +64,8 @@ class UserController extends AbstractController
         return new ResourceCreatedResponse($responseData);
     }
 
+    #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
+    #[ValidationErrorResponseDoc]
     #[Route('user/verify', name: 'user_verify', methods: ['POST'])]
     public function verify(UserService $userService, #[MapRequestPayload] VerifyEmailConfirmationDTO $dto)
     {
@@ -53,6 +76,12 @@ class UserController extends AbstractController
             new ValidationFailedResponse('Verification Failed');
     }
 
+    #[SuccessResponseDoc(
+        description: 'Current User Data',
+        dataModel: User::class,
+        dataModelGroups: UserNormalizerGroup::PRIVATE
+    )]
+    #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_get', methods: ['GET'])]
     public function me(EntitySerializerInterface $entitySerializer): ApiResponse
@@ -63,6 +92,12 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[SuccessResponseDoc(
+        description: 'Requested User Data',
+        dataModel: User::class,
+        dataModelGroups: UserNormalizerGroup::PRIVATE
+    )]
+    #[NotFoundResponseDoc('User not found')]
     #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function get(EntitySerializerInterface $entitySerializer, User $user): ApiResponse
     {
@@ -71,6 +106,13 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[SuccessResponseDoc(
+        description: 'Patched User Data',
+        dataModel: User::class,
+        dataModelGroups: UserNormalizerGroup::PRIVATE
+    )]
+    #[ValidationErrorResponseDoc]
+    #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_patch', methods: ['PATCH'])]
     public function patch(UserService $userService, EntitySerializerInterface $entitySerializer, #[MapRequestPayload] UserPatchDTO $dto): ApiResponse
@@ -83,6 +125,9 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[SuccessResponseDoc(dataExample: ['message' => 'Password changed successfully'])]
+    #[ValidationErrorResponseDoc]
+    #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('user/change_password', name: 'user_change_password', methods: ['PATCH'])]
     public function changePassword(AuthServiceInterface $authService, UserService $userService, #[MapRequestPayload] UserChangePasswordDTO $dto): ApiResponse
@@ -94,6 +139,8 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'Password changed successfully']);
     }
 
+    #[SuccessResponseDoc(dataExample: ['message' => 'User removed successfully'])]
+    #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_delete', methods: ['DELETE'])]
     public function delete(UserRepository $userRepository){
@@ -103,6 +150,12 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'User removed successfully']);
     }
 
+    #[PaginatorResponseDoc(
+        description: 'Paginated users list', 
+        dataModel: User::class,
+        dataModelGroups: UserNormalizerGroup::PUBLIC
+    )]
+    #[ValidationErrorResponseDoc]
     #[Route('user', name: 'user_list', methods: ['GET'])]
     public function list(
         UserRepository $userRepository, 
@@ -119,6 +172,8 @@ class UserController extends AbstractController
         return new SuccessResponse($paginationResult);
     }
 
+    #[SuccessResponseDoc(dataExample: ['message' => 'If user with specified email exists, password reset link was sent to specified email'])]
+    #[ValidationErrorResponseDoc]
     #[Route('user/reset_password_request', name: 'user_reset_password_request', methods: ['POST'])]
     public function resetPasswordRequest(UserService $userService, #[MapRequestPayload] UserResetPasswordRequestDTO $dto): ApiResponse
     {
@@ -127,6 +182,8 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'If user with specified email exists, password reset link was sent to specified email']);
     }
 
+    #[SuccessResponseDoc(dataExample: ['message' => 'Password reset successful'])]
+    #[ValidationErrorResponseDoc]
     #[Route('user/reset_password', name: 'user_reset_password', methods: ['PATCH'])]
     public function resetPassword(UserService $userService, #[MapRequestPayload] UserResetPasswordDTO $dto)
     {

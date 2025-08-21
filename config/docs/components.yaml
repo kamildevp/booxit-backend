@@ -21,8 +21,10 @@ nelmio_api_doc:
                     properties:
                         email:
                             type: string
+                            format: email
                         password:
                             type: string
+                            example: password123
                 RefreshCredentials:
                     type: object
                     properties:

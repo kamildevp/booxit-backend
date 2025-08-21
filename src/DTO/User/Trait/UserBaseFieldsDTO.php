@@ -5,6 +5,7 @@ namespace App\DTO\User\Trait;
 use App\Entity\User;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\Constraints as CustomAssert;
+use OpenApi\Attributes as OA;
 
 trait UserBaseFieldsDTO {
     #[Assert\Length(
@@ -15,6 +16,7 @@ trait UserBaseFieldsDTO {
     )]
     public readonly string $name;
 
+    #[OA\Property(format: 'email')]
     #[Assert\Email(
         message: 'Parameter is not a valid email',
     )]

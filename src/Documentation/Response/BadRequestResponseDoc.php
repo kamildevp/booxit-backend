@@ -3,13 +3,14 @@
 namespace App\Documentation\Response;
 
 use App\Response\BadRequestResponse;
+use OpenApi\Generator;
 
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class BadRequestResponseDoc extends ClientErrorResponseDoc
 {
     public function __construct(
         string $description = 'Bad Request Response',
-        ?array $errorsExample = null, 
+        mixed $errorsExample = Generator::UNDEFINED, 
         array $headers = []
     )
     {

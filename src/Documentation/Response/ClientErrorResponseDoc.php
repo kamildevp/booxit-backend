@@ -12,7 +12,7 @@ class ClientErrorResponseDoc extends OA\Response
         int $statusCode = 400, 
         ?string $message = null,
         ?string $description = null, 
-        ?array $errorsExample = null, 
+        mixed $errorsExample = null, 
         array $headers = []
     )
     {

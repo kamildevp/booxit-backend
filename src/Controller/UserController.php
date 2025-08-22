@@ -38,6 +38,12 @@ use OpenApi\Attributes as OA;
 #[OA\Tag('User')]
 class UserController extends AbstractController
 {
+    #[OA\Post(
+        summary: 'Create a new user',
+        description: 'Registers a new unverified user and sends an email containing a verification link. 
+        The link is generated using the specified **verification_handler**, which must match one of the predefined handlers to ensure it points to a trusted domain. 
+        Users must verify their email address before they can log in. Unverified accounts are automatically deleted after 24 hours.'
+    )]
     #[SuccessResponseDoc(
         statusCode: 201,
         description: 'Created User',
@@ -58,6 +64,11 @@ class UserController extends AbstractController
         return new ResourceCreatedResponse($responseData);
     }
 
+    #[OA\Post(
+        summary: 'Verify user',
+        description: 'Confirms a user’s email address using the verification parameters provided in the link sent to that address. 
+        This endpoint should be called by the verification handler specified during user registration or email change.'
+    )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
     #[ValidationErrorResponseDoc]
     #[Route('user/verify', name: 'user_verify', methods: ['POST'])]
@@ -70,6 +81,10 @@ class UserController extends AbstractController
             new ValidationFailedResponse('Verification Failed');
     }
 
+    #[OA\Get(
+        summary: 'Get current user',
+        description: 'Returns the data of the authenticated user based on the access token.'
+    )]
     #[SuccessResponseDoc(
         description: 'Current User Data',
         dataModel: User::class,
@@ -86,10 +101,14 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[OA\Get(
+        summary: 'Get user',
+        description: 'Returns the public data of the specified user.'
+    )]
     #[SuccessResponseDoc(
         description: 'Requested User Data',
         dataModel: User::class,
-        dataModelGroups: UserNormalizerGroup::PRIVATE
+        dataModelGroups: UserNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('User not found')]
     #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -100,6 +119,12 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[OA\Patch(
+        summary: 'Update current user',
+        description: 'Updates the authenticated user’s data.  
+        **Important:** If the email address is changed, a verification link will be sent to the new address.  
+        The change takes effect only after the new email has been verified.'
+    )]
     #[SuccessResponseDoc(
         description: 'Patched User Data',
         dataModel: User::class,
@@ -119,6 +144,10 @@ class UserController extends AbstractController
         return new SuccessResponse($responseData);
     }
 
+    #[OA\Patch(
+        summary: 'Change password',
+        description: 'Changes the authenticated user’s password.'
+    )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Password changed successfully'])]
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
@@ -133,6 +162,11 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'Password changed successfully']);
     }
 
+    #[OA\Delete(
+        summary: 'Delete current user account',
+        description: 'Deletes the authenticated user’s account.  
+        **Important:** The account is soft-deleted, which means a new account cannot be registered with the same email address.'
+    )]
     #[SuccessResponseDoc(dataExample: ['message' => 'User removed successfully'])]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
@@ -144,6 +178,10 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'User removed successfully']);
     }
 
+    #[OA\Get(
+        summary: 'List users',
+        description: 'Retrieves a paginated list of registered users with their public information.'
+    )]
     #[PaginatorResponseDoc(
         description: 'Paginated users list', 
         dataModel: User::class,
@@ -166,6 +204,11 @@ class UserController extends AbstractController
         return new SuccessResponse($paginationResult);
     }
 
+    #[OA\Post(
+        summary: 'Request password reset',
+        description: 'If the provided email address matches a registered user, a password reset link valid for 24 hours will be sent to that address.  
+        **Important:** If a valid reset link already exists for the user, a new email will not be sent.'
+    )]
     #[SuccessResponseDoc(dataExample: ['message' => 'If user with specified email exists, password reset link was sent to specified email'])]
     #[ValidationErrorResponseDoc]
     #[Route('user/reset_password_request', name: 'user_reset_password_request', methods: ['POST'])]
@@ -176,6 +219,10 @@ class UserController extends AbstractController
         return new SuccessResponse(['message' => 'If user with specified email exists, password reset link was sent to specified email']);
     }
 
+    #[OA\Patch(
+        summary: 'Reset user password',
+        description: 'Resets the user’s password using the parameters included in a valid password reset link.'
+    )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Password reset successful'])]
     #[ValidationErrorResponseDoc]
     #[Route('user/reset_password', name: 'user_reset_password', methods: ['PATCH'])]

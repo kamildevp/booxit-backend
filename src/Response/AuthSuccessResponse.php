@@ -2,8 +2,6 @@
 
 namespace App\Response;
 
-use App\Enum\ResponseStatus;
-
 class AuthSuccessResponse extends SuccessResponse
 {
 

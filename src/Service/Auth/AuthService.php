@@ -2,6 +2,7 @@
 
 namespace App\Service\Auth;
 
+use App\DTO\Auth\AuthLogoutDTO;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Exceptions\InvalidObjectException;
@@ -131,5 +132,17 @@ class AuthService implements AuthServiceInterface
         }
 
         return $this->refreshTokenRepository->find((int)$payload['refresh_token_id']);
+    }
+
+    public function logoutCurrentUser(AuthLogoutDTO $dto): void
+    {
+        $refreshToken = $this->getRefreshTokenUsedByCurrentUser();
+        if($dto->logoutOtherSessions){
+            $user = $this->security->getUser();
+            $this->refreshTokenRepository->removeAllUserRefreshTokens($user);
+        }
+        else if($refreshToken){
+            $this->refreshTokenRepository->remove($refreshToken, true);
+        }
     }
 }

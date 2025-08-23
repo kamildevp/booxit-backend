@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unit\Service\Auth;
 
+use App\DTO\Auth\AuthLogoutDTO;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Exceptions\InvalidObjectException;
@@ -300,5 +301,82 @@ class AuthServiceTest extends TestCase
         $refreshToken = $this->authService->getRefreshTokenUsedByCurrentUser();
 
         $this->assertNull($refreshToken);
+    }
+
+    public function testLogoutCurrentUser(): void
+    {
+        $userId = 1;
+        $refreshTokenId = 1;
+        $tokenMock = 'tokenMock';
+        $refreshTokenMock = $this->createMock(RefreshToken::class);
+        $postAuthTokenMock = $this->createMock(JWTPostAuthenticationToken::class);
+
+        $this->securityMock->expects($this->once())
+            ->method('getToken')
+            ->willReturn($postAuthTokenMock);
+        
+        $postAuthTokenMock->expects($this->once())
+            ->method('getCredentials')
+            ->willReturn($tokenMock);
+
+        $this->jwtEncoderMock->expects($this->once())
+            ->method('decode')
+            ->with($tokenMock)
+            ->willReturn([
+                'id' => $userId,
+                'refresh_token_id' => $refreshTokenId,
+            ]);
+
+        $this->refreshTokenRepositoryMock->expects(($this->once()))
+            ->method('find')
+            ->with($refreshTokenId)
+            ->willReturn($refreshTokenMock);
+
+        $this->refreshTokenRepositoryMock->expects(($this->once()))
+            ->method('remove')
+            ->with($refreshTokenMock);
+
+        $this->authService->logoutCurrentUser(new AuthLogoutDTO(false));
+    }
+
+    public function testLogoutCurrentUserWithOtherSessions(): void
+    {
+        $userId = 1;
+        $refreshTokenId = 1;
+        $tokenMock = 'tokenMock';
+        $refreshTokenMock = $this->createMock(RefreshToken::class);
+        $postAuthTokenMock = $this->createMock(JWTPostAuthenticationToken::class);
+        $userMock = $this->createMock(User::class);
+
+        $this->securityMock->expects($this->once())
+            ->method('getUser')
+            ->willReturn($userMock);
+
+        $this->securityMock->expects($this->once())
+            ->method('getToken')
+            ->willReturn($postAuthTokenMock);
+        
+        $postAuthTokenMock->expects($this->once())
+            ->method('getCredentials')
+            ->willReturn($tokenMock);
+
+        $this->jwtEncoderMock->expects($this->once())
+            ->method('decode')
+            ->with($tokenMock)
+            ->willReturn([
+                'id' => $userId,
+                'refresh_token_id' => $refreshTokenId,
+            ]);
+
+        $this->refreshTokenRepositoryMock->expects(($this->once()))
+            ->method('find')
+            ->with($refreshTokenId)
+            ->willReturn($refreshTokenMock);
+
+        $this->refreshTokenRepositoryMock->expects(($this->once()))
+            ->method('removeAllUserRefreshTokens')
+            ->with($userMock);
+
+        $this->authService->logoutCurrentUser(new AuthLogoutDTO(true));
     }
 }

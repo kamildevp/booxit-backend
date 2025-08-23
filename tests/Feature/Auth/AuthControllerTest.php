@@ -6,6 +6,7 @@ use App\DataFixtures\Test\Auth\AuthRefreshFixtures;
 use App\Entity\RefreshToken;
 use App\Repository\RefreshTokenRepository;
 use App\Tests\Feature\Auth\DataProvider\AuthLoginDataProvider;
+use App\Tests\Feature\Auth\DataProvider\AuthLogoutDataProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Feature\BaseWebTestCase;
@@ -68,5 +69,19 @@ class AuthControllerTest extends BaseWebTestCase
 
         $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/refresh', $params, expectedCode: 401);
         $this->assertEquals('Invalid or expired refresh token', $responseData['message']);
+    }
+
+    #[DataProviderExternal(AuthLogoutDataProvider::class, 'validDataCases')]
+    public function testLogout(array $params, int $expectedRefreshTokensCount): void
+    {
+        $this->dbTool->loadFixtures([
+            AuthRefreshFixtures::class
+        ], true);
+
+        $this->fullLogin($this->client); 
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/logout', $params);
+
+        $this->assertEquals('Logged out successfully', $responseData['message']);
+        $this->assertCount($expectedRefreshTokensCount, $this->user->getRefreshTokens());
     }
 }

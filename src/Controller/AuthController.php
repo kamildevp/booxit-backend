@@ -30,10 +30,7 @@ class AuthController extends AbstractController
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('auth/logout', name: 'auth_logout', methods: ['POST'])]
-    public function logout(
-        AuthServiceInterface $authService, 
-        #[MapRequestPayload] AuthLogoutDTO $dto 
-    ): SuccessResponse
+    public function logout(AuthServiceInterface $authService, #[MapRequestPayload] AuthLogoutDTO $dto): SuccessResponse
     {        
         $authService->logoutCurrentUser($dto);
         return new SuccessResponse(['message' => 'Logged out successfully']);

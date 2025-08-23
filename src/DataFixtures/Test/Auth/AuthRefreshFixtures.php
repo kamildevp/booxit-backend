@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\DataFixtures\Test\Auth;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;

@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Response;
 
 use App\Enum\ResponseStatus;
 use App\Exceptions\DetailedException;
 use App\Response\Interface\ExceptionResponseInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Throwable;
 
 class ClientErrorResponse extends ApiResponse implements ExceptionResponseInterface

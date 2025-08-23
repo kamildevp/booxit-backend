@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Security;
 
 use App\Exceptions\TokenRefreshFailedException;
@@ -51,7 +53,7 @@ class RefreshTokenAuthenticator extends AbstractAuthenticator
         }
         
         $user = $refreshToken->getAppUser();
-        $passport = new SelfValidatingPassport(new UserBadge($user->getId(), function() use ($user){
+        $passport = new SelfValidatingPassport(new UserBadge((string)$user->getId(), function() use ($user){
             return $user;
         }));
 

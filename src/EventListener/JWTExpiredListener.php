@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use App\Response\UnauthorizedResponse;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTExpiredEvent;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class JWTExpiredListener
 {

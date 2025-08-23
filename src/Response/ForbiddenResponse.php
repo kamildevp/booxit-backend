@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Response;
+declare(strict_types=1);
 
-use App\Enum\ResponseStatus;
+namespace App\Response;
 
 class ForbiddenResponse extends ClientErrorResponse
 {

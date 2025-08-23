@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository\Pagination;
 
 use App\DTO\PaginationDTO;
@@ -36,7 +38,7 @@ class PaginationBuilder {
         $result->setItems(iterator_to_array($paginator));
         $result->setPage($page);
         $result->setPerPage($perPage);
-        $result->setPagesCount(ceil($total / $perPage));
+        $result->setPagesCount((int)ceil($total / $perPage));
         $result->setTotal($total);
 
         return $result;

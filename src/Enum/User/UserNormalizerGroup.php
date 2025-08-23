@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enum\User;
 
 use App\Enum\Interface\NormalizerGroupInterface;

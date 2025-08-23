@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Feature\User;
 
 use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;

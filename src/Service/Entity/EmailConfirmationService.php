@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service\Entity;
 
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
@@ -9,7 +11,6 @@ use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailVerification;
 use App\Repository\EmailConfirmationRepository;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
-use App\Service\MailingHelper\MailingHelper;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;

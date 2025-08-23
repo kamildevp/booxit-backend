@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Validator\Constraints;
 
-use App\Validator\DateTimeFormatValidator;
 use App\Validator\StringifiedCollectionSubsetValidator;
 use Attribute;
 use Symfony\Component\Validator\Attribute\HasNamedArguments;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Feature\Auth\DataProvider;
 
 use App\Tests\Feature\Global\DataProvider\BaseDataProvider;

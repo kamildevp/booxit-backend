@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Security;
 
 use App\Model\PostAuthRefreshToken;
 use App\Response\AuthSuccessResponse;
-use App\Service\Auth\AuthService;
 use App\Service\Auth\AuthServiceInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;

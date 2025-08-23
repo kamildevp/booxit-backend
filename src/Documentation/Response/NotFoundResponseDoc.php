@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Documentation\Response;
 
 use App\Response\NotFoundResponse;

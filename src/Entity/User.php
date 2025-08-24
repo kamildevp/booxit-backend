@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Entity\Trait\Timestampable;
 use App\Enum\User\UserNormalizerGroup;
+use App\Enum\User\UserRole;
 use App\Repository\Filter\EntityFilter\Attribute\Filter;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Order\EntityOrder\Attribute\Order;
@@ -56,8 +57,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[Groups([UserNormalizerGroup::PRIVATE->value])]
     #[ORM\Column]
-    private array $roles = ['ROLE_USER'];
+    private array $roles = [UserRole::REGULAR->value];
 
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;

@@ -7,6 +7,7 @@ namespace App\Serializer;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use DateTimeImmutable;
+use DateTimeInterface;
 use DateTimeZone;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 
@@ -45,5 +46,12 @@ class DateTimeNormalizer implements NormalizerInterface, DenormalizerInterface
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $this->defaultNormalizer->supportsNormalization($data, $format, $context);
+    }
+
+    public function getSupportedTypes(?string $format): array
+    {
+        return [
+            DateTimeInterface::class => true,
+        ];
     }
 }

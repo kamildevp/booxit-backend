@@ -3,6 +3,7 @@ version: "3.8"
 networks:
   default: 
     name: ${DEFAULT_NETWORK_NAME:-booxit-backend-network}
+  web-server-network:
 
 services:
   php:
@@ -21,18 +22,19 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-booxit-rabbit}:${RABBITMQ_PASS:-pass}@${RABBIT_CONTAINER_HOSTNAME:-booxit-backend-rabbitmq}:5672
     networks:
       - default
+      - web-server-network
 
-  caddy:
-    hostname: ${CADDY_CONTAINER_HOSTNAME:-booxit-backend-caddy}
-    image: caddy:2.8-alpine
+  nginx:
+    hostname: ${NGINX_CONTAINER_HOSTNAME:-booxit-backend-nginx}
+    image: nginx:1.29.1-alpine
     depends_on:
       - php
     restart: unless-stopped
     volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./docker/nginx:/etc/nginx/conf.d
       - ./public:/var/www/public
     networks:
-      - default
+      - web-server-network
 
   database:
     hostname: ${DB_CONTAINER_HOSTNAME:-booxit-backend-db}

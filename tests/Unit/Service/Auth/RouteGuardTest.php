@@ -62,7 +62,7 @@ class RouteGuardTest extends TestCase
         ->with('dummy');
 
         $routeGuard = new RouteGuard($this->securityMock);
-        $routeGuard->validateAccess($controller, $requestMock, 'testMethod');
+        $routeGuard->validateAccess($controller, $requestMock, [], 'testMethod');
     }
 
 }

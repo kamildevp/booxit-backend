@@ -31,10 +31,15 @@ class RouteGuard implements RouteGuardInterface
         $this->user = $this->security->getUser();
     }
 
-    public function validateAccess(AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, Request $request, ?string $methodName = null): void
+    public function validateAccess(
+        AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, 
+        Request $request, 
+        array $controllerArguments,
+        ?string $methodName = null,
+    ): void
     {
-        $this->validateLocationAccess($request, $controller);
-        $this->validateLocationAccess($request, $controller, $methodName ?? '__invoke');
+        $this->validateLocationAccess($request, $controller, $controllerArguments);
+        $this->validateLocationAccess($request, $controller, $controllerArguments, $methodName ?? '__invoke');
     }
 
     public function getAuthorizedUserOrFail(): User
@@ -46,13 +51,18 @@ class RouteGuard implements RouteGuardInterface
         return $this->user;
     }
 
-    private function validateLocationAccess(Request $request, AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, ?string $methodName = null): void
+    private function validateLocationAccess(
+        Request $request, 
+        AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, 
+        array $controllerArguments,
+        ?string $methodName = null
+    ): void
     {
         $restrictedAccessAttributes = $this->getRestrictedAccessAttributes($controller, $methodName);
 
         foreach($restrictedAccessAttributes as $attribute){
             $accessRule = $this->resolveAccessRule($attribute);
-            $accessRule->validateAccess($this->user, $request);
+            $accessRule->validateAccess($this->user, $request, $controllerArguments);
         }
     }
 

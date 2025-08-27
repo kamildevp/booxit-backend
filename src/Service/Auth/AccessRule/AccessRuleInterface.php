@@ -9,5 +9,5 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 interface AccessRuleInterface
 {
-    public function validateAccess(?UserInterface $user, Request $request): void;
+    public function validateAccess(?UserInterface $user, Request $request, array $controllerArguments): void;
 }

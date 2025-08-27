@@ -13,7 +13,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface RouteGuardInterface
 {
-    public function validateAccess(AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, Request $request, ?string $methodName = null): void;
+    public function validateAccess(
+        AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, 
+        Request $request, 
+        array $controllerArguments,
+        ?string $methodName = null, 
+    ): void;
 
     public function getAuthorizedUserOrFail(): User;
 }

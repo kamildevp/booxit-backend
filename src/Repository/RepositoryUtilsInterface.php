@@ -16,5 +16,5 @@ interface RepositoryUtilsInterface
 
     public function paginate(PaginationDTO $paginationDTO, ?FiltersDTOInterface $filtersDTO = null, ?OrderDTOInterface $orderDTO = null, ?QueryBuilder $qb = null): PaginationResult;
 
-    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludedIds = []);
+    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = []);
 }

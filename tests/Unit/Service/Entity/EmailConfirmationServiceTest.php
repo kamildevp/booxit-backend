@@ -13,7 +13,6 @@ use App\Repository\EmailConfirmationRepository;
 use App\Service\Entity\EmailConfirmationService;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -21,7 +20,6 @@ use Symfony\Component\Messenger\Envelope;
 
 class EmailConfirmationServiceTest extends TestCase
 {
-    private MockObject&EntityManagerInterface $entityManagerMock;
     private MockObject&EmailConfirmationHandlerInterface $emailConfirmationHandlerMock;
     private MockObject&MessageBusInterface $messageBusMock;
     private MockObject&EmailConfirmationRepository $emailConfirmationRepositoryMock;
@@ -29,18 +27,14 @@ class EmailConfirmationServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->entityManagerMock = $this->createMock(EntityManagerInterface::class);
         $this->emailConfirmationHandlerMock = $this->createMock(EmailConfirmationHandlerInterface::class);
         $this->messageBusMock = $this->createMock(MessageBusInterface::class);
         $this->emailConfirmationRepositoryMock = $this->createMock(EmailConfirmationRepository::class);
 
-        $this->entityManagerMock->method('getRepository')
-            ->willReturn($this->emailConfirmationRepositoryMock);
-
         $this->emailConfirmationService = new EmailConfirmationService(
-            $this->entityManagerMock,
             $this->emailConfirmationHandlerMock,
-            $this->messageBusMock
+            $this->messageBusMock,
+            $this->emailConfirmationRepositoryMock
         );
     }
 

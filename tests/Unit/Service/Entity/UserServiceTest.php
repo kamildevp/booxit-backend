@@ -22,14 +22,12 @@ use App\Service\Entity\EmailConfirmationService;
 use App\Service\Entity\UserService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use DateTime;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserServiceTest extends TestCase
 {
-    private MockObject&EntityManagerInterface $entityManagerMock;
     private MockObject&EntitySerializerInterface $serializerMock;
     private MockObject&EmailConfirmationService $emailConfirmationServiceMock;
     private MockObject&UserPasswordHasherInterface $hasherMock;
@@ -42,7 +40,6 @@ class UserServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->entityManagerMock = $this->createMock(EntityManagerInterface::class);
         $this->serializerMock = $this->createMock(EntitySerializerInterface::class);
         $this->emailConfirmationServiceMock = $this->createMock(EmailConfirmationService::class);
         $this->hasherMock = $this->createMock(UserPasswordHasherInterface::class);
@@ -51,17 +48,14 @@ class UserServiceTest extends TestCase
         $this->emailConfirmationRepositoryMock = $this->createMock(EmailConfirmationRepository::class);
         $this->refreshTokenRepositoryMock = $this->createMock(RefreshTokenRepository::class);
 
-        $this->entityManagerMock->method('getRepository')->willReturnMap([
-            [User::class, $this->userRepositoryMock],
-            [EmailConfirmation::class, $this->emailConfirmationRepositoryMock],
-            [RefreshToken::class, $this->refreshTokenRepositoryMock],
-        ]);
 
         $this->userService = new UserService(
-            $this->entityManagerMock,
             $this->serializerMock,
             $this->emailConfirmationServiceMock,
-            $this->hasherMock
+            $this->hasherMock,
+            $this->userRepositoryMock,
+            $this->emailConfirmationRepositoryMock,
+            $this->refreshTokenRepositoryMock
         );
     }
 

@@ -16,7 +16,6 @@ use App\Repository\EmailConfirmationRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\EntitySerializer\EntitySerializerInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
@@ -25,20 +24,16 @@ use DateTime;
 
 class UserService
 {
-    protected UserRepository $userRepository;
-    protected EmailConfirmationRepository $emailConfirmationRepository;
-    protected RefreshTokenRepository $refreshTokenRepository;
-
     public function __construct(
-        protected EntityManagerInterface $entityManager, 
         protected EntitySerializerInterface $entitySerializer,
         protected EmailConfirmationService $emailConfirmationService,
-        protected UserPasswordHasherInterface $passwordHasher    
+        protected UserPasswordHasherInterface $passwordHasher,
+        protected UserRepository $userRepository,
+        protected EmailConfirmationRepository $emailConfirmationRepository,
+        protected RefreshTokenRepository $refreshTokenRepository,   
     )
     {
-        $this->userRepository = $this->entityManager->getRepository(User::class);
-        $this->emailConfirmationRepository = $this->entityManager->getRepository(EmailConfirmation::class);
-        $this->refreshTokenRepository = $this->entityManager->getRepository(RefreshToken::class);
+
     }
 
     public function createUser(UserCreateDTO $dto): User

@@ -13,21 +13,19 @@ use App\Repository\EmailConfirmationRepository;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
 use DateTimeInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class EmailConfirmationService
 {
-    protected EmailConfirmationRepository $emailConfirmationRepository;
     const DEFAULT_EMAIL_CONFIRMATION_EXPIRY = '+1 day';
 
     public function __construct(
-        protected EntityManagerInterface $entityManager, 
         protected EmailConfirmationHandlerInterface $emailConfirmationHandler,
         protected MessageBusInterface $bus,
+        protected EmailConfirmationRepository $emailConfirmationRepository
     )
     {
-        $this->emailConfirmationRepository = $this->entityManager->getRepository(EmailConfirmation::class);
+
     }
 
     public function setupEmailConfirmation(

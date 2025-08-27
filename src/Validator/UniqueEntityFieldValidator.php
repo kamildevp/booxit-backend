@@ -78,6 +78,6 @@ class UniqueEntityFieldValidator extends ConstraintValidator
             $column = $routeAttribute == 'currentUser' ? 'id' : $column;
             $mappedParams[$column] = $routeAttribute == 'currentUser' ? $currentUser->getId() : $request->attributes->get($routeAttribute);
         }
-        return $mappedParams;
+        return array_filter($mappedParams, fn($param) => !is_null($param));
     }
 }

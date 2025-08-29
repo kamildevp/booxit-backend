@@ -17,18 +17,18 @@ class EntitySerializer implements EntitySerializerInterface
 
     /**
      * @template T of object
-     * @param array $params
+     * @param mixed $data
      * @param class-string<T>|T $targetEntity
      * @return T
     */
-    public function parseToEntity(array $params, string|object $targetEntity): object
+    public function parseToEntity(mixed $data, string|object $targetEntity): object
     {
         $context = is_object($targetEntity) ? [
             AbstractNormalizer::OBJECT_TO_POPULATE => $targetEntity
         ] : [];
         $class = is_object($targetEntity) ? get_class($targetEntity) : $targetEntity;
 
-        return $this->denormalizer->denormalize($params, $class, context: $context);
+        return $this->denormalizer->denormalize($data, $class, context: $context);
     }
 
     public function normalize(mixed $value, array $groups): array

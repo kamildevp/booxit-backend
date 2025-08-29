@@ -98,7 +98,7 @@ class UserServiceTest extends TestCase
 
         $this->serializerMock
             ->method('parseToEntity')
-            ->with($dto->toArray(), $userMock)
+            ->with($dto, $userMock)
             ->willReturn($userMock);
 
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
@@ -119,7 +119,7 @@ class UserServiceTest extends TestCase
 
         $this->serializerMock
             ->method('parseToEntity')
-            ->with($dto->toArray(), $userMock)
+            ->with($dto, $userMock)
             ->willReturn($userMock);
 
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);

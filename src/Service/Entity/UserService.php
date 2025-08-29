@@ -58,7 +58,7 @@ class UserService
     public function patchUser(User $user, UserPatchDTO $dto): User
     {
         $userEmail = $user->getEmail();
-        $user = $this->entitySerializer->parseToEntity($dto->toArray(), $user);
+        $user = $this->entitySerializer->parseToEntity($dto, $user);
 
         $this->userRepository->save($user, true);
 

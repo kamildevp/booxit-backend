@@ -15,6 +15,7 @@ use App\Response\BadRequestResponse;
 use App\Response\ForbiddenResponse;
 use App\Response\HttpErrorResponse;
 use App\Response\Interface\ExceptionResponseInterface;
+use App\Response\MethodNotAllowedResponse;
 use App\Response\NotFoundResponse;
 use App\Response\ServerErrorResponse;
 use App\Response\UnauthorizedResponse;
@@ -24,6 +25,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -42,6 +44,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
         HttpException::class => HttpErrorResponse::class,
         BadRequestHttpException::class => BadRequestResponse::class,
         UnsupportedMediaTypeHttpException::class => UnsupportedMediaTypeResponse::class,
+        MethodNotAllowedHttpException::class => MethodNotAllowedResponse::class,
     ];
 
     private string $environment;

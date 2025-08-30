@@ -10,7 +10,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class AccessRuleStub implements AccessRuleInterface
 {
-    public function validateAccess(?UserInterface $user, Request $request, array $controllerArguments): void
+    public function validateAccess(?UserInterface $user, Request $request): void
     {
         $request->get('dummy');
     }

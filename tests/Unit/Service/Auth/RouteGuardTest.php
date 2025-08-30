@@ -6,20 +6,25 @@ namespace App\Tests\Unit\Service\Auth;
 
 use App\Entity\User;
 use App\Exceptions\UnauthorizedException;
+use App\Kernel;
 use App\Service\Auth\RouteGuard;
+use App\Tests\Unit\Service\Auth\Stubs\AccessRuleStub;
 use App\Tests\Unit\Service\Auth\Stubs\ControllerStub;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class RouteGuardTest extends TestCase
 {
     private MockObject&Security $securityMock;
+    private MockObject&Kernel $kernelMock;
 
     protected function setUp(): void
     {
         $this->securityMock = $this->createMock(Security::class);
+        $this->kernelMock = $this->createMock(Kernel::class);
     }
 
     public function testGetAuthorizedUserOrFailReturnsUser(): void
@@ -30,7 +35,7 @@ class RouteGuardTest extends TestCase
             ->method('getUser')
             ->willReturn($userMock);
 
-        $routeGuard = new RouteGuard($this->securityMock);
+        $routeGuard = new RouteGuard($this->securityMock, $this->kernelMock);
         $user = $routeGuard->getAuthorizedUserOrFail();
 
         $this->assertInstanceOf(User::class, $user);
@@ -42,7 +47,7 @@ class RouteGuardTest extends TestCase
             ->method('getUser')
             ->willReturn(null);
 
-        $routeGuard = new RouteGuard($this->securityMock);
+        $routeGuard = new RouteGuard($this->securityMock, $this->kernelMock);
         $this->expectException(UnauthorizedException::class);
         $routeGuard->getAuthorizedUserOrFail();
     }
@@ -50,9 +55,10 @@ class RouteGuardTest extends TestCase
     public function testValidateAccessExecutesAccessRule(): void
     {
         $userMock = $this->createMock(User::class);
-        $this->securityMock->expects($this->once())
-            ->method('getUser')
-            ->willReturn($userMock);
+        $containerMock = $this->createMock(ContainerInterface::class);
+        $this->securityMock->method('getUser')->willReturn($userMock);
+        $this->kernelMock->method('getContainer')->willReturn($containerMock);
+        $containerMock->method('get')->with(AccessRuleStub::class)->willReturn(new AccessRuleStub());
 
         $requestMock = $this->createMock(Request::class);
         $controller = new ControllerStub();
@@ -61,8 +67,8 @@ class RouteGuardTest extends TestCase
         ->method('get')
         ->with('dummy');
 
-        $routeGuard = new RouteGuard($this->securityMock);
-        $routeGuard->validateAccess($controller, $requestMock, [], 'testMethod');
+        $routeGuard = new RouteGuard($this->securityMock, $this->kernelMock);
+        $routeGuard->validateAccess($controller, $requestMock, 'testMethod');
     }
 
 }

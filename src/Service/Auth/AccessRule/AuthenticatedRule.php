@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class AuthenticatedRule implements AccessRuleInterface
 {
-    public function validateAccess(?UserInterface $user, Request $request, array $controllerArguments): void
+    public function validateAccess(?UserInterface $user, Request $request): void
     {
         if(!$user instanceof User){
             throw new UnauthorizedException;

@@ -43,6 +43,10 @@ services:
         arguments:
             $storageDir: '%storage_directory%'
 
+    App\Service\Auth\AccessRule\:
+        resource: '../src/Service/Auth/AccessRule/'
+        public: true
+
     App\Service\SetterHelper\Task\:
         resource: '../src/Service/SetterHelper/Task/'
         public: true

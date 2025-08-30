@@ -6,16 +6,13 @@ namespace App\Service\Auth;
 
 use App\Entity\User;
 use App\Exceptions\UnauthorizedException;
+use App\Kernel;
 use App\Service\Auth\AccessRule\AccessRuleInterface;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use InvalidArgumentException;
-use Nelmio\ApiDocBundle\Controller\DocumentationController;
-use Nelmio\ApiDocBundle\Controller\SwaggerUiController;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionMethod;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -25,21 +22,21 @@ class RouteGuard implements RouteGuardInterface
     private ?UserInterface $user = null;
 
     public function __construct(
-        private Security $security,
+        protected Security $security,
+        protected Kernel $kernel,
     )
     {
         $this->user = $this->security->getUser();
     }
 
     public function validateAccess(
-        AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, 
+        mixed $controller, 
         Request $request, 
-        array $controllerArguments,
         ?string $methodName = null,
     ): void
     {
-        $this->validateLocationAccess($request, $controller, $controllerArguments);
-        $this->validateLocationAccess($request, $controller, $controllerArguments, $methodName ?? '__invoke');
+        $this->validateLocationAccess($request, $controller);
+        $this->validateLocationAccess($request, $controller, $methodName ?? '__invoke');
     }
 
     public function getAuthorizedUserOrFail(): User
@@ -53,8 +50,7 @@ class RouteGuard implements RouteGuardInterface
 
     private function validateLocationAccess(
         Request $request, 
-        AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, 
-        array $controllerArguments,
+        mixed $controller, 
         ?string $methodName = null
     ): void
     {
@@ -62,11 +58,11 @@ class RouteGuard implements RouteGuardInterface
 
         foreach($restrictedAccessAttributes as $attribute){
             $accessRule = $this->resolveAccessRule($attribute);
-            $accessRule->validateAccess($this->user, $request, $controllerArguments);
+            $accessRule->validateAccess($this->user, $request);
         }
     }
 
-    private function getRestrictedAccessAttributes(AbstractController|RedirectController|DocumentationController|SwaggerUiController $controller, ?string $methodName = null): array
+    private function getRestrictedAccessAttributes(mixed $controller, ?string $methodName = null): array
     {
         $reflection = $methodName ? new ReflectionMethod($controller, $methodName) : new ReflectionClass($controller);
         return $reflection->getAttributes(RestrictedAccess::class);
@@ -78,7 +74,7 @@ class RouteGuard implements RouteGuardInterface
     private function resolveAccessRule(ReflectionAttribute $attribute): AccessRuleInterface
     {
         $accessRuleClass = $attribute->newInstance()->accessRule;
-        $accessRule = new $accessRuleClass;
+        $accessRule = $this->kernel->getContainer()->get($accessRuleClass);
         if(!($accessRule instanceof AccessRuleInterface)){
             throw new InvalidArgumentException('Access Rule must implement AccessRuleInterface');
         }

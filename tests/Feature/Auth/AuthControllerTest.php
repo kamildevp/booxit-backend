@@ -7,6 +7,7 @@ namespace App\Tests\Feature\Auth;
 use App\DataFixtures\Test\Auth\AuthRefreshFixtures;
 use App\Entity\RefreshToken;
 use App\Repository\RefreshTokenRepository;
+use App\Tests\Feature\Attribute\Fixtures;
 use App\Tests\Feature\Auth\DataProvider\AuthLoginDataProvider;
 use App\Tests\Feature\Auth\DataProvider\AuthLogoutDataProvider;
 use Doctrine\ORM\EntityManagerInterface;
@@ -38,12 +39,9 @@ class AuthControllerTest extends BaseWebTestCase
         $this->assertEquals('Invalid credentials', $responseData['message']);
     }
 
+    #[Fixtures([AuthRefreshFixtures::class])]
     public function testRefresh(): void
     {
-        $this->dbTool->loadFixtures([
-            AuthRefreshFixtures::class
-        ], true);
-
         $refreshToken = $this->refreshTokenRepository->findOneBy(['appUser' => $this->user]);
         $params = ['refresh_token' => $refreshToken->getValue()];
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/refresh', $params);
@@ -59,12 +57,9 @@ class AuthControllerTest extends BaseWebTestCase
         $this->assertEquals('Invalid or expired refresh token', $responseData['message']);
     }
 
+    #[Fixtures([AuthRefreshFixtures::class])]
     public function testRefreshWithUsedRefreshToken(): void
     {
-        $this->dbTool->loadFixtures([
-            AuthRefreshFixtures::class
-        ], true);
-
         $refreshToken = $this->refreshTokenRepository->findOneBy(['appUser' => $this->user]);
         $params = ['refresh_token' => $refreshToken->getValue()];
         $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/refresh', $params);
@@ -73,13 +68,10 @@ class AuthControllerTest extends BaseWebTestCase
         $this->assertEquals('Invalid or expired refresh token', $responseData['message']);
     }
 
+    #[Fixtures([AuthRefreshFixtures::class])]
     #[DataProviderExternal(AuthLogoutDataProvider::class, 'validDataCases')]
     public function testLogout(array $params, int $expectedRefreshTokensCount): void
     {
-        $this->dbTool->loadFixtures([
-            AuthRefreshFixtures::class
-        ], true);
-
         $this->fullLogin($this->client); 
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/logout', $params);
 

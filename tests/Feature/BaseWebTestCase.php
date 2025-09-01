@@ -6,6 +6,8 @@ namespace App\Tests\Feature;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
 use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Tests\Feature\Attribute\Fixtures;
 use App\Tests\Feature\Trait\DataFormattingTestTools;
 use App\Tests\Feature\Trait\ListAssertions;
 use App\Tests\Feature\Trait\RequestTestTools;
@@ -16,6 +18,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Liip\TestFixturesBundle\Services\DatabaseToolCollection;
 use Liip\TestFixturesBundle\Services\DatabaseTools\AbstractDatabaseTool;
 use Psr\Container\ContainerInterface;
+use ReflectionMethod;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -32,6 +35,7 @@ class BaseWebTestCase extends WebTestCase
     protected string $secret;
     protected NormalizerInterface $normalizer;
     protected User $user;
+    protected EntityManagerInterface $entityManager;
 
     protected function setUp(): void
     {
@@ -41,11 +45,32 @@ class BaseWebTestCase extends WebTestCase
         $this->dbTool = $this->container->get(DatabaseToolCollection::class)->get();
         $this->secret = $this->container->get(ContainerBagInterface::class)->get('kernel.secret');
         $this->normalizer = $this->container->get(NormalizerInterface::class);
+        $this->entityManager = $this->container->get(EntityManagerInterface::class);
 
-        $this->dbTool->loadFixtures([
-            VerifiedUserFixtures::class
-        ]);
-        $userRepository = $this->container->get(EntityManagerInterface::class)->getRepository(User::class);
-        $this->user = $userRepository->findOneBy(['email' => 'verifieduser@example.com']);
+        $this->loadFixtures();
+
+        $userRepository = $this->container->get(UserRepository::class);
+        $this->user = $userRepository->findOneBy(['email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL]) ?? new User();
+    }
+
+    protected function getFixturesAttribute(): ?Fixtures
+    {
+        $fixturesAttributes = (new ReflectionMethod($this, $this->name()))->getAttributes(Fixtures::class);
+        if(empty($fixturesAttributes)){
+            return null;
+        }
+
+        return $fixturesAttributes[0]->newInstance();
+    }
+
+    protected function loadFixtures(): void
+    {
+        $fixturesAttribute = $this->getFixturesAttribute();
+        if($fixturesAttribute && !$fixturesAttribute->append){
+            $this->dbTool->loadFixtures($fixturesAttribute->fixtures);
+            return;
+        }
+
+        $this->dbTool->loadFixtures([VerifiedUserFixtures::class, ...($fixturesAttribute->fixtures ?? [])]);
     }
 }

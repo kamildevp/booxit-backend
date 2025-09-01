@@ -13,6 +13,7 @@ use App\Entity\User;
 use App\Enum\EmailConfirmationType;
 use App\Enum\User\UserNormalizerGroup;
 use App\Repository\UserRepository;
+use App\Tests\Feature\Attribute\Fixtures;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Feature\BaseWebTestCase;
@@ -50,36 +51,27 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount(1, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([UserFixtures::class])]
     #[DataProviderExternal(UserCreateDataProvider::class, 'validationDataCases')]
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
-        $this->dbTool->loadFixtures([
-            UserFixtures::class
-        ], true);
-
         $this->assertPathValidation($this->client, 'POST', '/api/user', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([VerifyUserFixtures::class])]
     public function testVerifySuccess(): void
     {
-        $this->dbTool->loadFixtures([
-            VerifyUserFixtures::class
-        ], true);
-
         $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::USER_VERIFICATION);
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/user/verify', $params);
 
         $this->assertEquals('Verification Successful', $responseData['message']);
     }
 
+    #[Fixtures([VerifyUserFixtures::class])]
     #[DataProviderExternal(UserVerifyDataProvider::class, 'failureDataCases')]
     public function testVerifyFailure(array $verifyParams): void
     {
-        $this->dbTool->loadFixtures([
-            VerifyUserFixtures::class
-        ], true);
-
         $validParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::USER_VERIFICATION);
         $params = array_merge($validParams, $verifyParams);
         $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/user/verify', $params);
@@ -102,12 +94,9 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
+    #[Fixtures([UserFixtures::class])]
     public function testGet(): void
     {
-        $this->dbTool->loadFixtures([
-            UserFixtures::class
-        ], true);
-
         $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
         $expectedResponseData = $this->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
         $userId = $user->getId();
@@ -134,25 +123,19 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount($mailSent ? 1 : 0, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([UserFixtures::class])]
     #[DataProviderExternal(UserPatchDataProvider::class, 'validationDataCases')]
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
-        $this->dbTool->loadFixtures([
-            UserFixtures::class
-        ], true);
-
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'PATCH', '/api/user/me', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([ChangeUserPasswordFixtures::class])]
     #[DataProviderExternal(UserChangePasswordDataProvider::class, 'validDataCases')]
     public function testChangePassword(array $params, int $expectedRefreshTokensCount): void
     {
-        $this->dbTool->loadFixtures([
-            ChangeUserPasswordFixtures::class
-        ], true);
-
         $this->fullLogin($this->client);
         $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/change_password', $params);
 
@@ -176,13 +159,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertEquals('User removed successfully', $responseData['message']);
     }
 
+    #[Fixtures([UserFixtures::class], false)]
     #[DataProviderExternal(UserListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $this->dbTool->loadFixtures([
-            UserFixtures::class
-        ]);
-
         $path = '/api/user?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
@@ -196,13 +176,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }
 
+    #[Fixtures([UserSortingFixtures::class], false)]
     #[DataProviderExternal(UserListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $this->dbTool->loadFixtures([
-            UserSortingFixtures::class
-        ]);
-
         $path = '/api/user?' . http_build_query($filters);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
@@ -210,13 +187,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
     }
 
+    #[Fixtures([UserSortingFixtures::class], false)]
     #[DataProviderExternal(UserListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(array $sorting, array $orderedItems): void
     {
-        $this->dbTool->loadFixtures([
-            UserSortingFixtures::class
-        ]);
-
         $path = '/api/user?' . http_build_query($sorting);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
@@ -234,13 +208,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
+    #[Fixtures([UserFixtures::class], false)]
     #[DataProviderExternal(UserResetPasswordRequestDataProvider::class, 'validDataCases')]
     public function testResetPasswordRequest(array $params): void
     {
-        $this->dbTool->loadFixtures([
-            UserFixtures::class
-        ]);
-
         $expectedResponseData = ['message' => 'If user with specified email exists, password reset link was sent to specified email'];
         $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/user/reset_password_request', $params);
 
@@ -255,13 +226,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([PasswordResetFixtures::class])]
     #[DataProviderExternal(UserResetPasswordDataProvider::class, 'validDataCases')]
     public function testResetPasswordSuccess(array $params): void
     {
-        $this->dbTool->loadFixtures([
-            PasswordResetFixtures::class
-        ], true);
-
         $verifyParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::PASSWORD_RESET);
         $params = array_merge($verifyParams, $params);
         $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/reset_password', $params);
@@ -269,13 +237,10 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertEquals('Password reset successful', $responseData['message']);
     }
 
+    #[Fixtures([PasswordResetFixtures::class])]
     #[DataProviderExternal(UserResetPasswordDataProvider::class, 'failureDataCases')]
     public function testResetPasswordFailure(array $params): void
     {
-        $this->dbTool->loadFixtures([
-            PasswordResetFixtures::class
-        ], true);
-
         $verifyParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::PASSWORD_RESET);
         $params = array_merge($verifyParams, $params);
         $responseData = $this->getFailureResponseData($this->client, 'PATCH', '/api/user/reset_password', $params);

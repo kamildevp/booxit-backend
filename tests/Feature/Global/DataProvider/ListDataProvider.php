@@ -127,9 +127,9 @@ class ListDataProvider extends BaseDataProvider
     {
         $data = [
             'string' => [
-                [$columnName => 'Sorted A User'],
-                [$columnName => 'Sorted B User'],
-                [$columnName => 'Sorted C User'],
+                [$columnName => 'Sorted A'],
+                [$columnName => 'Sorted B'],
+                [$columnName => 'Sorted C'],
             ],
             'email' => [
                 [$columnName => 'sort_a_user@example.com'],

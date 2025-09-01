@@ -16,7 +16,7 @@ class UserListDataProvider extends ListDataProvider
                     'name' => 'A'
                 ],
                 [
-                    'name' => 'Sorted A User'
+                    'name' => 'Sorted A'
                 ],
             ],
         ], parent::getTimestampsFiltersDataCases());

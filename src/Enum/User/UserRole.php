@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Enum\User;
 
+use App\Enum\Trait\ValuesTrait;
+
 enum UserRole: string
 {
+    use ValuesTrait;
+
     case REGULAR = 'REGULAR';
     case PREMIUM = 'PREMIUM';
-
-    public static function values(): array
-    {
-        return array_map(fn($case) => $case->value, self::cases());
-    }
 }

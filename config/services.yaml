@@ -47,6 +47,10 @@ services:
         resource: '../src/Service/Auth/AccessRule/'
         public: true
 
+    App\Documentation\Processor\MapQueryStringProcessor:
+        tags:
+            - { name: nelmio_api_doc.swagger.processor, priority: -20 }
+
     App\Service\SetterHelper\Task\:
         resource: '../src/Service/SetterHelper/Task/'
         public: true

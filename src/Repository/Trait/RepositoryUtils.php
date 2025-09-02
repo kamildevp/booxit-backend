@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Repository\Trait;
 
 use App\DTO\FiltersDTOInterface;
+use App\DTO\ListQueryDTOInterface;
 use App\DTO\OrderDTOInterface;
-use App\DTO\PaginationDTO;
 use App\Exceptions\EntityNotFoundException;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
@@ -30,20 +30,18 @@ trait RepositoryUtils
         return $entity;
     }
 
-    public function paginate(PaginationDTO $paginationDTO, ?FiltersDTOInterface $filtersDTO = null, ?OrderDTOInterface $orderDTO = null, ?QueryBuilder $qb = null): PaginationResult
+    public function paginate(ListQueryDTOInterface $queryDTO, ?QueryBuilder $qb = null): PaginationResult
     {
         $qb = ($qb ?? $this->createQueryBuilder('e'));
         
-        if($filtersDTO != null){
-            $this->applyFilters($qb, $filtersDTO);
+        if($queryDTO->filters instanceof FiltersDTOInterface){
+            $this->applyFilters($qb, $queryDTO->filters);
         }
 
-        if($orderDTO != null){
-            $this->applyOrder($qb, $orderDTO);
-        }
+        $this->applyOrder($qb, $queryDTO);
         
         $paginationBuilder = new PaginationBuilder(self::MAX_ENTRIES_PER_PAGE);
-        return $paginationBuilder->paginate($qb, $paginationDTO);
+        return $paginationBuilder->paginate($qb, $queryDTO);
     }
 
     private function applyFilters(QueryBuilder $qb, FiltersDTOInterface $filtersDTO): void

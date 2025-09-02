@@ -26,17 +26,11 @@ class UserListDataProvider extends ListDataProvider
     {
         return array_merge([
             [
-                [
-                    'order' => 'name',
-                    'order_dir' => 'asc',
-                ],
+                'name',
                 parent::getSortedColumnValueSequence('name', 'string')
             ],
             [
-                [
-                    'order' => 'name',
-                    'order_dir' => 'desc',
-                ],
+                '-name',
                 parent::getSortedColumnValueSequence('name', 'string', 'desc')
             ],
         ], parent::getTimestampsSortingDataCases());
@@ -47,37 +41,30 @@ class UserListDataProvider extends ListDataProvider
         return array_merge(parent::validationDataCases(), [
             [
                 [
-                    'name' => '',
+                    'filters' => [
+                        'name' => '',
+                    ]
                 ],
                 [
-                    'name' => [
-                        'Parameter must be at least 1 characters long'
-                    ],
-                ]
-            ],
-            [
-                [
-                    'name' => str_repeat('a', 55),
-                ],
-                [
-                    'name' => [
-                        'Parameter cannot be longer than 50 characters'
+                    'filters' => [
+                        'name' => [
+                            'Parameter must be at least 1 characters long'
+                        ],
                     ]
                 ]
             ],
             [
                 [
-                    'order' => 'invalid,name',
-                    'order_dir' => 'invalid_dir'
+                    'filters' => [
+                        'name' => str_repeat('a', 55),
+                    ]
                 ],
                 [
-                    'order' => [
-                        'Specified order columns are invalid'
-                    ],
-                    'order_dir' => [
-                        'Specified order directions does not match order columns',
-                        'Specified order directions are invalid',
-                    ],
+                    'filters' => [
+                        'name' => [
+                            'Parameter cannot be longer than 50 characters'
+                        ]
+                    ]
                 ]
             ],
         ]);

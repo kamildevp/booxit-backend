@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Pagination;
 
-use App\DTO\PaginationDTO;
+use App\DTO\PaginationDTOInterface;
 use App\Repository\Pagination\Model\PaginationResult;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -18,7 +18,7 @@ class PaginationBuilder {
         
     }
 
-    public function paginate(QueryBuilder $qb, PaginationDTO $paginationDTO): PaginationResult
+    public function paginate(QueryBuilder $qb, PaginationDTOInterface $paginationDTO): PaginationResult
     {
         $offset = ($paginationDTO->getPage() - 1) * $paginationDTO->getPerPage();
         $perPage = min($paginationDTO->getPerPage(), $this->maxEntriesPerPage);    

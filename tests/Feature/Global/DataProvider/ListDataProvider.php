@@ -36,15 +36,10 @@ class ListDataProvider extends BaseDataProvider
             [
                 [
                     'order' => 'invalid,name',
-                    'order_dir' => 'invalid_dir'
                 ],
                 [
                     'order' => [
                         'Specified order columns are invalid'
-                    ],
-                    'order_dir' => [
-                        'Specified order directions does not match order columns',
-                        'Specified order directions are invalid',
                     ],
                 ]
             ],
@@ -93,31 +88,19 @@ class ListDataProvider extends BaseDataProvider
     {
         return [
             [
-                [
-                    'order' => 'created_at',
-                    'order_dir' => 'asc',
-                ],
+                'created_at',
                 self::getSortedColumnValueSequence('created_at', 'datetime')
             ],
             [
-                [
-                    'order' => 'created_at',
-                    'order_dir' => 'desc',
-                ],
+                '-created_at',
                 self::getSortedColumnValueSequence('created_at', 'datetime', 'desc')
             ],
             [
-                [
-                    'order' => 'updated_at',
-                    'order_dir' => 'asc',
-                ],
+                'updated_at',
                 self::getSortedColumnValueSequence('updated_at', 'datetime')
             ],
             [
-                [
-                    'order' => 'updated_at',
-                    'order_dir' => 'desc',
-                ],
+                '-updated_at',
                 self::getSortedColumnValueSequence('updated_at', 'datetime', 'desc')
             ],
         ];

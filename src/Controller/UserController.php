@@ -11,11 +11,9 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
-use App\DTO\PaginationDTO;
 use App\DTO\User\UserChangePasswordDTO;
 use App\DTO\User\UserCreateDTO;
-use App\DTO\User\UserListFiltersDTO;
-use App\DTO\User\UserListOrderDTO;
+use App\DTO\User\UserListQueryDTO;
 use App\DTO\User\UserPatchDTO;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
@@ -203,12 +201,10 @@ class UserController extends AbstractController
     public function list(
         UserRepository $userRepository, 
         EntitySerializerInterface $entitySerializer, 
-        #[MapQueryString] PaginationDTO $paginationDTO = new PaginationDTO,
-        #[MapQueryString] UserListFiltersDTO $filtersDTO = new UserListFiltersDTO,
-        #[MapQueryString] UserListOrderDTO $orderDTO = new UserListOrderDTO
+        #[MapQueryString] UserListQueryDTO $queryDTO = new UserListQueryDTO,
     ): SuccessResponse
     {
-        $paginationResult = $userRepository->paginate($paginationDTO, $filtersDTO, $orderDTO);
+        $paginationResult = $userRepository->paginate($queryDTO);
         $formattedItems = $entitySerializer->normalize($paginationResult->getItems(), UserNormalizerGroup::PUBLIC->normalizationGroups());
         $paginationResult->setItems($formattedItems);
 

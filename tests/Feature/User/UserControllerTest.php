@@ -180,7 +180,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/user?' . http_build_query($filters);
+        $path = '/api/user?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -189,9 +189,9 @@ class UserControllerTest extends BaseWebTestCase
 
     #[Fixtures([UserSortingFixtures::class], false)]
     #[DataProviderExternal(UserListDataProvider::class, 'sortingDataCases')]
-    public function testListSorting(array $sorting, array $orderedItems): void
+    public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/user?' . http_build_query($sorting);
+        $path = '/api/user?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));

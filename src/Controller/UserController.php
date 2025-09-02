@@ -205,10 +205,9 @@ class UserController extends AbstractController
     ): SuccessResponse
     {
         $paginationResult = $userRepository->paginate($queryDTO);
-        $formattedItems = $entitySerializer->normalize($paginationResult->getItems(), UserNormalizerGroup::PUBLIC->normalizationGroups());
-        $paginationResult->setItems($formattedItems);
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, UserNormalizerGroup::PUBLIC->normalizationGroups());
 
-        return new SuccessResponse($paginationResult);
+        return new SuccessResponse($result);
     }
 
     #[OA\Post(

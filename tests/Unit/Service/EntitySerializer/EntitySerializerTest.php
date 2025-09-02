@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\EntitySerializer;
 
+use App\Repository\Pagination\Model\PaginationResult;
 use App\Service\EntitySerializer\EntitySerializer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -80,5 +81,34 @@ class EntitySerializerTest extends TestCase
         $result = $this->entitySerializer->normalize($object, $groups);
 
         $this->assertSame($normalizedData, $result);
+    }
+
+    public function testNormalizePaginationResult(): void
+    {
+        $items = [new \stdClass(), new \stdClass()];
+        $groups = ['group1'];
+        $normalizedItems = [
+            ['id' => 1],
+            ['id' => 2],
+        ];
+
+        $paginationResultMock = $this->createMock(PaginationResult::class);
+        $paginationResultMock->expects($this->once())
+            ->method('getItems')
+            ->willReturn($items);        
+
+        $this->normalizerMock
+            ->expects($this->once())
+            ->method('normalize')
+            ->with($items, null, ['groups' => $groups])
+            ->willReturn($normalizedItems);
+
+        $paginationResultMock->expects($this->once())
+            ->method('setItems')
+            ->with($normalizedItems);
+
+        $result = $this->entitySerializer->normalizePaginationResult($paginationResultMock, $groups);
+
+        $this->assertSame($paginationResultMock, $result);
     }
 }

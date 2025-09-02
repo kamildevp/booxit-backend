@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\EntitySerializer;
 
+use App\Repository\Pagination\Model\PaginationResult;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -34,5 +35,12 @@ class EntitySerializer implements EntitySerializerInterface
     public function normalize(mixed $value, array $groups): array
     {
         return $this->normalizer->normalize($value, context: ['groups' => $groups]);
+    }
+
+    public function normalizePaginationResult(PaginationResult $paginationResult, array $groups): PaginationResult
+    {
+        $formattedItems = $this->normalize($paginationResult->getItems(), $groups);
+        $paginationResult->setItems($formattedItems);
+        return $paginationResult;
     }
 }

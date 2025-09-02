@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\EntitySerializer;
 
+use App\Repository\Pagination\Model\PaginationResult;
+
 interface EntitySerializerInterface 
 {
     /**
@@ -15,4 +17,6 @@ interface EntitySerializerInterface
     public function parseToEntity(mixed $data, string | object $targetEntity): object;
 
     public function normalize(mixed $value, array $groups): array;
+
+    public function normalizePaginationResult(PaginationResult $paginationResult, array $groups): PaginationResult;
 }

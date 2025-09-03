@@ -7,9 +7,7 @@ namespace App\Entity;
 use App\Entity\Trait\Timestampable;
 use App\Enum\User\UserNormalizerGroup;
 use App\Enum\User\UserRole;
-use App\Repository\Filter\EntityFilter\Attribute\Filter;
 use App\Repository\Filter\EntityFilter\FieldContains;
-use App\Repository\Order\EntityOrder\Attribute\Order;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -30,22 +28,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     use Timestampable, SoftDeleteableEntity;
 
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
-    #[Order('id', new BaseFieldOrder)]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
     #[Groups([UserNormalizerGroup::PRIVATE->value])]
-    #[Order('email', new BaseFieldOrder)]
-    #[Filter('email', new FieldContains)] 
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
 
     #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
-    #[Order('name', new BaseFieldOrder)]
-    #[Filter('name', new FieldContains)] 
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
@@ -300,6 +293,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+            'email' => new FieldContains('email'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+            'email' => new BaseFieldOrder('email'),
+        ]);
     }
 
 }

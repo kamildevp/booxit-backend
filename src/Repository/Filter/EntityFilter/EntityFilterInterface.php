@@ -10,5 +10,5 @@ interface EntityFilterInterface {
     
     public function supports(mixed $value): bool;
 
-    public function apply(QueryBuilder $qb, string $columnName, mixed $value, string $filterId): void;
+    public function apply(QueryBuilder $qb, mixed $value, string $filterId): void;
 }

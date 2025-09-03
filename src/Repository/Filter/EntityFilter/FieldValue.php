@@ -9,9 +9,9 @@ use Doctrine\ORM\QueryBuilder;
 
 class FieldValue extends AbstractFieldFilter
 {
-    public function __construct(public string $operator)
+    public function __construct(string $propertyName, protected string $operator)
     {
-        
+        parent::__construct($propertyName);
     }
 
     public function supports(mixed $value): bool
@@ -19,8 +19,8 @@ class FieldValue extends AbstractFieldFilter
         return is_string($value) || is_numeric($value) || $value instanceof DateTimeInterface;
     }
 
-    public function apply(QueryBuilder $qb, string $columnName, mixed $value, string $filterId): void
+    public function apply(QueryBuilder $qb, mixed $value, string $filterId): void
     {
-        $qb->andWhere("e.$columnName $this->operator :$filterId")->setParameter($filterId, $value);
+        $qb->andWhere("e.$this->propertyName $this->operator :$filterId")->setParameter($filterId, $value);
     }
 }

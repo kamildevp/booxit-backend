@@ -8,8 +8,8 @@ use Doctrine\ORM\QueryBuilder;
 
 class BaseFieldOrder extends AbstractFieldOrder
 {
-    public function apply(QueryBuilder $qb, string $columnName, string $dir, string $orderId): void
+    public function apply(QueryBuilder $qb, string $dir, string $orderId): void
     {
-        $qb->addOrderBy("e.$columnName", $dir);
+        $qb->addOrderBy("e.$this->propertyName", $dir);
     }
 }

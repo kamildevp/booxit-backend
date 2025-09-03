@@ -8,5 +8,5 @@ use Doctrine\ORM\QueryBuilder;
 
 interface EntityOrderInterface 
 {
-    public function apply(QueryBuilder $qb, string $columnName, string $dir, string $orderId): void;
+    public function apply(QueryBuilder $qb, string $dir, string $orderId): void;
 }

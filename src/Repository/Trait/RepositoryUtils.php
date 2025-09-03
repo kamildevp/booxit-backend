@@ -7,6 +7,7 @@ namespace App\Repository\Trait;
 use App\DTO\FiltersDTOInterface;
 use App\DTO\ListQueryDTOInterface;
 use App\DTO\OrderDTOInterface;
+use App\Enum\OrderDir;
 use App\Exceptions\EntityNotFoundException;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
@@ -18,7 +19,7 @@ trait RepositoryUtils
 {
     const DEFAULT_ENTRIES_PER_PAGE = 20; 
     const MAX_ENTRIES_PER_PAGE = 100;
-    const DEFAULT_ORDER_MAP = ['id' => 'asc'];
+    const DEFAULT_ORDER_MAP = ['id' => OrderDir::ASC->value];
 
     public function findOrFail($id, $lockMode = null, $lockVersion = null): object
     {
@@ -34,7 +35,7 @@ trait RepositoryUtils
     {
         $qb = ($qb ?? $this->createQueryBuilder('e'));
         
-        if($queryDTO->filters instanceof FiltersDTOInterface){
+        if(isset($queryDTO->filters) && $queryDTO->filters instanceof FiltersDTOInterface){
             $this->applyFilters($qb, $queryDTO->filters);
         }
 

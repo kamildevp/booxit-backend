@@ -8,5 +8,10 @@ use Doctrine\ORM\QueryBuilder;
 
 abstract class AbstractFieldOrder implements EntityOrderInterface
 {
-    abstract public function apply(QueryBuilder $qb, string $columnName, string $dir, string $orderId): void;
+    public function __construct(protected string $propertyName)
+    {
+        
+    }
+
+    abstract public function apply(QueryBuilder $qb, string $dir, string $orderId): void;
 }

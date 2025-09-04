@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Service\Entity;
+namespace App\Tests\Unit\Service\Entity;
 
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserCreateDTO;

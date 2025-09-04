@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Service\EntitySerializer;
+namespace App\Tests\Unit\Service\EntitySerializer;
 
 use App\Repository\Pagination\Model\PaginationResult;
 use App\Service\EntitySerializer\EntitySerializer;

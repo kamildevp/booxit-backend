@@ -8,6 +8,7 @@ use Nelmio\ApiDocBundle\OpenApiPhp\Util;
 use Nelmio\ApiDocBundle\RouteDescriber\RouteArgumentDescriber\SymfonyMapQueryStringDescriber;
 use OpenApi\Analysis;
 use OpenApi\Annotations as OA;
+use OpenApi\Annotations\Schema;
 use OpenApi\Generator;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
@@ -50,23 +51,88 @@ final class MapQueryStringProcessor
         }
 
         $nativeModelName = str_replace(OA\Components::SCHEMA_REF, '', $modelRef);
-
         $schemaModel = Util::getSchema($analysis->openapi, $nativeModelName);
+        $this->addSchemaAsSeparatedParameters($analysis, $schemaModel, $operation);
+    }
 
-        // There are no properties to map to query parameters
+
+    private function addSchemaAsSeparatedParameters(Analysis $analysis, Schema $schemaModel, OA\Operation $operation, string $parameterPrefix = '')
+    {
         if (Generator::UNDEFINED === $schemaModel->properties) {
             return;
         }
-
+        
         foreach ($schemaModel->properties as $property) {
-            $name = 'array' === $property->type
-                ? $property->property.'[]'
-                : $property->property;
+            $name = !empty($parameterPrefix) ? $parameterPrefix.'['.$property->property.']' : $property->property;
+            $name = 'array' === $property->type ? $name .'[]' : $name;
 
-            $operationParameter = Util::getOperationParameter($operation, $name, 'query');
+            // Remove incompatible properties
+            $propertyVars = get_object_vars($property);
+            unset($propertyVars['property']);
+            $schema = new OA\Schema($propertyVars);
 
-            Util::modifyAnnotationValue($operationParameter, 'explode', false);
-            Util::modifyAnnotationValue($operationParameter, 'style', $operationParameter->schema->type == Generator::UNDEFINED ? 'deepObject' : Generator::UNDEFINED);
+            if($schema->type != Generator::UNDEFINED){
+                $description = $this->replaceDescriptionPlaceholders($schema->description);
+                $operationParameter = Util::getOperationParameter($operation, $name, 'query');
+                $operationParameter->schema = $schema;
+                $operationParameter->name = $name;
+                $operationParameter->description = $description;
+                $operationParameter->required = $schema->required;
+                $operationParameter->deprecated = $schema->deprecated;
+                $operationParameter->example = $schema->example;
+
+                if (\is_array($schemaModel->required) && \in_array($property->property, $schemaModel->required, true)) {
+                    Util::modifyAnnotationValue($operationParameter, 'required', true);
+                } else {
+                    Util::modifyAnnotationValue($operationParameter, 'required', false);
+                }
+
+                continue;
+            }
+
+            $this->removeOperationParameter($operation, $name, 'query');
+            $ref = isset($schema->oneOf[0]->ref) ? $schema->oneOf[0]->ref : $schema->ref;
+            $modelName = str_replace(OA\Components::SCHEMA_REF, '', $ref);
+            $refSchema = Util::getSchema($analysis->openapi, $modelName);
+
+            $this->addSchemaAsSeparatedParameters($analysis, $refSchema, $operation, $name);
         }
+    }
+
+    private function removeOperationParameter(OA\Operation $operation, string $name, string $in): void
+    {
+        $key = null;
+        $nested = $operation::$_nested;
+        $collection = $nested[OA\Parameter::class][0];
+
+        $key = Util::searchCollectionItem(
+            $operation->{$collection} && Generator::UNDEFINED !== $operation->{$collection} ? $operation->{$collection} : [],
+            ['name' => $name, 'in' => $in]
+        );
+        
+        if (null === $key) {
+            return;
+        }
+
+        unset($operation->{$collection}[$key]);
+        $operation->{$collection} = array_values($operation->{$collection});
+    }
+
+    private function replaceDescriptionPlaceholders(string $description): string
+    {
+        $matches = [];
+        preg_match_all('/(?<=\{\{ )([\p{L}\p{N}\\\\]+::[\p{L}\p{N}]+)(?= \}\})/u', $description, $matches);
+
+        $placeholders = $matches[0];
+        foreach($placeholders as $placeholder){
+            $callable = explode("::", $placeholder);
+            if(is_callable($callable)){
+                $value = call_user_func($callable);
+                $stringValue = is_array($value) ? implode(', ', $value) : (string)$value;
+                $description = str_replace("{{ $placeholder }}", $stringValue, $description);
+            }
+        }
+
+        return $description;
     }
 }

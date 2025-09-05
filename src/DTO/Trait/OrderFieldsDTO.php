@@ -13,7 +13,8 @@ trait OrderFieldsDTO
 {
     protected string $separator = ',';
     
-    #[OA\Property(description: 'Comma-separated list of fields to sort by. Prefix with "-" for descending order. Example: "-name,created_at,updated_at"')]
+    #[OA\Property(description: 'Comma-separated list of fields to sort by. Prefix with "-" for descending order. Example: "-name,created_at,updated_at".
+    </br>**Orderable columns: {{ '. self::class . '::getOrderableColumns }}**')]
     #[CustomAssert\StringifiedCollectionSubset(baseCollectionCallbackMethod: 'getAllowedColumns', message: 'Specified order columns are invalid')]
     public readonly ?string $order;
 
@@ -33,11 +34,11 @@ trait OrderFieldsDTO
     #[Ignore]
     public function getAllowedColumns(): array
     {
-        $orderableColumns = $this->getOrderableColumns();
+        $orderableColumns = static::getOrderableColumns();
         $descOrderColumns = array_map(fn($column) => "-$column" ,$orderableColumns);
         return array_merge($orderableColumns, $descOrderColumns);
     }
 
     #[Ignore]
-    abstract public function getOrderableColumns(): array;
+    abstract public static function getOrderableColumns(): array;
 }

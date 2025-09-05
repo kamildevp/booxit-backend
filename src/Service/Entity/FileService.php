@@ -34,7 +34,7 @@ class FileService
         }
         $uploadedBy = $uploadedBy ?? $this->security->getUser();
 
-        $extension = MimeTypes::getDefault()->getExtensions($contentType)[0] ?? 'bin';
+        $extension = (!is_null($contentType) ? MimeTypes::getDefault()->getExtensions($contentType)[0] : null) ?? 'bin';
         $fileName = sprintf('%s_%s.%s', $uploadType->value, uniqid(), $extension);
         $tmpPath = tempnam(sys_get_temp_dir(), 'upload_');
         file_put_contents($tmpPath, $content);

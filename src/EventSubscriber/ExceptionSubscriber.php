@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
+use App\Exceptions\ConflictException;
 use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\InvalidRequestException;
@@ -12,6 +13,7 @@ use App\Exceptions\RequestValidationException;
 use App\Exceptions\UnauthorizedException;
 use App\Kernel;
 use App\Response\BadRequestResponse;
+use App\Response\ConflictResponse;
 use App\Response\ForbiddenResponse;
 use App\Response\HttpErrorResponse;
 use App\Response\Interface\ExceptionResponseInterface;
@@ -45,6 +47,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
         BadRequestHttpException::class => BadRequestResponse::class,
         UnsupportedMediaTypeHttpException::class => UnsupportedMediaTypeResponse::class,
         MethodNotAllowedHttpException::class => MethodNotAllowedResponse::class,
+        ConflictException::class => ConflictResponse::class,
     ];
 
     private string $environment;

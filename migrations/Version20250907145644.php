@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250907132956 extends AbstractMigration
+final class Version20250907145644 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,10 +20,6 @@ final class Version20250907132956 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE organization_member (id INT NOT NULL, organization_id INT NOT NULL, app_user_id INT NOT NULL, roles TEXT NOT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE INDEX IDX_756A2A8D32C8A3DE ON organization_member (organization_id)');
-        $this->addSql('CREATE INDEX IDX_756A2A8D4A3353D8 ON organization_member (app_user_id)');
-        $this->addSql('COMMENT ON COLUMN organization_member.roles IS \'(DC2Type:array)\'');
         $this->addSql('CREATE TABLE reservation (id INT NOT NULL, schedule_id INT NOT NULL, service_id INT DEFAULT NULL, time_window_id INT NOT NULL, email VARCHAR(180) NOT NULL, phone_number VARCHAR(255) NOT NULL, verified BOOLEAN NOT NULL, confirmed BOOLEAN NOT NULL, date VARCHAR(255) NOT NULL, expiry_date TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_42C84955A40BC2D5 ON reservation (schedule_id)');
         $this->addSql('CREATE INDEX IDX_42C84955ED5CA9E6 ON reservation (service_id)');
@@ -45,8 +41,6 @@ final class Version20250907132956 extends AbstractMigration
         $this->addSql('CREATE TABLE working_hours_time_window (working_hours_id INT NOT NULL, time_window_id INT NOT NULL, PRIMARY KEY(working_hours_id, time_window_id))');
         $this->addSql('CREATE INDEX IDX_266B86ED55A755D4 ON working_hours_time_window (working_hours_id)');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_266B86ED137F1495 ON working_hours_time_window (time_window_id)');
-        $this->addSql('ALTER TABLE organization_member ADD CONSTRAINT FK_756A2A8D32C8A3DE FOREIGN KEY (organization_id) REFERENCES organization (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
-        $this->addSql('ALTER TABLE organization_member ADD CONSTRAINT FK_756A2A8D4A3353D8 FOREIGN KEY (app_user_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955A40BC2D5 FOREIGN KEY (schedule_id) REFERENCES schedule (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955ED5CA9E6 FOREIGN KEY (service_id) REFERENCES service (id) ON DELETE SET NULL NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955137F1495 FOREIGN KEY (time_window_id) REFERENCES time_window (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
@@ -64,8 +58,6 @@ final class Version20250907132956 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE organization_member DROP CONSTRAINT FK_756A2A8D32C8A3DE');
-        $this->addSql('ALTER TABLE organization_member DROP CONSTRAINT FK_756A2A8D4A3353D8');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955A40BC2D5');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955ED5CA9E6');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955137F1495');
@@ -78,7 +70,6 @@ final class Version20250907132956 extends AbstractMigration
         $this->addSql('ALTER TABLE working_hours DROP CONSTRAINT FK_D72CDC3DA40BC2D5');
         $this->addSql('ALTER TABLE working_hours_time_window DROP CONSTRAINT FK_266B86ED55A755D4');
         $this->addSql('ALTER TABLE working_hours_time_window DROP CONSTRAINT FK_266B86ED137F1495');
-        $this->addSql('DROP TABLE organization_member');
         $this->addSql('DROP TABLE reservation');
         $this->addSql('DROP TABLE schedule');
         $this->addSql('DROP TABLE schedule_service');

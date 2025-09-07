@@ -15,7 +15,8 @@ class ClientErrorResponseDoc extends OA\Response
         ?string $message = null,
         ?string $description = null, 
         mixed $errorsExample = null, 
-        array $headers = []
+        array $headers = [],
+        ?array $contentExamples = null,
     )
     {
         $dataProperty =  new OA\Property(property: 'data', type: 'object', properties: [
@@ -28,7 +29,8 @@ class ClientErrorResponseDoc extends OA\Response
             properties: [
                 new OA\Property(property: "status", type: "string", example: ResponseStatus::FAIL->value),
                 $dataProperty
-            ]
+            ],
+            examples: $contentExamples
         );
 
         parent::__construct( 

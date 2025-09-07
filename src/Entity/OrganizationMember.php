@@ -2,50 +2,54 @@
 
 namespace App\Entity;
 
+use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
+use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationMemberRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\OrganizationMember\RoleTask;
-use App\Service\SetterHelper\Task\OrganizationMember\UserTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: OrganizationMemberRepository::class)]
+#[ORM\UniqueConstraint(
+    name: "unique_org_user",
+    columns: ["organization_id", "app_user_id"]
+)]
 class OrganizationMember
 {
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'organizationMembers')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(inversedBy: 'members')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Organization $organization = null;
 
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
     #[ORM\ManyToOne(inversedBy: 'organizationAssignments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $appUser = null;
 
-    #[ORM\Column(type: Types::ARRAY)]
-    private array $roles = [];
-
-    #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class)]
     private Collection $scheduleAssignments;
+
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $role = null;
 
     public function __construct()
     {
         $this->scheduleAssignments = new ArrayCollection();
     }
 
-    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups: ['user-organizations'])]
     public function getOrganization(): ?Organization
     {
         return $this->organization;
@@ -58,37 +62,16 @@ class OrganizationMember
         return $this;
     }
 
-    #[Getter(groups: ['organization-members', 'organization-admins', 'schedule-assignments'], propertyNameAlias: 'user')]
     public function getAppUser(): ?User
     {
         return $this->appUser;
     }
 
-    #[Setter(targetParameter: 'user_id', setterTask: UserTask::class, groups: ['user'])]
     public function setAppUser(?User $appUser): self
     {
         $this->appUser = $appUser;
 
         return $this;
-    }
-
-    #[Getter(groups: ['user-organizations', 'organization-members', 'organization-admins'])]
-    public function getRoles(): array
-    {
-        return $this->roles;
-    }
-
-    #[Setter(setterTask: RoleTask::class, groups: ['Default', 'roles'])]
-    public function setRoles(array $roles): self
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    public function hasRoles(array $roles):bool
-    {
-        return empty(array_diff($roles, $this->roles));
     }
 
     /**
@@ -97,13 +80,6 @@ class OrganizationMember
     public function getScheduleAssignments(): Collection
     {
         return $this->scheduleAssignments;
-    }
-
-    public function getScheduleAssignment(Schedule $schedule): ?ScheduleAssignment
-    {
-        return $this->scheduleAssignments->findFirst(function($key, $assigment) use ($schedule){
-            return $assigment->getSchedule() === $schedule;
-        });
     }
 
     public function addScheduleAssignment(ScheduleAssignment $scheduleAssignment): self
@@ -128,7 +104,31 @@ class OrganizationMember
         return $this;
     }
 
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(string $role): static
+    {
+        $this->role = $role;
+
+        return $this;
+    }
 
 
-   
+    public static function getFilterDefs(): array
+    {
+        return [
+            'role' => new FieldValue('role', '='),
+        ];
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return [
+            'id' => new BaseFieldOrder('id'),
+            'role' => new BaseFieldOrder('role'),
+        ];
+    }
 }

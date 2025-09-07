@@ -61,13 +61,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $verified = null;
 
-    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, cascade: ['remove'])]
     private Collection $organizationAssignments;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
-    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'])]
     private Collection $refreshTokens;
 
     public function __construct()

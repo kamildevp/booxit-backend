@@ -2,55 +2,48 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Organization\MembersTask;
-use App\Service\SetterHelper\Task\Organization\ServicesTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: OrganizationRepository::class)]
 class Organization
 {
-    const ALLOWED_ROLES = ['MEMBER', 'ADMIN'];
+    use Timestampable, Blameable;
 
+    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
-    #[ORM\Column(length: 50)]
+    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, orphanRemoval: true, cascade: ['persist'])]
-    private Collection $members;
-
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true, cascade: ['persist'])]
-    private Collection $services;
-
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, orphanRemoval: true)]
-    private Collection $schedules;
-
-    #[Assert\Length(
-        max: 2000,
-        maxMessage: 'Maximum description length is 2000 characters'
-    )]
+    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $banner = null;
+    #[ORM\OneToOne]
+    private ?File $bannerFile = null;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY')]
+    private Collection $members;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, fetch: 'EXTRA_LAZY')]
+    private Collection $services;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, fetch: 'EXTRA_LAZY')]
+    private Collection $schedules;
 
     public function __construct()
     {
@@ -59,19 +52,16 @@ class Organization
         $this->schedules = new ArrayCollection();
     }
 
-    #[Getter(groups: ['schedule', 'user-organizations', 'organizations','reservation-organization'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups:['schedule','user-organizations', 'organizations', 'organization', 'reservation-organization'])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -79,13 +69,11 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization'])]
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    #[Setter]
     public function setDescription(string $description): self
     {
         $this->description = $description;
@@ -93,25 +81,21 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
     public function getMembersCount(): ?string
     {
         return $this->members->count();
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
     public function getServicesCount(): ?string
     {
         return $this->services->count();
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
     public function getSchedulesCount(): ?string
     {
         return $this->schedules->count();
     }
 
-    #[Getter(groups: ['organization-members'])]
     /**
      * @return Collection<int, OrganizationMember>
      */
@@ -120,7 +104,6 @@ class Organization
         return $this->members;
     }
 
-    #[Setter(setterTask: MembersTask::class, groups: ['members'])]
     public function setMembers(Collection $members): self
     {
         $this->members = $members;
@@ -150,23 +133,6 @@ class Organization
         return $this;
     }
 
-    public function hasMember(User $user):bool
-    {
-        $memberExists = $this->members->exists(function($key, $value) use ($user){
-            return $value->getAppUser() === $user;
-        });
-        return $memberExists;
-    }
-
-    public function getMember(User $user):?OrganizationMember
-    {
-        $member = $this->members->findFirst(function($key, $value) use ($user){
-            return $value->getAppUser() === $user;
-        });
-        return $member;
-    }
-
-    #[Getter(groups: ['organization-services'])]
     /**
      * @return Collection<int, Service>
      */
@@ -175,7 +141,6 @@ class Organization
         return $this->services;
     }
 
-    #[Setter(setterTask: ServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services): self
     {
         $this->services = $services;
@@ -205,7 +170,6 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization-schedules'])]
     /**
      * @return Collection<int, Schedule>
      */
@@ -244,27 +208,29 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization-admins'])]
-    /**
-     * @return Collection<int, OrganizationMember>
-     */
-    public function getAdmins():Collection
+    public function getBannerFile(): ?File
     {
-        return $this->members->filter(function($element){
-            return $element->hasRoles(['ADMIN']);
-        });
+        return $this->bannerFile;
     }
 
-    public function getBanner(): ?string
+    public function setBannerFile(?File $bannerFile): static
     {
-        return $this->banner;
-    }
-
-    public function setBanner(?string $banner): self
-    {
-        $this->banner = $banner;
-
+        $this->bannerFile = $bannerFile;
         return $this;
     }
 
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+        ]);
+    }
 }

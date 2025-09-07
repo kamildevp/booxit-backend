@@ -15,7 +15,8 @@ trait RequestTestTools
         string $uri,
         array $parameters = [],
         array $files = [],
-        array $server = []
+        array $server = [],
+        ?string $content = null,
     ) {
         $method = strtoupper($method);
 
@@ -31,7 +32,7 @@ trait RequestTestTools
             $headers['CONTENT_TYPE'] = 'application/json';
         }
 
-        $content = $method !== 'GET' ? json_encode($parameters) : null;
+        $content = $method !== 'GET' && !$content ? json_encode($parameters) : $content;
         $query = $method === 'GET' ? $parameters : [];
 
         return $client->request(

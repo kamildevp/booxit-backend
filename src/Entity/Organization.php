@@ -33,7 +33,7 @@ class Organization
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\OneToOne]
+    #[ORM\OneToOne(cascade: ['remove'])]
     private ?File $bannerFile = null;
 
     #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY')]

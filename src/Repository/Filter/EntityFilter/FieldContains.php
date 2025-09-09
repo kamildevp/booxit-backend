@@ -10,6 +10,6 @@ class FieldContains extends AbstractFieldFilter
 {
     public function apply(QueryBuilder $qb, mixed $value, string $filterId): void
     {
-        $qb->andWhere("LOWER(e.$this->propertyName) LIKE LOWER(:$filterId)")->setParameter($filterId, '%' . $value . '%');
+        $qb->andWhere("LOWER($this->qbIdentifier.$this->propertyName) LIKE LOWER(:$filterId)")->setParameter($filterId, '%' . $value . '%');
     }
 }

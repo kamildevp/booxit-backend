@@ -21,6 +21,6 @@ class FieldValue extends AbstractFieldFilter
 
     public function apply(QueryBuilder $qb, mixed $value, string $filterId): void
     {
-        $qb->andWhere("e.$this->propertyName $this->operator :$filterId")->setParameter($filterId, $value);
+        $qb->andWhere("$this->qbIdentifier.$this->propertyName $this->operator :$filterId")->setParameter($filterId, $value);
     }
 }

@@ -10,6 +10,6 @@ class BaseFieldOrder extends AbstractFieldOrder
 {
     public function apply(QueryBuilder $qb, string $dir, string $orderId): void
     {
-        $qb->addOrderBy("e.$this->propertyName", $dir);
+        $qb->addOrderBy("$this->qbIdentifier.$this->propertyName", $dir);
     }
 }

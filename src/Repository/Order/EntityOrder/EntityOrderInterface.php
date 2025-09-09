@@ -8,5 +8,7 @@ use Doctrine\ORM\QueryBuilder;
 
 interface EntityOrderInterface 
 {
+    public function setQbIdentifier(string $qbIdentifier): static;
+
     public function apply(QueryBuilder $qb, string $dir, string $orderId): void;
 }

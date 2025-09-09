@@ -7,18 +7,17 @@ namespace App\Repository\Order;
 use App\DTO\OrderDTOInterface;;
 use App\Repository\Order\EntityOrder\EntityOrderInterface;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 
 class OrderBuilder 
 {
     const ORDER_DEFS_METHOD_NAME = 'getOrderDefs';
 
-    public function applyOrder(QueryBuilder $qb, string $entityClass, OrderDTOInterface $orderDTO, array $defaultOrderMap): void
+    public function applyOrder(QueryBuilder $qb, string $entityClass, OrderDTOInterface $orderDTO, array $defaultOrderMap, array $relationMap = []): void
     {
-        if(!method_exists($entityClass, self::ORDER_DEFS_METHOD_NAME)){
-            return;
-        }
+        $availableOrderDefs = method_exists($entityClass, self::ORDER_DEFS_METHOD_NAME) ? $entityClass::{self::ORDER_DEFS_METHOD_NAME}() : [];
+        $availableOrderDefs = array_merge($availableOrderDefs, $this->getRelationOrderDefs($relationMap));
 
-        $availableOrderDefs = $entityClass::{self::ORDER_DEFS_METHOD_NAME}();
         $orderMap = $orderDTO->getOrderMap();
         $orderMap = empty($orderMap) ? $defaultOrderMap : $orderMap;
 
@@ -33,5 +32,26 @@ class OrderBuilder
             $order->apply($qb, $orderDir, "orderParam$orderIndx");
             $orderIndx++;
         }
+    }
+
+    private function getRelationOrderDefs(array $relationMap): array
+    {
+        $availableOrderDefs = [];
+        foreach($relationMap as $relation => $map){
+            if(!method_exists($map['class'], self::ORDER_DEFS_METHOD_NAME)){
+                continue;
+            }
+
+            $relationSnakeCase = (new CamelCaseToSnakeCaseNameConverter)->normalize($relation);
+            $classOrderDefs = $map['class']::{self::ORDER_DEFS_METHOD_NAME}();
+            $relationOrderDefs = array_combine(
+                array_map(fn($parameterName) => "$relationSnakeCase.$parameterName", array_keys($classOrderDefs)),
+                array_map(fn($order) => $order->setQbIdentifier($map['qbIdentifier']), array_values($classOrderDefs)),
+            );
+
+            $availableOrderDefs = array_merge($availableOrderDefs, $relationOrderDefs);
+        }
+
+        return $availableOrderDefs;
     }
 }

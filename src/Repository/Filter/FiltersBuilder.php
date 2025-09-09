@@ -12,7 +12,7 @@ class FiltersBuilder
 {
     const FILTER_DEFS_METHOD_NAME = 'getFilterDefs';
 
-    public function applyFilters(QueryBuilder $qb, string $entityClass, FiltersDTOInterface $filtersDTO): void
+    public function applyFilters(QueryBuilder $qb, string $entityClass, FiltersDTOInterface $filtersDTO, $qbIdentifier = 'e'): void
     {
         if(!method_exists($entityClass, self::FILTER_DEFS_METHOD_NAME)){
             return;
@@ -27,6 +27,7 @@ class FiltersBuilder
                 continue;
             }
 
+            $filter->setQbIdentifier($qbIdentifier);
             $filter->apply($qb, $filterValue, "filterParam$filterIndx");
             $filterIndx++;
         }

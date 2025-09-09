@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\OrganizationMember;
+use App\Entity\User;
+use App\Enum\Organization\OrganizationRole;
 use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -42,6 +44,40 @@ class OrganizationMemberRepository extends ServiceEntityRepository implements Re
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function getOrganizationMembersCount(int $organizationId, ?OrganizationRole $role = null): int
+    {
+        $qb = $this->createQueryBuilder('om')
+                    ->select('COUNT(om.id)')
+                    ->where('om.organization = :organization')
+                    ->setParameter('organization', $organizationId);
+
+        if($role){
+            $qb->andWhere('om.role = :role')->setParameter('role', $role->value);
+        }
+        
+        return (int)$qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function countOrganizationsWhereUserIsTheOnlyAdmin(User $user): int
+    {
+        $qb = $this->createQueryBuilder('om')
+            ->select('COUNT(DISTINCT om.id)')
+            ->andWhere('om.appUser = :user')
+            ->andWhere('om.role = :adminRole')
+            ->andWhere(
+                'NOT EXISTS (
+                    SELECT 1 FROM App\Entity\OrganizationMember om2
+                    WHERE om2.organization = om.organization
+                    AND om2.role = :adminRole
+                    AND om2.appUser != :user
+                )'
+            )
+            ->setParameter('user', $user)
+            ->setParameter('adminRole', OrganizationRole::ADMIN->value);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
 //    /**

@@ -52,7 +52,7 @@ class OrganizationMemberController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(OrganizationAdminRule::class)]
-    #[Route('organization/{organization}/member', name: 'organization_member_add', methods: ['POST'])]
+    #[Route('organization/{organization}/member', name: 'organization_member_add', methods: ['POST'], requirements: ['organization' => '\d+'])]
     public function add(
         Organization $organization,
         #[MapRequestPayload] OrganizationMemberAddDTO $dto,
@@ -77,7 +77,7 @@ class OrganizationMemberController extends AbstractController
     )]
     #[NotFoundResponseDoc('Organization not found')]
     #[ValidationErrorResponseDoc]
-    #[Route('organization/{organization}/member', name: 'organization_member_list', methods: ['GET'])]
+    #[Route('organization/{organization}/member', name: 'organization_member_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
     public function list(
         Organization $organization,
         EntitySerializerInterface $entitySerializer, 

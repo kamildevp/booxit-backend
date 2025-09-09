@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User;
 
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
@@ -157,6 +158,15 @@ class UserControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/user/me');
 
         $this->assertEquals('User removed successfully', $responseData['message']);
+    }
+
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    public function testDeleteConflictResponse(): void
+    {
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'DELETE', '/api/user/me', expectedCode: 409);
+
+        $this->assertEquals('This user cannot be removed because they are the sole administrator of one or more organizations. Please remove those organizations first.', $responseData['message']);
     }
 
     #[Fixtures([UserFixtures::class], false)]

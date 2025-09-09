@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Global\DataProvider;
 
+use App\Enum\Organization\OrganizationRole;
+
 class ListDataProvider extends BaseDataProvider 
 {    
     public static function listDataCases()
@@ -128,6 +130,11 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => '2025-05-13T12:20:00+00:00'],
                 [$columnName => '2025-05-13T12:30:00+00:00'],
                 [$columnName => '2025-06-13T12:20:00+00:00'],
+            ],
+            'organization_role' => [
+                [$columnName => OrganizationRole::ADMIN->value],
+                [$columnName => OrganizationRole::MEMBER->value],
+                [$columnName => OrganizationRole::MEMBER->value],
             ],
         ];
 

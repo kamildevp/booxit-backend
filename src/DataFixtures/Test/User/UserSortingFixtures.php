@@ -13,6 +13,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserSortingFixtures extends Fixture
 {    
+    const USER_REFERENCE = 'user-sort';
+
     public function __construct(private UserPasswordHasherInterface $hasher)
     {
 
@@ -34,7 +36,7 @@ class UserSortingFixtures extends Fixture
             $sortedData[1],
         ];
 
-        foreach($data as $item){
+        foreach($data as $i => $item){
             $user = new User();
             $user->setName($item['name']);
             $user->setEmail($item['email']);
@@ -46,6 +48,7 @@ class UserSortingFixtures extends Fixture
             $user->setUpdatedAt(new DateTimeImmutable($item['updated_at']));
 
             $manager->persist($user);
+            $this->addReference(self::USER_REFERENCE.$i, $user);
         }
 
         $manager->flush();

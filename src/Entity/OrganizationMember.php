@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 )]
 class OrganizationMember
 {
-    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value, OrganizationMemberNormalizerGroup::PRIVATE->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -28,7 +28,7 @@ class OrganizationMember
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Organization $organization = null;
 
-    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value, OrganizationMemberNormalizerGroup::PRIVATE->value])]
     #[ORM\ManyToOne(inversedBy: 'organizationAssignments')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $appUser = null;
@@ -36,7 +36,7 @@ class OrganizationMember
     #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class)]
     private Collection $scheduleAssignments;
 
-    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value])]
+    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value, OrganizationMemberNormalizerGroup::PRIVATE->value])]
     #[ORM\Column(length: 255)]
     private ?string $role = null;
 

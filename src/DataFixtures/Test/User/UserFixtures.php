@@ -11,6 +11,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
+    const USER_REFERENCE = 'user';
+
     public function __construct(private UserPasswordHasherInterface $hasher)
     {
         
@@ -28,6 +30,7 @@ class UserFixtures extends Fixture
             $user->setVerified((bool) random_int(0, 1));
 
             $manager->persist($user);
+            $this->addReference(self::USER_REFERENCE.$i, $user);
         }
 
         $manager->flush();

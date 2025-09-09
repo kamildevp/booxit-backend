@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\PaginatorResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
@@ -176,13 +177,14 @@ class UserController extends AbstractController
         **Important:** The account is soft-deleted, which means a new account cannot be registered with the same email address.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'User removed successfully'])]
+    #[ConflictResponseDoc('This user cannot be removed because they are the sole administrator of one or more organizations. Please remove those organizations first.')]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
     #[Route('user/me', name: 'user_me_delete', methods: ['DELETE'])]
-    public function delete(UserRepository $userRepository): SuccessResponse
+    public function delete(UserService $userService): SuccessResponse
     {
         $user = $this->getUser();
-        $userRepository->remove($user, true);
+        $userService->removeUser($user);
         
         return new SuccessResponse(['message' => 'User removed successfully']);
     }

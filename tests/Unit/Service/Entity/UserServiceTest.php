@@ -13,9 +13,11 @@ use App\Entity\EmailConfirmation;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Enum\EmailConfirmationType;
+use App\Exceptions\ConflictException;
 use App\Exceptions\InvalidActionException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Repository\EmailConfirmationRepository;
+use App\Repository\OrganizationMemberRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\Entity\EmailConfirmationService;
@@ -35,6 +37,7 @@ class UserServiceTest extends TestCase
     private MockObject&UserRepository $userRepositoryMock;
     private MockObject&EmailConfirmationRepository $emailConfirmationRepositoryMock;
     private MockObject&RefreshTokenRepository $refreshTokenRepositoryMock;
+    private MockObject&OrganizationMemberRepository $organizationMemberRepositoryMock;
 
     private UserService $userService;
 
@@ -47,6 +50,7 @@ class UserServiceTest extends TestCase
         $this->userRepositoryMock = $this->createMock(UserRepository::class);
         $this->emailConfirmationRepositoryMock = $this->createMock(EmailConfirmationRepository::class);
         $this->refreshTokenRepositoryMock = $this->createMock(RefreshTokenRepository::class);
+        $this->organizationMemberRepositoryMock = $this->createMock(OrganizationMemberRepository::class);
 
 
         $this->userService = new UserService(
@@ -55,7 +59,8 @@ class UserServiceTest extends TestCase
             $this->hasherMock,
             $this->userRepositoryMock,
             $this->emailConfirmationRepositoryMock,
-            $this->refreshTokenRepositoryMock
+            $this->refreshTokenRepositoryMock,
+            $this->organizationMemberRepositoryMock,
         );
     }
 
@@ -283,5 +288,42 @@ class UserServiceTest extends TestCase
 
         $result = $this->userService->resetUserPassword($dto);
         $this->assertTrue($result);
+    }
+
+    public function testRemoveUserSuccessfully(): void
+    {
+        $userMock = $this->createMock(User::class);
+
+        $this->organizationMemberRepositoryMock
+            ->expects($this->once())
+            ->method('countOrganizationsWhereUserIsTheOnlyAdmin')
+            ->with($userMock)
+            ->willReturn(0);
+
+        $this->userRepositoryMock
+            ->expects($this->once())
+            ->method('remove')
+            ->with($userMock, true);
+
+        $this->userService->removeUser($userMock);
+    }
+
+    public function testRemoveUserThrowsConflictExceptionWhenUserIsSoleAdmin(): void
+    {
+        $userMock = $this->createMock(User::class);
+
+        $this->organizationMemberRepositoryMock
+            ->expects($this->once())
+            ->method('countOrganizationsWhereUserIsTheOnlyAdmin')
+            ->with($userMock)
+            ->willReturn(1);
+
+        $this->expectException(ConflictException::class);
+
+        $this->userRepositoryMock
+            ->expects($this->never())
+            ->method('remove');
+
+        $this->userService->removeUser($userMock);
     }
 }

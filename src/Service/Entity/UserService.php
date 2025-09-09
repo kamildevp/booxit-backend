@@ -7,7 +7,6 @@ namespace App\Service\Entity;
 use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserPatchDTO;
-use App\Entity\EmailConfirmation;
 use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Enum\EmailConfirmationType;
@@ -19,7 +18,9 @@ use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
+use App\Exceptions\ConflictException;
 use App\Exceptions\InvalidActionException;
+use App\Repository\OrganizationMemberRepository;
 use DateTime;
 
 class UserService
@@ -31,6 +32,7 @@ class UserService
         protected UserRepository $userRepository,
         protected EmailConfirmationRepository $emailConfirmationRepository,
         protected RefreshTokenRepository $refreshTokenRepository,   
+        protected OrganizationMemberRepository $organizationMemberRepository,
     )
     {
 
@@ -146,5 +148,14 @@ class UserService
         $this->emailConfirmationRepository->remove($emailConfirmation, true);
 
         return true;
+    }
+
+    public function removeUser(User $user): void
+    {
+        $orphanedOrganizationsCount = $this->organizationMemberRepository->countOrganizationsWhereUserIsTheOnlyAdmin($user);
+        if($orphanedOrganizationsCount > 0){
+                throw new ConflictException('This user cannot be removed because they are the sole administrator of one or more organizations. Please remove those organizations first.');
+        }
+        $this->userRepository->remove($user, true);
     }
 }

@@ -24,6 +24,7 @@ class OrganizationMember
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups([OrganizationMemberNormalizerGroup::USER_MEMBERSHIPS->value])]
     #[ORM\ManyToOne(inversedBy: 'members')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Organization $organization = null;
@@ -36,7 +37,11 @@ class OrganizationMember
     #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class)]
     private Collection $scheduleAssignments;
 
-    #[Groups([OrganizationMemberNormalizerGroup::PUBLIC->value, OrganizationMemberNormalizerGroup::PRIVATE->value])]
+    #[Groups([
+        OrganizationMemberNormalizerGroup::PUBLIC->value, 
+        OrganizationMemberNormalizerGroup::PRIVATE->value, 
+        OrganizationMemberNormalizerGroup::USER_MEMBERSHIPS->value
+    ])]
     #[ORM\Column(length: 255)]
     private ?string $role = null;
 

@@ -15,11 +15,16 @@ use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserChangePasswordDTO;
 use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserListQueryDTO;
+use App\DTO\User\UserOrganizationMembershipListQueryDTO;
 use App\DTO\User\UserPatchDTO;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
+use App\Entity\Organization;
+use App\Entity\OrganizationMember;
 use App\Entity\User;
+use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
 use App\Enum\User\UserNormalizerGroup;
+use App\Repository\OrganizationMemberRepository;
 use App\Repository\UserRepository;
 use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
@@ -112,7 +117,7 @@ class UserController extends AbstractController
         dataModelGroups: UserNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('User not found')]
-    #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['user' => '\d+'])]
     public function get(EntitySerializerInterface $entitySerializer, User $user): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
@@ -243,4 +248,32 @@ class UserController extends AbstractController
             new ValidationFailedResponse('Password reset failed');
     }
 
+    #[OA\Get(
+        summary: 'List user organization memberships',
+        description: 'Retrieves a paginated list of specified user’s organization memberships'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated list of user’s organization memberships', 
+        dataModel: OrganizationMember::class,
+        dataModelGroups: OrganizationMemberNormalizerGroup::USER_MEMBERSHIPS
+    )]
+    #[NotFoundResponseDoc('User not found')]
+    #[ValidationErrorResponseDoc]
+    #[Route('user/{user}/organization-membership', name: 'user_organization_membership_list', methods: ['GET'], requirements: ['user' => '\d+'])]
+    public function listOrganizationMemberships(
+        User $user,
+        EntitySerializerInterface $entitySerializer, 
+        OrganizationMemberRepository $organizationMemberRepository, 
+        #[MapQueryString] UserOrganizationMembershipListQueryDTO $queryDTO = new UserOrganizationMembershipListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $organizationMemberRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['appUser' => $user], 
+            ['organization' => Organization::class]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, OrganizationMemberNormalizerGroup::USER_MEMBERSHIPS->normalizationGroups());
+
+        return new SuccessResponse($result);
+    }
 }

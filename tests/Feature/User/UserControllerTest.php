@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User;
 
+use App\DataFixtures\Test\Organization\OrganizationFixtures;
+use App\DataFixtures\Test\Organization\OrganizationSortingFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
-use App\Entity\User;
 use App\Enum\EmailConfirmationType;
+use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
 use App\Enum\User\UserNormalizerGroup;
+use App\Repository\OrganizationMemberRepository;
 use App\Repository\UserRepository;
 use App\Tests\Feature\Attribute\Fixtures;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Feature\BaseWebTestCase;
 use App\Tests\Feature\Trait\EmailConfirmationUtils;
@@ -23,6 +25,8 @@ use App\Tests\Feature\User\DataProvider\UserAuthDataProvider;
 use App\Tests\Feature\User\DataProvider\UserChangePasswordDataProvider;
 use App\Tests\Feature\User\DataProvider\UserCreateDataProvider;
 use App\Tests\Feature\User\DataProvider\UserListDataProvider;
+use App\Tests\Feature\User\DataProvider\UserNotFoundDataProvider;
+use App\Tests\Feature\User\DataProvider\UserOrganizationMembershipListDataProvider;
 use App\Tests\Feature\User\DataProvider\UserPatchDataProvider;
 use App\Tests\Feature\User\DataProvider\UserResetPasswordDataProvider;
 use App\Tests\Feature\User\DataProvider\UserResetPasswordRequestDataProvider;
@@ -35,12 +39,14 @@ class UserControllerTest extends BaseWebTestCase
 
     protected InMemoryTransport $mailerTransport;
     protected UserRepository $userRepository;
+    protected OrganizationMemberRepository $organizationMemberRepository;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->mailerTransport = $this->container->get('messenger.transport.async_mailer');
-        $this->userRepository = $this->container->get(EntityManagerInterface::class)->getRepository(User::class);
+        $this->userRepository = $this->container->get(UserRepository::class);
+        $this->organizationMemberRepository = $this->container->get(OrganizationMemberRepository::class);
     }
 
     #[DataProviderExternal(UserCreateDataProvider::class, 'validDataCases')]
@@ -104,12 +110,6 @@ class UserControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/user/$userId");
 
         $this->assertEquals($expectedResponseData, $responseData);
-    }
-
-    public function testGetForNotExistingUser(): void
-    {
-        $responseData = $this->getFailureResponseData($this->client, 'GET', "/api/user/1000", expectedCode: 404);
-        $this->assertEquals('User not found', $responseData['message']);
     }
 
     #[DataProviderExternal(UserPatchDataProvider::class, 'validDataCases')]
@@ -262,6 +262,66 @@ class UserControllerTest extends BaseWebTestCase
     public function testResetPasswordValidation(array $params, array $expectedErrors): void
     {
         $this->assertPathValidation($this->client, 'PATCH', '/api/user/reset_password', $params, $expectedErrors);
+    }
+
+    #[Fixtures([OrganizationFixtures::class])]
+    #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'listDataCases')]
+    public function testListOrganizationMemberships(int $page, int $perPage, int $total): void
+    {
+        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query([
+            'page' => $page,
+            'per_page' => $perPage,
+        ]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->organizationMemberRepository->findBy(['appUser' => $this->user], ['id' => 'ASC'], $perPage, $offset);
+        $formattedItems = $this->normalize($items, OrganizationMemberNormalizerGroup::USER_MEMBERSHIPS->normalizationGroups());
+
+        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
+    }
+
+    #[Fixtures([OrganizationSortingFixtures::class])]
+    #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'filtersDataCases')]
+    public function testListOrganizationMembershipsFilters(array $filters, array $expectedItemData): void
+    {
+        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query(['filters' => $filters]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertCount(1, $responseData['items']);
+        $dotExpectedItemData = array_dot($expectedItemData);
+        $dotResponseItemData = array_dot($responseData['items'][0]);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+    }
+
+    #[Fixtures([OrganizationSortingFixtures::class])]
+    #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'sortingDataCases')]
+    public function testListOrganizationMembershipsSorting(string $sorting, array $orderedItems): void
+    {
+        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query(['order' => $sorting]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
+        foreach($orderedItems as $indx => $item){
+            $dotExpectedItemData = array_dot($item);
+            $dotResponseItemData = array_dot($responseData['items'][$indx]);
+            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+        }
+    }
+
+    #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'validationDataCases')]
+    public function testListOrganizationMembershipsValidation(array $params, array $expectedErrors): void
+    {
+        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query($params);
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
+    }
+
+    #[DataProviderExternal(UserNotFoundDataProvider::class, 'dataCases')]
+    public function testNotFoundResponses(string $path, string $method): void
+    {
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
+        $this->assertEquals('User not found', $responseData['message']);
     }
 
     #[DataProviderExternal(UserAuthDataProvider::class, 'protectedPaths')]

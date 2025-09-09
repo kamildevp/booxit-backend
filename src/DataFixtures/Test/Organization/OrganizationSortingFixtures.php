@@ -22,6 +22,7 @@ class OrganizationSortingFixtures extends Fixture
             'name' => 'string',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'role' => 'organization_role'
         ]);
 
         $data = [
@@ -40,7 +41,7 @@ class OrganizationSortingFixtures extends Fixture
             $organizationMember = new OrganizationMember();
             $organizationMember->setOrganization($organization);
             $organizationMember->setAppUser($this->getReference(VerifiedUserFixtures::VERIFIED_USER_REFERENCE, User::class));
-            $organizationMember->setRole(OrganizationRole::ADMIN->value);
+            $organizationMember->setRole($item['role']);
             $manager->persist($organizationMember);
         }
 

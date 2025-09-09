@@ -19,6 +19,7 @@ use App\DTO\Organization\OrganizationPatchDTO;
 use App\Entity\Organization;
 use App\Enum\File\UploadType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Organization\OrganizationRole;
 use App\Repository\OrganizationRepository;
 use App\Response\NotFoundResponse;
 use App\Response\ResourceCreatedResponse;
@@ -26,6 +27,7 @@ use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\OrganizationAdminRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\FileService;
+use App\Service\Entity\OrganizationMemberService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
@@ -59,10 +61,12 @@ class OrganizationController extends AbstractController
         #[MapRequestPayload] OrganizationCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
         OrganizationRepository $organizationRepository,   
+        OrganizationMemberService $organizationMemberService,
     ): ResourceCreatedResponse
     {
         $organization = $entitySerializer->parseToEntity($dto, Organization::class);
         $organizationRepository->save($organization, true);
+        $organizationMemberService->createOrganizationMember($organization, $this->getUser(), OrganizationRole::ADMIN);
         $responseData = $entitySerializer->normalize($organization, OrganizationNormalizerGroup::PRIVATE->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);

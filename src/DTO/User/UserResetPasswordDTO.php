@@ -16,10 +16,10 @@ class UserResetPasswordDTO extends VerifyEmailConfirmationDTO
         int $expires,
         string $type,
         string $token,
-        string $signature,
+        string $_hash,
         string $password
     ) {
-        parent::__construct($id, $expires, $type, $token, $signature);
+        parent::__construct($id, $expires, $type, $token, $_hash);
         $this->password = $password;
     }
 }

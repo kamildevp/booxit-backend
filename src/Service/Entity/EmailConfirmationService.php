@@ -73,7 +73,7 @@ class EmailConfirmationService
         $valid = $this->emailConfirmationHandler->validateEmailConfirmation(
             $emailConfirmation,
             $dto->token,
-            $dto->signature,
+            $dto->_hash,
             $dto->expires,
             $dto->type
         );

@@ -48,7 +48,7 @@ class UserResetPasswordDataProvider extends BaseDataProvider
             ],
             [
                 [
-                    'signature' => 'invalid',
+                    '_hash' => 'invalid',
                     'password' => 'newpassword123',
                 ]
             ],
@@ -73,7 +73,7 @@ class UserResetPasswordDataProvider extends BaseDataProvider
                     'token' => [
                         'This value should be of type string.',
                     ],
-                    'signature' => [
+                    '_hash' => [
                         'This value should be of type string.',
                     ],
                     'password' => [
@@ -87,7 +87,7 @@ class UserResetPasswordDataProvider extends BaseDataProvider
                     'expires' => 1231,
                     'type' => '',
                     'token' => '',
-                    'signature' => '',
+                    '_hash' => '',
                     'password' => 'pass2',
                 ],
                 [
@@ -97,7 +97,7 @@ class UserResetPasswordDataProvider extends BaseDataProvider
                     'token' => [
                         'This value should not be blank.',
                     ],
-                    'signature' => [
+                    '_hash' => [
                         'This value should not be blank.',
                     ],
                     'password' => [

@@ -19,5 +19,5 @@ trait EmailConfirmationBaseDTOFields
     public readonly string $token;
 
     #[Assert\NotBlank]
-    public readonly string $signature;
+    public readonly string $_hash;
 }

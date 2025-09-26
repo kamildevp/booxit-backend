@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\UriSigner;
 
 class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
 {
+    const VERIFICATION_HANDLER_VAR_PREFIX = 'VERIFICATION_HANDLER_';
+
     public function __construct(
         private UriSigner $uriSigner,
         #[\SensitiveParameter]private string $secret
@@ -79,7 +81,7 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
     
     public function resolveVerificationHandlerUrl(string $verificationHandler): string
     {
-        $envVarName = 'VERIFICATION_HANDLER_'. strtoupper($verificationHandler);
+        $envVarName = self::VERIFICATION_HANDLER_VAR_PREFIX . strtoupper($verificationHandler);
         
         if(!array_key_exists($envVarName, $_ENV)){
             throw new ResolveVerificationHandlerException('Verification Handler is not defined');

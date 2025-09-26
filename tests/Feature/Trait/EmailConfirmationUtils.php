@@ -34,7 +34,7 @@ trait EmailConfirmationUtils
 
         return [
             ...$verifyParams, 
-            'signature' => $signature, 
+            '_hash' => $signature, 
             'type' => $emailConfirmation->getType()
         ];
     }

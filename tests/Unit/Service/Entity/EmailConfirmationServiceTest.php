@@ -77,7 +77,7 @@ class EmailConfirmationServiceTest extends TestCase
         $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
-            ->with($emailConfirmationMock, $dto->token, $dto->signature, $dto->expires, $dto->type)
+            ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
             ->willReturn(true);
 
         $result = $this->emailConfirmationService->validateEmailConfirmation($dto);
@@ -93,7 +93,7 @@ class EmailConfirmationServiceTest extends TestCase
         $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
-            ->with($emailConfirmationMock, $dto->token, $dto->signature, $dto->expires, $dto->type)
+            ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
             ->willReturn(false);
 
         $result = $this->emailConfirmationService->validateEmailConfirmation($dto);
@@ -119,7 +119,7 @@ class EmailConfirmationServiceTest extends TestCase
         $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
-            ->with($emailConfirmationMock, $dto->token, $dto->signature, $dto->expires, $dto->type)
+            ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
             ->willReturn(true);
 
         $result = $this->emailConfirmationService->resolveEmailConfirmation($dto);

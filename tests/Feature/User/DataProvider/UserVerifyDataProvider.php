@@ -33,7 +33,7 @@ class UserVerifyDataProvider extends BaseDataProvider
             ],
             [
                 [
-                    'signature' => 'invalid',
+                    '_hash' => 'invalid',
                 ]
             ],
         ];
@@ -57,7 +57,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                     'token' => [
                         'This value should be of type string.',
                     ],
-                    'signature' => [
+                    '_hash' => [
                         'This value should be of type string.',
                     ],
                 ]
@@ -68,7 +68,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                     'expires' => 1231,
                     'type' => '',
                     'token' => '',
-                    'signature' => '',
+                    '_hash' => '',
                 ],
                 [
                     'type' => [
@@ -77,7 +77,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                     'token' => [
                         'This value should not be blank.',
                     ],
-                    'signature' => [
+                    '_hash' => [
                         'This value should not be blank.',
                     ],
                 ]

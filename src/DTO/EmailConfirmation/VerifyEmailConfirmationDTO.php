@@ -16,12 +16,12 @@ class VerifyEmailConfirmationDTO extends AbstractDTO
         int $expires,
         string $type,
         string $token,
-        string $signature,
+        string $_hash,
     ) {
         $this->id = $id;
         $this->expires = $expires;
         $this->type = $type;
         $this->token = $token;
-        $this->signature = $signature;
+        $this->_hash = $_hash;
     }
 }

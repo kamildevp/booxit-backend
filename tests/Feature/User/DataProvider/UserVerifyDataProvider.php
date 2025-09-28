@@ -9,9 +9,17 @@ use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class UserVerifyDataProvider extends BaseDataProvider 
 {
-    public static function failureDataCases()
+    public static function validDataCases()
     {
         return [
+            [EmailConfirmationType::USER_VERIFICATION],
+            [EmailConfirmationType::EMAIL_VERIFICATION],
+        ];
+    }
+
+    public static function failureDataCases()
+    {
+        $paramsCases = [
             [
                 [
                     'id' => 0,
@@ -33,6 +41,22 @@ class UserVerifyDataProvider extends BaseDataProvider
                 ]
             ],
         ];
+
+        $allowedTypes = [EmailConfirmationType::USER_VERIFICATION, EmailConfirmationType::EMAIL_VERIFICATION];
+        $cases = [];
+        foreach($allowedTypes as $type){
+            $typeCases = array_map(fn($case) => [...$case, $type], $paramsCases);
+            $cases = array_merge($cases, $typeCases);
+        }
+
+        return array_merge($cases, [
+            [
+                [
+                    'type' => EmailConfirmationType::EMAIL_VERIFICATION->value,
+                ],
+                EmailConfirmationType::USER_VERIFICATION
+            ],
+        ]);
     }
 
     public static function validationDataCases()

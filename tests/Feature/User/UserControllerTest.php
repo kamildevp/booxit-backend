@@ -11,6 +11,7 @@ use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\DataFixtures\Test\User\UserSortingFixtures;
+use App\DataFixtures\Test\User\VerifyUserEmailFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
 use App\Enum\EmailConfirmationType;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
@@ -66,20 +67,21 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([VerifyUserFixtures::class])]
-    public function testVerifySuccess(): void
+    #[Fixtures([VerifyUserFixtures::class, VerifyUserEmailFixtures::class])]
+    #[DataProviderExternal(UserVerifyDataProvider::class, 'validDataCases')]
+    public function testVerifySuccess(EmailConfirmationType $type): void
     {
-        $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::USER_VERIFICATION);
+        $params = $this->prepareEmailConfirmationVerifyParams($type);
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/user/verify', $params);
 
         $this->assertEquals('Verification Successful', $responseData['message']);
     }
 
-    #[Fixtures([VerifyUserFixtures::class])]
+    #[Fixtures([VerifyUserFixtures::class, VerifyUserEmailFixtures::class])]
     #[DataProviderExternal(UserVerifyDataProvider::class, 'failureDataCases')]
-    public function testVerifyFailure(array $verifyParams): void
+    public function testVerifyFailure(array $verifyParams, EmailConfirmationType $type): void
     {
-        $validParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::USER_VERIFICATION);
+        $validParams = $this->prepareEmailConfirmationVerifyParams($type);
         $params = array_merge($validParams, $verifyParams);
         $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/user/verify', $params);
 

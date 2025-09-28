@@ -12,7 +12,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class PasswordResetFixtures extends Fixture
+class VerifyUserEmailFixtures extends Fixture
 {
     public function __construct(private UserPasswordHasherInterface $hasher)
     {
@@ -23,17 +23,17 @@ class PasswordResetFixtures extends Fixture
     {
         $user = new User();
         $user->setName('Test User');
-        $user->setEmail('user-pass-reset@example.com');
+        $user->setEmail('olduser@example.com');
         $user->setPassword($this->hasher->hashPassword($user, 'password123'));
-        $user->setVerified(true);
+        $user->setVerified(false);
         $manager->persist($user);
 
         $emailConfirmation = new EmailConfirmation();
         $emailConfirmation->setCreator($user);
-        $emailConfirmation->setEmail('user@example.com');
+        $emailConfirmation->setEmail('newuser@example.com');
         $emailConfirmation->setExpiryDate(new DateTime('+1 day'));
         $emailConfirmation->setVerificationHandler('test');
-        $emailConfirmation->setType(EmailConfirmationType::PASSWORD_RESET->value);
+        $emailConfirmation->setType(EmailConfirmationType::EMAIL_VERIFICATION->value);
         $manager->persist($emailConfirmation);
 
         $manager->flush();

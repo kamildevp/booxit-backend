@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Response;
 
 use App\Response\Interface\ExceptionResponseInterface;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Throwable;
@@ -25,6 +26,9 @@ class HttpErrorResponse implements ExceptionResponseInterface
             }
 
             return new ValidationErrorResponse(array_undot($errors));
+        }
+        elseif($exception instanceof HttpException && $exception->getStatusCode() == 404){
+            return new NotFoundResponse();
         }
         else{
             return new ServerErrorResponse();

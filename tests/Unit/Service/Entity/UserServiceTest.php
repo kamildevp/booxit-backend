@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserPatchDTO;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
+use App\DTO\User\UserVerifyEmailDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\RefreshToken;
 use App\Entity\User;
@@ -180,11 +180,17 @@ class UserServiceTest extends TestCase
 
     public function testVerifyUserEmailFails(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new UserVerifyEmailDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $this->emailConfirmationServiceMock
             ->method('resolveEmailConfirmation')
-            ->with($dto)
+            ->with(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            )
             ->willThrowException(new VerifyEmailConfirmationException());
 
         $this->assertFalse($this->userService->verifyUserEmail($dto));
@@ -192,7 +198,7 @@ class UserServiceTest extends TestCase
 
     public function testVerifyUserEmailSucceeds(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new UserVerifyEmailDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $userMock = $this->createMock(User::class);
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
@@ -200,8 +206,13 @@ class UserServiceTest extends TestCase
         $emailMock = 'verified@example.com';
         $emailConfirmationMock->method('getEmail')->willReturn($emailMock);
 
-
-        $this->emailConfirmationServiceMock->method('resolveEmailConfirmation')->with($dto)->willReturn($emailConfirmationMock);
+        $this->emailConfirmationServiceMock->method('resolveEmailConfirmation')->with(
+            $dto->id,
+            $dto->token,
+            $dto->_hash,
+            $dto->expires,
+            $dto->type
+        )->willReturn($emailConfirmationMock);
 
         $userMock->expects($this->once())->method('setEmail')->with($emailMock);
         $userMock->expects($this->once())->method('setVerified')->with(true);

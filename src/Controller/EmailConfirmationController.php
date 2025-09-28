@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
+use App\DTO\EmailConfirmation\ValidateEmailConfirmationDTO;
 use App\Response\SuccessResponse;
 use App\Response\ValidationFailedResponse;
 use App\Service\Entity\EmailConfirmationService;
@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class EmailConfirmationController extends AbstractController
 {
     #[Route('email_confirmation/validate', name: 'email_confirmation_validate', methods: ['GET'])]
-    public function verify(EmailConfirmationService $emailConfirmationService, #[MapQueryString] VerifyEmailConfirmationDTO $dto)
+    public function verify(EmailConfirmationService $emailConfirmationService, #[MapQueryString] ValidateEmailConfirmationDTO $dto)
     {
         $valid = $emailConfirmationService->validateEmailConfirmation($dto);
 

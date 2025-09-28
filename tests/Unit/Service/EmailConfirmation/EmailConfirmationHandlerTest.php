@@ -88,6 +88,7 @@ class EmailConfirmationHandlerTest extends TestCase
             'expires' => $expiryDate->getTimestamp(),
             'id' => $userId,
             'token' => $token,
+            'type' => $typeMock
         ]);
 
         $this->uriSignerMock->expects($this->once())
@@ -126,6 +127,7 @@ class EmailConfirmationHandlerTest extends TestCase
             'expires' => $expiryDate->getTimestamp(),
             'id' => $userId,
             'token' => $token,
+            'type' => $typeMock
         ]);
 
         $this->uriSignerMock->expects($this->once())

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
+use App\DTO\EmailConfirmation\ValidateEmailConfirmationDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
 use App\Exceptions\VerifyEmailConfirmationException;
@@ -70,7 +70,7 @@ class EmailConfirmationServiceTest extends TestCase
 
     public function testValidateEmailConfirmationReturnsTrueWhenValid(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
 
@@ -87,7 +87,7 @@ class EmailConfirmationServiceTest extends TestCase
 
     public function testValidateEmailConfirmationReturnsFalseWhenInvalid(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
         $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
@@ -103,16 +103,22 @@ class EmailConfirmationServiceTest extends TestCase
 
     public function testResolveEmailConfirmationThrowsExceptionWhenNotFound(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
         $this->emailConfirmationRepositoryMock->method('find')->willReturn(null);
 
         $this->expectException(VerifyEmailConfirmationException::class);
-        $this->emailConfirmationService->resolveEmailConfirmation($dto);
+        $this->emailConfirmationService->resolveEmailConfirmation(
+            $dto->id,
+            $dto->token,
+            $dto->_hash,
+            $dto->expires,
+            $dto->type
+        );
     }
 
     public function testResolveEmailConfirmationReturnsEntityWhenValid(): void
     {
-        $dto = new VerifyEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
+        $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
 
@@ -122,7 +128,13 @@ class EmailConfirmationServiceTest extends TestCase
             ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
             ->willReturn(true);
 
-        $result = $this->emailConfirmationService->resolveEmailConfirmation($dto);
+        $result = $this->emailConfirmationService->resolveEmailConfirmation(
+            $dto->id,
+            $dto->token,
+            $dto->_hash,
+            $dto->expires,
+            $dto->type
+        );
 
         $this->assertSame($emailConfirmationMock, $result);
     }

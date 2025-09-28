@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
+use App\DTO\EmailConfirmation\ValidateEmailConfirmationDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
 use App\Exceptions\VerifyEmailConfirmationException;
@@ -49,10 +49,16 @@ class EmailConfirmationService
         $this->bus->dispatch(new EmailVerification($emailConfirmation->getId(), $removeUserOnFail));
     }
 
-    public function validateEmailConfirmation(VerifyEmailConfirmationDTO $dto): bool
+    public function validateEmailConfirmation(ValidateEmailConfirmationDTO $dto): bool
     {
         try{
-            $this->resolveEmailConfirmation($dto);
+            $this->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
         }
         catch(VerifyEmailConfirmationException)
         {
@@ -63,19 +69,19 @@ class EmailConfirmationService
     }
 
 
-    public function resolveEmailConfirmation(VerifyEmailConfirmationDTO $dto): EmailConfirmation
+    public function resolveEmailConfirmation(int $id, string $token, string $signature, int $expires, string $type): EmailConfirmation
     {
-        $emailConfirmation = $this->emailConfirmationRepository->find($dto->id);
+        $emailConfirmation = $this->emailConfirmationRepository->find($id);
         if(!$emailConfirmation){
             throw new VerifyEmailConfirmationException();
         }
 
         $valid = $this->emailConfirmationHandler->validateEmailConfirmation(
             $emailConfirmation,
-            $dto->token,
-            $dto->_hash,
-            $dto->expires,
-            $dto->type
+            $token,
+            $signature,
+            $expires,
+            $type
         );
         if(!$valid){
             throw new VerifyEmailConfirmationException();

@@ -12,7 +12,7 @@ trait EmailConfirmationBaseDTOFields
 
     public readonly int $expires;
 
-    #[Assert\NotBlank]
+    #[Assert\Choice(callback: 'getAllowedTypes', message: 'Parameter must be one of valid types: {{ choices }}')]
     public readonly string $type;
 
     #[Assert\NotBlank]
@@ -20,4 +20,6 @@ trait EmailConfirmationBaseDTOFields
 
     #[Assert\NotBlank]
     public readonly string $_hash;
+
+    abstract static function getAllowedTypes(): array;
 }

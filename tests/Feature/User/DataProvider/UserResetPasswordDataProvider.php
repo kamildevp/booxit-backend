@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User\DataProvider;
 
+use App\Enum\EmailConfirmationType;
 use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
 
 class UserResetPasswordDataProvider extends BaseDataProvider 
@@ -31,12 +32,6 @@ class UserResetPasswordDataProvider extends BaseDataProvider
             [
                 [
                     'expires' => 0,
-                    'password' => 'newpassword123',
-                ]
-            ],
-            [
-                [
-                    'type' => 'invalid',
                     'password' => 'newpassword123',
                 ]
             ],
@@ -85,17 +80,17 @@ class UserResetPasswordDataProvider extends BaseDataProvider
                 [
                     'id' => 1,
                     'expires' => 1231,
-                    'type' => '',
+                    'type' => 'invalid',
                     'token' => '',
                     '_hash' => '',
                     'password' => 'pass2',
                 ],
                 [
-                    'type' => [
-                        'This value should not be blank.',
-                    ],
                     'token' => [
                         'This value should not be blank.',
+                    ],
+                    'type' => [
+                        'Parameter must be one of valid types: "'.EmailConfirmationType::PASSWORD_RESET->value.'"',
                     ],
                     '_hash' => [
                         'This value should not be blank.',

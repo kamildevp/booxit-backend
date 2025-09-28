@@ -9,7 +9,7 @@ use App\Validator\Constraints as CustomAssert;
 use OpenApi\Attributes as OA;
 
 trait VerificationHandlerFieldDTO {
-    #[OA\Property(enum: ['main'])]
+    #[OA\Property(enum: ['internal'])]
     #[Assert\NotBlank]
     #[CustomAssert\DefinedVerificationHandler]
     public readonly string $verificationHandler;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User\DataProvider;
 
+use App\Enum\EmailConfirmationType;
 use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
 
 class UserVerifyDataProvider extends BaseDataProvider 
@@ -19,11 +20,6 @@ class UserVerifyDataProvider extends BaseDataProvider
             [
                 [
                     'expires' => 0,
-                ]
-            ],
-            [
-                [
-                    'type' => 'invalid',
                 ]
             ],
             [
@@ -52,7 +48,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                         'This value should be of type int.',
                     ],
                     'type' => [
-                        'This value should be of type string.',
+                        'This value should be of type string.'
                     ],
                     'token' => [
                         'This value should be of type string.',
@@ -66,13 +62,16 @@ class UserVerifyDataProvider extends BaseDataProvider
                 [
                     'id' => 1,
                     'expires' => 1231,
-                    'type' => '',
+                    'type' => 'invalid',
                     'token' => '',
                     '_hash' => '',
                 ],
                 [
                     'type' => [
-                        'This value should not be blank.',
+                        'Parameter must be one of valid types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', [
+                            EmailConfirmationType::USER_VERIFICATION->value,
+                            EmailConfirmationType::EMAIL_VERIFICATION->value
+                        ]))
                     ],
                     'token' => [
                         'This value should not be blank.',

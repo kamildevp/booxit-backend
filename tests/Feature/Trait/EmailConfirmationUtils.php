@@ -23,6 +23,7 @@ trait EmailConfirmationUtils
             'expires' => $emailConfirmation->getExpiryDate()->getTimestamp(),
             'id' => $emailConfirmation->getId(),
             'token' => $token,
+            'type' => $emailConfirmation->getType(),
         ];
 
         $signer = $this->container->get(UriSigner::class);
@@ -34,8 +35,7 @@ trait EmailConfirmationUtils
 
         return [
             ...$verifyParams, 
-            '_hash' => $signature, 
-            'type' => $emailConfirmation->getType()
+            '_hash' => $signature,
         ];
     }
 }

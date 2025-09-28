@@ -24,6 +24,7 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
         $extraParams['id'] = $emailConfirmation->getId();
         $extraParams['token'] = $this->createToken($user->getId(), $emailConfirmation->getEmail());
         $extraParams['expires'] = $emailConfirmation->getExpiryDate()->getTimestamp();
+        $extraParams['type'] = $emailConfirmation->getType();
         $baseUrl = $this->resolveVerificationHandlerUrl($emailConfirmation->getVerificationHandler());
 
         $url = $baseUrl . '?' . http_build_query($extraParams);
@@ -44,7 +45,8 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
             '_hash' => $signature, 
             'expires' => $expiryTimestamp,
             'id' => $emailConfirmation->getId(),
-            'token' => $token
+            'token' => $token,
+            'type' => $type
         ];
 
         $signedUrl = $baseUrl . '?' . http_build_query($params);

@@ -11,7 +11,6 @@ use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserChangePasswordDTO;
 use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserListQueryDTO;
@@ -19,6 +18,7 @@ use App\DTO\User\UserOrganizationMembershipListQueryDTO;
 use App\DTO\User\UserPatchDTO;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
+use App\DTO\User\UserVerifyEmailDTO;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
@@ -48,7 +48,9 @@ class UserController extends AbstractController
         summary: 'Create a new user',
         description: 'Registers a new unverified user and sends an email containing a verification link. 
         The link is generated using the specified **verification_handler**, which must match one of the predefined handlers to ensure it points to a trusted domain. 
-        Users must verify their email address before they can log in. Unverified accounts are automatically deleted after 24 hours.'
+        Users must verify their email address before they can log in. Unverified accounts are automatically deleted after 24 hours.
+        <br><br>**Note:** The *"internal"* verification handler is a dummy handler used to generate a safe verification URL when no external handler is provided. 
+        To complete the verification process, the appropriate verification endpoint must be called with the parameters extracted from the decoded verification link.'
     )]
     #[SuccessResponseDoc(
         statusCode: 201,
@@ -78,7 +80,7 @@ class UserController extends AbstractController
     #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
     #[ValidationErrorResponseDoc]
     #[Route('user/verify', name: 'user_verify', methods: ['POST'])]
-    public function verify(UserService $userService, #[MapRequestPayload] VerifyEmailConfirmationDTO $dto): ApiResponse
+    public function verify(UserService $userService, #[MapRequestPayload] UserVerifyEmailDTO $dto): ApiResponse
     {
         $verified = $userService->verifyUserEmail($dto);
 
@@ -127,8 +129,10 @@ class UserController extends AbstractController
 
     #[OA\Patch(
         summary: 'Update current user',
-        description: 'Updates the authenticated user’s data.  
-        **Important:** If the email address is changed, a verification link will be sent to the new address.  
+        description: 'Updates the authenticated user’s data.
+        <br><br>**Note:** The *"internal"* verification handler is a dummy handler used to generate a safe verification URL when no external handler is provided. 
+        To complete the verification process, the appropriate verification endpoint must be called with the parameters extracted from the decoded verification link.
+        <br><br>**Important:** If the email address is changed, a verification link will be sent to the new address.  
         The change takes effect only after the new email has been verified.'
     )]
     #[SuccessResponseDoc(
@@ -219,8 +223,10 @@ class UserController extends AbstractController
 
     #[OA\Post(
         summary: 'Request password reset',
-        description: 'If the provided email address matches a registered user, a password reset link valid for 24 hours will be sent to that address.  
-        **Important:** If a valid reset link already exists for the user, a new email will not be sent.'
+        description: 'If the provided email address matches a registered user, a password reset link valid for 24 hours will be sent to that address.
+        <br><br>**Note:** The *"internal"* verification handler is a dummy handler used to generate a safe verification URL when no external handler is provided. 
+        To complete the verification process, the appropriate verification endpoint must be called with the parameters extracted from the decoded verification link.
+        <br><br>**Important:** If a valid reset link already exists for the user, a new email will not be sent.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'If user with specified email exists, password reset link was sent to specified email'])]
     #[ValidationErrorResponseDoc]

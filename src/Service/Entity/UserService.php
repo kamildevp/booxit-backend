@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\EmailConfirmation\VerifyEmailConfirmationDTO;
 use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserPatchDTO;
 use App\Entity\RefreshToken;
@@ -18,6 +17,7 @@ use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
+use App\DTO\User\UserVerifyEmailDTO;
 use App\Exceptions\ConflictException;
 use App\Exceptions\InvalidActionException;
 use App\Repository\OrganizationMemberRepository;
@@ -96,10 +96,16 @@ class UserService
         }
     }
 
-    public function verifyUserEmail(VerifyEmailConfirmationDTO $dto): bool
+    public function verifyUserEmail(UserVerifyEmailDTO $dto): bool
     {
         try{
-            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation($dto);
+            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
         }
         catch(VerifyEmailConfirmationException)
         {
@@ -136,7 +142,13 @@ class UserService
     public function resetUserPassword(UserResetPasswordDTO $dto): bool
     {
         try{
-            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation($dto);
+            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
         }
         catch(VerifyEmailConfirmationException)
         {

@@ -6,8 +6,9 @@ namespace App\DTO\EmailConfirmation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\EmailConfirmationBaseDTOFields;
+use App\Enum\EmailConfirmationType;
 
-class VerifyEmailConfirmationDTO extends AbstractDTO
+class ValidateEmailConfirmationDTO extends AbstractDTO
 {
     use EmailConfirmationBaseDTOFields;
 
@@ -23,5 +24,10 @@ class VerifyEmailConfirmationDTO extends AbstractDTO
         $this->type = $type;
         $this->token = $token;
         $this->_hash = $_hash;
+    }
+
+    static function getAllowedTypes(): array
+    {
+        return EmailConfirmationType::values();
     }
 }

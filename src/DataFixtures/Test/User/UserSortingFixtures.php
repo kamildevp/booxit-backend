@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\DataFixtures\Test\User;
 
 use App\Entity\User;
-use App\Tests\Feature\Global\DataProvider\ListDataProvider;
+use App\Tests\Utils\DataProvider\ListDataProvider;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Attribute;
+namespace App\Tests\Utils\Attribute;
 
 use Attribute;
 

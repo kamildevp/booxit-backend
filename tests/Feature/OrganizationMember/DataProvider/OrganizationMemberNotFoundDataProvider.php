@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\OrganizationMember\DataProvider;
 
-use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
+use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class OrganizationMemberNotFoundDataProvider extends BaseDataProvider 
 {

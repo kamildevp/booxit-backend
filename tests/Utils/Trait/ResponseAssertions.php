@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Trait;
+namespace App\Tests\Utils\Trait;
 
 trait ResponseAssertions
 {

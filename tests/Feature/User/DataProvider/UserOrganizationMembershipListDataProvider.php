@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\User\DataProvider;
 
 use App\Enum\Organization\OrganizationRole;
-use App\Tests\Feature\Global\DataProvider\ListDataProvider;
+use App\Tests\Utils\DataProvider\ListDataProvider;
 use App\Tests\Feature\Organization\DataProvider\OrganizationListDataProvider;
 
 class UserOrganizationMembershipListDataProvider extends ListDataProvider 

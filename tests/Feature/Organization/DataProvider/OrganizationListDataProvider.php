@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Organization\DataProvider;
 
-use App\Tests\Feature\Global\DataProvider\ListDataProvider;
+use App\Tests\Utils\DataProvider\ListDataProvider;
 
 class OrganizationListDataProvider extends ListDataProvider 
 {

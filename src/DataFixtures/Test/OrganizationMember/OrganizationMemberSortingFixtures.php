@@ -8,7 +8,7 @@ use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
-use App\Tests\Feature\Global\DataProvider\ListDataProvider;
+use App\Tests\Utils\DataProvider\ListDataProvider;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 

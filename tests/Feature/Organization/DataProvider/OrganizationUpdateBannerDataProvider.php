@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Organization\DataProvider;
 
-use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
+use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class OrganizationUpdateBannerDataProvider extends BaseDataProvider 
 {

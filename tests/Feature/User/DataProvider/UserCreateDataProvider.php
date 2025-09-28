@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\User\DataProvider;
 
 use App\Enum\User\UserRole;
-use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
+use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class UserCreateDataProvider extends BaseDataProvider 
 {

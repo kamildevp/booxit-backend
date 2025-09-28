@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Global\DataProvider;
+namespace App\Tests\Utils\DataProvider;
 
 class BaseDataProvider 
 {

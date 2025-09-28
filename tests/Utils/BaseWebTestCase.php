@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature;
+namespace App\Tests\Utils;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Tests\Feature\Attribute\Fixtures;
-use App\Tests\Feature\Trait\DataFormattingTestTools;
-use App\Tests\Feature\Trait\FileTestTools;
-use App\Tests\Feature\Trait\ListAssertions;
-use App\Tests\Feature\Trait\RequestTestTools;
-use App\Tests\Feature\Trait\ResponseAssertions;
-use App\Tests\Feature\Trait\ResponseTestTools;
-use App\Tests\Feature\Trait\ValidationAssertions;
+use App\Tests\Utils\Attribute\Fixtures;
+use App\Tests\Utils\Trait\DataFormattingTestTools;
+use App\Tests\Utils\Trait\FileTestTools;
+use App\Tests\Utils\Trait\ListAssertions;
+use App\Tests\Utils\Trait\RequestTestTools;
+use App\Tests\Utils\Trait\ResponseAssertions;
+use App\Tests\Utils\Trait\ResponseTestTools;
+use App\Tests\Utils\Trait\ValidationAssertions;
 use Doctrine\ORM\EntityManagerInterface;
 use Liip\TestFixturesBundle\Services\DatabaseToolCollection;
 use Liip\TestFixturesBundle\Services\DatabaseTools\AbstractDatabaseTool;

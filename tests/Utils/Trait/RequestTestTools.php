@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Trait;
+namespace App\Tests\Utils\Trait;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;

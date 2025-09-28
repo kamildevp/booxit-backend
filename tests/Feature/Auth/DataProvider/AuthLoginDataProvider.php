@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\Auth\DataProvider;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
-use App\Tests\Feature\Global\DataProvider\BaseDataProvider;
+use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class AuthLoginDataProvider extends BaseDataProvider 
 {

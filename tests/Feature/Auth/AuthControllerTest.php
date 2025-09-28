@@ -7,12 +7,12 @@ namespace App\Tests\Feature\Auth;
 use App\DataFixtures\Test\Auth\AuthRefreshFixtures;
 use App\Entity\RefreshToken;
 use App\Repository\RefreshTokenRepository;
-use App\Tests\Feature\Attribute\Fixtures;
+use App\Tests\Utils\Attribute\Fixtures;
 use App\Tests\Feature\Auth\DataProvider\AuthLoginDataProvider;
 use App\Tests\Feature\Auth\DataProvider\AuthLogoutDataProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
-use App\Tests\Feature\BaseWebTestCase;
+use App\Tests\Utils\BaseWebTestCase;
 
 class AuthControllerTest extends BaseWebTestCase
 {

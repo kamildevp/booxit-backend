@@ -7,19 +7,14 @@ namespace App\DTO\Organization;
 use App\DTO\ListFiltersDTO;
 use App\DTO\Trait\TimestampsFiltersFieldsDTO;
 use DateTimeImmutable;
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Constraints\Compound as Compound;
 
 class OrganizationListFiltersDTO extends ListFiltersDTO 
 {
     use TimestampsFiltersFieldsDTO;
 
     public function __construct(
-        #[Assert\Length(
-            min: 1,
-            max: 50,
-            minMessage: 'Parameter must be at least {{ limit }} characters long',
-            maxMessage: 'Parameter cannot be longer than {{ limit }} characters',
-        )]
+        #[Compound\ContainsFilterRequirements]
         public readonly ?string $name = null,
         ?DateTimeImmutable $createdFrom = null,
         ?DateTimeImmutable $createdTo = null,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\ScheduleAssignment;
-use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,10 +16,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method ScheduleAssignment[]    findAll()
  * @method ScheduleAssignment[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ScheduleAssignmentRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class ScheduleAssignmentRepository extends BaseRepository
 {
-    use RepositoryUtils;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, ScheduleAssignment::class);

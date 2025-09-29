@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Organization;
-use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,9 +16,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Organization[]    findAll()
  * @method Organization[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class OrganizationRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class OrganizationRepository extends BaseRepository
 {
-    use RepositoryUtils;
 
     public function __construct(ManagerRegistry $registry)
     {

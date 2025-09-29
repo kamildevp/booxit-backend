@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Trait;
+namespace App\Repository;
 
 use App\DTO\FiltersDTOInterface;
 use App\DTO\ListQueryDTOInterface;
@@ -13,14 +13,21 @@ use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
 use App\Repository\Pagination\Model\PaginationResult;
 use App\Repository\Pagination\PaginationBuilder;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 
-trait RepositoryUtils
+abstract class BaseRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     const DEFAULT_ENTRIES_PER_PAGE = 20; 
     const MAX_ENTRIES_PER_PAGE = 100;
     const DEFAULT_ORDER_MAP = ['id' => OrderDir::ASC->value];
     const QB_IDENTIFIER = 'e';
+
+    public function __construct(ManagerRegistry $registry, string $entityClass)
+    {
+        parent::__construct($registry, $entityClass);
+    }
 
     public function findOrFail($id, $lockMode = null, $lockVersion = null): object
     {

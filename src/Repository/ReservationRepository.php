@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Reservation;
-use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,9 +16,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Reservation[]    findAll()
  * @method Reservation[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ReservationRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class ReservationRepository extends BaseRepository
 {
-    use RepositoryUtils;
 
     public function __construct(ManagerRegistry $registry)
     {

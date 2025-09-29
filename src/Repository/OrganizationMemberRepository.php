@@ -7,7 +7,6 @@ namespace App\Repository;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
 use App\Enum\Organization\OrganizationRole;
-use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,10 +18,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method OrganizationMember[]    findAll()
  * @method OrganizationMember[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class OrganizationMemberRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class OrganizationMemberRepository extends BaseRepository
 {
-    use RepositoryUtils;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, OrganizationMember::class);

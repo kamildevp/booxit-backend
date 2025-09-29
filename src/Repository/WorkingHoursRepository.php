@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\WorkingHours;
-use App\Repository\Trait\RepositoryUtils;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * @extends ServiceEntityRepository<WorkingHours>
@@ -17,10 +17,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method WorkingHours[]    findAll()
  * @method WorkingHours[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class WorkingHoursRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class WorkingHoursRepository extends BaseRepository
 {
-    use RepositoryUtils;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, WorkingHours::class);

@@ -6,7 +6,6 @@ namespace App\Repository;
 
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
-use App\Repository\Trait\RepositoryUtils;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,10 +18,8 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method EmailConfirmation[]    findAll()
  * @method EmailConfirmation[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class EmailConfirmationRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
+class EmailConfirmationRepository extends BaseRepository
 {
-    use RepositoryUtils;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, EmailConfirmation::class);

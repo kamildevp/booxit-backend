@@ -9,6 +9,8 @@ use App\Entity\User;
 use App\Enum\Organization\OrganizationRole;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<OrganizationMember>
@@ -20,9 +22,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class OrganizationMemberRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, OrganizationMember::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, OrganizationMember::class);
     }
 
     public function save(OrganizationMember $entity, bool $flush = false): void

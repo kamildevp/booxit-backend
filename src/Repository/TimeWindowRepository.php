@@ -7,6 +7,8 @@ namespace App\Repository;
 use App\Entity\TimeWindow;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<TimeWindow>
@@ -18,9 +20,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class TimeWindowRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, TimeWindow::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, TimeWindow::class);
     }
 
     public function save(TimeWindow $entity, bool $flush = false): void

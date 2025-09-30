@@ -9,6 +9,8 @@ use App\Entity\User;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<EmailConfirmation>
@@ -20,9 +22,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EmailConfirmationRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, EmailConfirmation::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, EmailConfirmation::class);
     }
 
     public function save(EmailConfirmation $entity, bool $flush = false): void

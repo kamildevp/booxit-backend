@@ -7,6 +7,8 @@ namespace App\Repository;
 use App\Entity\ScheduleAssignment;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<ScheduleAssignment>
@@ -18,9 +20,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ScheduleAssignmentRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, ScheduleAssignment::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, ScheduleAssignment::class);
     }
 
     public function save(ScheduleAssignment $entity, bool $flush = false): void

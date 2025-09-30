@@ -24,8 +24,13 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
     const DEFAULT_ORDER_MAP = ['id' => OrderDir::ASC->value];
     const QB_IDENTIFIER = 'e';
 
-    public function __construct(ManagerRegistry $registry, string $entityClass)
+    protected FiltersBuilder $filtersBuilder;
+    protected OrderBuilder $orderBuilder;
+
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder, string $entityClass)
     {
+        $this->filtersBuilder = $filtersBuilder;
+        $this->orderBuilder = $orderBuilder;
         parent::__construct($registry, $entityClass);
     }
 
@@ -71,9 +76,8 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
 
     private function applyFilters(QueryBuilder $qb, string $entityClass, FiltersDTOInterface $filtersDTO, string $qbIdentifier = self::QB_IDENTIFIER, array $relatedEntityMap = []): void
     {
-        $filtersBuilder = new FiltersBuilder();
-        $filtersBuilder->applyFilters($qb, $entityClass, $filtersDTO, $qbIdentifier);
-        $this->applyRelatedFilters($filtersBuilder, $qb, $relatedEntityMap, $filtersDTO);
+        $this->filtersBuilder->applyFilters($qb, $entityClass, $filtersDTO, $qbIdentifier);
+        $this->applyRelatedFilters($this->filtersBuilder, $qb, $relatedEntityMap, $filtersDTO);
     }
 
     private function applyRelatedFilters(FiltersBuilder $filtersBuilder, QueryBuilder $qb, array $relationMap, FiltersDTOInterface $filtersDTO): void
@@ -87,8 +91,7 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
 
     private function applyOrder(QueryBuilder $qb, OrderDTOInterface $orderDTO, array $relationMap): void
     {
-        $orderBuilder = new OrderBuilder();
-        $orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, self::DEFAULT_ORDER_MAP, $relationMap);
+        $this->orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, self::DEFAULT_ORDER_MAP, $relationMap);
     }
 
     public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [])

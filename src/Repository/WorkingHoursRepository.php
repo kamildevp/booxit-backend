@@ -7,6 +7,8 @@ namespace App\Repository;
 use App\Entity\WorkingHours;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -19,9 +21,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 class WorkingHoursRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, WorkingHours::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, WorkingHours::class);
     }
 
     public function save(WorkingHours $entity, bool $flush = false): void

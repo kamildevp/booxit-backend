@@ -8,6 +8,8 @@ use App\Entity\RefreshToken;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<RefreshToken>
@@ -19,9 +21,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class RefreshTokenRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, RefreshToken::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, RefreshToken::class);
     }
 
     public function save(RefreshToken $entity, bool $flush = false): void

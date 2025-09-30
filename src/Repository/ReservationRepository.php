@@ -7,6 +7,8 @@ namespace App\Repository;
 use App\Entity\Reservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 
 /**
  * @extends ServiceEntityRepository<Reservation>
@@ -18,10 +20,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ReservationRepository extends BaseRepository
 {
-
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, Reservation::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, Reservation::class);
     }
 
     public function save(Reservation $entity, bool $flush = false): void

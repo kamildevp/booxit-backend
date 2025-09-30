@@ -38,35 +38,39 @@ class OrganizationListDataProvider extends ListDataProvider
 
     public static function validationDataCases()
     {
-        return array_merge(parent::validationDataCases(), [
+        return array_merge(
+            parent::validationDataCases(), 
+            parent::getTimestampsFiltersValidationDataCases(), 
             [
                 [
-                    'filters' => [
-                        'name' => '',
-                    ]
-                ],
-                [
-                    'filters' => [
-                        'name' => [
-                            'Parameter must be at least 1 characters long'
-                        ],
-                    ]
-                ]
-            ],
-            [
-                [
-                    'filters' => [
-                        'name' => str_repeat('a', 55),
-                    ]
-                ],
-                [
-                    'filters' => [
-                        'name' => [
-                            'Parameter cannot be longer than 50 characters'
+                    [
+                        'filters' => [
+                            'name' => '',
+                        ]
+                    ],
+                    [
+                        'filters' => [
+                            'name' => [
+                                'Parameter must be at least 1 characters long'
+                            ],
                         ]
                     ]
-                ]
-            ],
-        ]);
+                ],
+                [
+                    [
+                        'filters' => [
+                            'name' => str_repeat('a', 55),
+                        ]
+                    ],
+                    [
+                        'filters' => [
+                            'name' => [
+                                'Parameter cannot be longer than 50 characters'
+                            ]
+                        ]
+                    ]
+                ],
+            ]
+        );
     }
 }

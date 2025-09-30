@@ -6,7 +6,7 @@ namespace App\Entity\Trait;
 
 use App\Enum\NormalizerGroup;
 use App\Enum\TimestampsColumns;
-use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Filter\EntityFilter\DateTimeFieldValue;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
@@ -49,10 +49,10 @@ trait Timestampable
     public static function getTimestampsFilterDefs(): array
     {
         return [
-            'createdFrom' => new FieldValue('createdAt', '>='),
-            'createdTo' => new FieldValue('createdAt', '<='),
-            'updatedFrom' => new FieldValue('updatedAt', '>='),
-            'updatedTo' => new FieldValue('updatedAt', '<='),
+            'createdFrom' => new DateTimeFieldValue('createdAt', '>='),
+            'createdTo' => new DateTimeFieldValue('createdAt', '<='),
+            'updatedFrom' => new DateTimeFieldValue('updatedAt', '>='),
+            'updatedTo' => new DateTimeFieldValue('updatedAt', '<='),
         ];
     }
 

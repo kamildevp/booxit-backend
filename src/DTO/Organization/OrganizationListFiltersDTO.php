@@ -6,7 +6,6 @@ namespace App\DTO\Organization;
 
 use App\DTO\ListFiltersDTO;
 use App\DTO\Trait\TimestampsFiltersFieldsDTO;
-use DateTimeImmutable;
 use App\Validator\Constraints\Compound as Compound;
 
 class OrganizationListFiltersDTO extends ListFiltersDTO 
@@ -16,10 +15,10 @@ class OrganizationListFiltersDTO extends ListFiltersDTO
     public function __construct(
         #[Compound\ContainsFilterRequirements]
         public readonly ?string $name = null,
-        ?DateTimeImmutable $createdFrom = null,
-        ?DateTimeImmutable $createdTo = null,
-        ?DateTimeImmutable $updatedFrom = null,
-        ?DateTimeImmutable $updatedTo = null,
+        ?string $createdFrom = null,
+        ?string $createdTo = null,
+        ?string $updatedFrom = null,
+        ?string $updatedTo = null,
     )
     {
         $this->createdFrom = $createdFrom;

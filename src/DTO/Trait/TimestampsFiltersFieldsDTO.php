@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace App\DTO\Trait;
 
-use DateTimeImmutable;
+use App\Validator\Constraints\Compound as Compound;
+use OpenApi\Attributes as OA;
 
 trait TimestampsFiltersFieldsDTO 
 {
-    public readonly ?DateTimeImmutable $createdFrom;
+    #[OA\Property(format: 'date-time')]
+    #[Compound\DateTimeStringRequirements(true)]
+    public readonly ?string $createdFrom;
 
-    public readonly ?DateTimeImmutable $createdTo;
+    #[OA\Property(format: 'date-time')]
+    #[Compound\DateTimeStringRequirements(true)]
+    public readonly ?string $createdTo;
 
-    public readonly ?DateTimeImmutable $updatedFrom;
+    #[OA\Property(format: 'date-time')]
+    #[Compound\DateTimeStringRequirements(true)]
+    public readonly ?string $updatedFrom;
 
-    public readonly ?DateTimeImmutable $updatedTo;
+    #[OA\Property(format: 'date-time')]
+    #[Compound\DateTimeStringRequirements(true)]
+    public readonly ?string $updatedTo;
 }

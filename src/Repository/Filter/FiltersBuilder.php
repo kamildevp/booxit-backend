@@ -7,10 +7,17 @@ namespace App\Repository\Filter;
 use App\DTO\FiltersDTOInterface;
 use App\Repository\Filter\EntityFilter\EntityFilterInterface;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class FiltersBuilder 
 {
     const FILTER_DEFS_METHOD_NAME = 'getFilterDefs';
+
+    public function __construct(private DenormalizerInterface&NormalizerInterface $normalizer)
+    {
+        
+    }
 
     public function applyFilters(QueryBuilder $qb, string $entityClass, FiltersDTOInterface $filtersDTO, $qbIdentifier = 'e'): void
     {
@@ -28,6 +35,7 @@ class FiltersBuilder
             }
 
             $filter->setQbIdentifier($qbIdentifier);
+            $filter->setNormalizer($this->normalizer);
             $filter->apply($qb, $filterValue, "filterParam$filterIndx");
             $filterIndx++;
         }

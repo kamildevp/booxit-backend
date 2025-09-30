@@ -48,12 +48,45 @@ class ListDataProvider extends BaseDataProvider
         ];
     }
 
-        public static function getTimestampsFiltersDataCases(): array
+    public static function getTimestampsFiltersValidationDataCases()
     {
         return [
             [
                 [
-                    'created_from' => '2025-06-13T12:00:00+00:00'
+                    'filters' => [
+                        'created_from' => 'a',
+                        'created_to' => 'a',
+                        'updated_from' => 'a',
+                        'updated_to' => 'a',
+                    ]
+                ],
+                [
+                    'filters' => [
+                        'created_from' => [
+                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                        ],
+                        'created_to' => [
+                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                        ],
+                        'updated_from' => [
+                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                        ],
+                        'updated_to' => [
+                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                        ],
+                    ]
+                ]
+            ],
+        ];
+    }
+
+
+    public static function getTimestampsFiltersDataCases(): array
+    {
+        return [
+            [
+                [
+                    'created_from' => '2025-06-13T13:00:00+01:00'
                 ],
                 [
                     'created_at' => '2025-06-13T12:20:00+00:00'

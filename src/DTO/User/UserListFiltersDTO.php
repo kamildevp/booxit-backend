@@ -16,10 +16,10 @@ class UserListFiltersDTO extends ListFiltersDTO
     public function __construct(
         #[Compound\ContainsFilterRequirements]
         public readonly ?string $name = null,
-        ?DateTimeImmutable $createdFrom = null,
-        ?DateTimeImmutable $createdTo = null,
-        ?DateTimeImmutable $updatedFrom = null,
-        ?DateTimeImmutable $updatedTo = null,
+        ?string $createdFrom = null,
+        ?string $createdTo = null,
+        ?string $updatedFrom = null,
+        ?string $updatedTo = null,
     )
     {
         $this->createdFrom = $createdFrom;

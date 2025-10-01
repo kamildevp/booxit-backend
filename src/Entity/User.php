@@ -27,7 +27,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     use Timestampable, SoftDeleteableEntity;
 
-    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -38,7 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
 
-    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
@@ -57,7 +57,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;
 
-    #[Groups([UserNormalizerGroup::PUBLIC->value, UserNormalizerGroup::PRIVATE->value])]
+    #[Groups([UserNormalizerGroup::PUBLIC->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 

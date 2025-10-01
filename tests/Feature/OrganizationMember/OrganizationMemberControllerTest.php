@@ -48,7 +48,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organization = $this->organizationRepository->findOneBy([]);
         $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
         $params['user_id'] = $user->getId();
-        $expectedResponseData['app_user'] = $this->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
+        $expectedResponseData['app_user'] = $this->normalize($user, UserNormalizerGroup::BASE_INFO->normalizationGroups());
         
         $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/organization/'.$organization->getId().'/member', $params);
         $this->assertIsInt($responseData['id']);

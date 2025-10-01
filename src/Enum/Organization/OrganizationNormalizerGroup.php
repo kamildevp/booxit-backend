@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enum\Organization;
 
+use App\Entity\Organization;
 use App\Enum\Interface\NormalizerGroupInterface;
 use App\Enum\NormalizerGroup;
 use App\Enum\Trait\NormalizerGroupTrait;
@@ -14,16 +15,17 @@ enum OrganizationNormalizerGroup: string implements NormalizerGroupInterface
 
     case PUBLIC = 'organization-public';
     case PRIVATE = 'organization-private';
+    case BASE_INFO = 'organization-base_info';
+    case TIMESTAMP = Organization::class.NormalizerGroup::TIMESTAMP->value;
+    case AUTHOR_INFO = Organization::class.NormalizerGroup::AUTHOR_INFO->value;
 
     protected function appendGroups(): array
     {
-        $caseGroups = match($this){
-            OrganizationNormalizerGroup::PUBLIC => [],
-            OrganizationNormalizerGroup::PRIVATE => [NormalizerGroup::AUTHOR_INFO->value],
+        return match($this){
+            self::PUBLIC => [self::BASE_INFO->value, self::TIMESTAMP->value],
+            self::PRIVATE => self::PUBLIC->normalizationGroups(),
+            self::AUTHOR_INFO => NormalizerGroup::AUTHOR_INFO->normalizationGroups(),
+            default => []
         };
-
-        return array_merge($caseGroups, [
-            NormalizerGroup::TIMESTAMP->value,
-        ]);
     }
 }

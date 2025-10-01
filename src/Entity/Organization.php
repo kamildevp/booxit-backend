@@ -19,17 +19,17 @@ class Organization
 {
     use Timestampable, Blameable;
 
-    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
+    #[Groups([OrganizationNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
+    #[Groups([OrganizationNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50, unique: true)]
     private ?string $name = null;
 
-    #[Groups([OrganizationNormalizerGroup::PUBLIC->value, OrganizationNormalizerGroup::PRIVATE->value])]
+    #[Groups([OrganizationNormalizerGroup::PUBLIC->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 

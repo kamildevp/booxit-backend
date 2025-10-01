@@ -6,22 +6,24 @@ namespace App\Tests\Feature\User\DataProvider;
 
 use App\Enum\Organization\OrganizationRole;
 use App\Tests\Utils\DataProvider\ListDataProvider;
-use App\Tests\Feature\Organization\DataProvider\OrganizationListDataProvider;
 
 class UserOrganizationMembershipListDataProvider extends ListDataProvider 
 {
     public static function filtersDataCases()
     {
-        $organizationDataCases = OrganizationListDataProvider::filtersDataCases();
-        $nestedOrganizationDataCases = array_map(
-            fn($case) => array_map(
-                fn($arg) => ['organization' => $arg],
-                $case
-            ),
-            $organizationDataCases
-        );
-
-        return array_merge([
+        return [
+            [
+                [
+                    'organization' => [
+                        'name' => 'A'
+                    ]
+                ],
+                [
+                    'organization' => [
+                        'name' => 'Sorted A'
+                    ]
+                ],
+            ],
             [
                 [
                     'role' => OrganizationRole::ADMIN->value
@@ -30,21 +32,20 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                     'role' => OrganizationRole::ADMIN->value
                 ],
             ],
-        ], $nestedOrganizationDataCases);
+        ];
     }
 
     public static function sortingDataCases()
     {
-        $organizationDataCases = OrganizationListDataProvider::sortingDataCases();
-        $nestedOrganizationDataCases = array_map(
-            fn($case) => [
-                str_starts_with($case[0], '-') ? '-organization.'.str_replace('-','',$case[0]) : "organization.$case[0]",
-                array_map(fn($val) => ['organization' => $val], $case[1])
+        return [
+            [
+                'organization.name',
+                array_map(fn($val) => ['organization' => $val], parent::getSortedColumnValueSequence('name', 'string'))
             ],
-            $organizationDataCases
-        );
-
-        return array_merge([
+            [
+                '-organization.name',
+                array_map(fn($val) => ['organization' => $val], parent::getSortedColumnValueSequence('name', 'string', 'desc'))
+            ],
             [
                 'role',
                 parent::getSortedColumnValueSequence('role', 'organization_role')
@@ -53,21 +54,48 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                 '-role',
                 parent::getSortedColumnValueSequence('role', 'organization_role', 'desc')
             ],
-        ], $nestedOrganizationDataCases);
+        ];
     }
 
     public static function validationDataCases()
     {
-        $organizationFilterDataCases = array_filter(OrganizationListDataProvider::validationDataCases(), fn($case) => isset($case[0]['filters']));
-        $nestedOrganizationDataCases = array_map(
-            fn($case) => array_map(
-                fn($arg) => ['filters' => ['organization' => $arg['filters']]],
-                $case
-            ),
-            $organizationFilterDataCases
-        );
-
-        return array_merge([
+        return [
+            [
+                [
+                    'filters' => [
+                        'organization' => [
+                            'name' => '',
+                        ]
+                    ]
+                ],
+                [
+                    'filters' => [
+                        'organization' => [
+                            'name' => [
+                                'Parameter must be at least 1 characters long'
+                            ],
+                        ]
+                    ]
+                ]
+            ],
+            [
+                [
+                    'filters' => [
+                        'organization' => [
+                            'name' => str_repeat('a', 55),
+                        ]
+                    ]
+                ],
+                [
+                    'filters' => [
+                        'organization' => [
+                            'name' => [
+                                'Parameter cannot be longer than 50 characters'
+                            ]
+                        ]
+                    ]
+                ]
+            ],
             [
                 [
                     'filters' => [
@@ -82,6 +110,6 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                     ]
                 ]
             ],
-        ], $nestedOrganizationDataCases);
+        ];
     }
 }

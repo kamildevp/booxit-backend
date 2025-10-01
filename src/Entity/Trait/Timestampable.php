@@ -16,12 +16,12 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 trait Timestampable
 {
-    #[Groups([NormalizerGroup::TIMESTAMP->value])]
+    #[Groups([self::class.NormalizerGroup::TIMESTAMP->value])]
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[DoctrineTimestampable(on: 'create')]
     public ?\DateTimeImmutable $createdAt = null;
 
-    #[Groups([NormalizerGroup::TIMESTAMP->value])]
+    #[Groups([self::class.NormalizerGroup::TIMESTAMP->value])]
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[DoctrineTimestampable(on: 'update')]
     public ?\DateTimeImmutable $updatedAt = null;

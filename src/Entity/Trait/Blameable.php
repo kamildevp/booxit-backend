@@ -12,12 +12,12 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 trait Blameable
 {
-    #[Groups([NormalizerGroup::AUTHOR_INFO->value])]
+    #[Groups([self::class.NormalizerGroup::AUTHOR_INFO->value])]
     #[Gedmo\Blameable(on: 'create')]
     #[ORM\ManyToOne]
     private ?User $createdBy = null;
 
-    #[Groups([NormalizerGroup::AUTHOR_INFO->value])]
+    #[Groups([self::class.NormalizerGroup::AUTHOR_INFO->value])]
     #[Gedmo\Blameable(on: 'update')]
     #[ORM\ManyToOne]
     private ?User $updatedBy = null;

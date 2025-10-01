@@ -6,7 +6,6 @@ namespace App\DTO\User;
 
 use App\DTO\AbstractDTO;
 use App\DTO\ListQueryDTOInterface;
-use App\DTO\Organization\OrganizationListQueryDTO;
 use App\DTO\Trait\OrderFieldsDTO;
 use App\DTO\Trait\PaginationFieldsDTO;
 use App\Repository\OrganizationMemberRepository;
@@ -33,7 +32,6 @@ class UserOrganizationMembershipListQueryDTO extends AbstractDTO implements List
     #[Ignore]
     public static function getOrderableColumns(): array
     {
-        $organizationOrderableColumns = array_map(fn($column) => "organization.$column", OrganizationListQueryDTO::getOrderableColumns());
-        return array_merge($organizationOrderableColumns, ['role']);
+        return ['organization.name', 'role'];
     }
 }

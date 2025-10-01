@@ -15,13 +15,19 @@ enum OrganizationMemberNormalizerGroup: string implements NormalizerGroupInterfa
 
     case PUBLIC = 'organization_member-public';
     case PRIVATE = 'organization_member-private';
+    case BASE_INFO = 'organization_member-base_info';
+    case USER = 'organization_member-user';
+    case ORGANIZATION = 'organization_member-organization';
     case USER_MEMBERSHIPS = 'organization_member-user_organizations';
 
     protected function appendGroups(): array
     {
         return match($this){
-            self::USER_MEMBERSHIPS => OrganizationNormalizerGroup::PUBLIC->normalizationGroups(),
-            default => UserNormalizerGroup::PUBLIC->normalizationGroups()
+            self::PUBLIC => [self::BASE_INFO->value, ...self::USER->normalizationGroups()],
+            self::PRIVATE => self::PUBLIC->normalizationGroups(),
+            self::USER => [self::BASE_INFO->value, UserNormalizerGroup::BASE_INFO->value],
+            self::USER_MEMBERSHIPS => [self::BASE_INFO->value, self::ORGANIZATION->value, OrganizationNormalizerGroup::BASE_INFO->value],
+            default => []
         };
     }
 }

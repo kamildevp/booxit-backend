@@ -4,23 +4,21 @@ declare(strict_types=1);
 
 namespace App\DTO\Organization;
 
-use App\DTO\ListFiltersDTO;
 use App\DTO\Trait\TimestampsFiltersFieldsDTO;
-use App\Validator\Constraints\Compound as Compound;
 
-class OrganizationListFiltersDTO extends ListFiltersDTO 
+class OrganizationListFiltersDTO extends OrganizationBaseListFiltersDTO
 {
     use TimestampsFiltersFieldsDTO;
 
     public function __construct(
-        #[Compound\ContainsFilterRequirements]
-        public readonly ?string $name = null,
+        ?string $name = null,
         ?string $createdFrom = null,
         ?string $createdTo = null,
         ?string $updatedFrom = null,
         ?string $updatedTo = null,
     )
     {
+        parent::__construct($name);
         $this->createdFrom = $createdFrom;
         $this->createdTo = $createdTo;
         $this->updatedFrom = $updatedFrom;

@@ -8,7 +8,6 @@ use App\DTO\AbstractDTO;
 use App\DTO\ListQueryDTOInterface;
 use App\DTO\Trait\OrderFieldsDTO;
 use App\DTO\Trait\PaginationFieldsDTO;
-use App\DTO\User\UserListQueryDTO;
 use App\Repository\OrganizationMemberRepository;
 use Nelmio\ApiDocBundle\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -33,7 +32,6 @@ class OrganizationMemberListQueryDTO extends AbstractDTO implements ListQueryDTO
     #[Ignore]
     public static function getOrderableColumns(): array
     {
-        $userOrderableColumns = array_map(fn($column) => "app_user.$column", UserListQueryDTO::getOrderableColumns());
-        return array_merge($userOrderableColumns, ['role']);
+        return ['app_user.name', 'role'];
     }
 }

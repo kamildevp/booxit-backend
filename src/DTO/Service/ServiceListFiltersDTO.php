@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DTO\Service;
+
+use App\DTO\ListFiltersDTO;
+use App\DTO\Trait\TimestampsFiltersFieldsDTO;
+use App\Validator\Constraints\Compound as Compound;
+
+class ServiceListFiltersDTO extends ListFiltersDTO 
+{
+    use TimestampsFiltersFieldsDTO;
+
+    public function __construct(
+        #[Compound\ContainsFilterRequirements] public readonly ?string $name = null,
+        #[Compound\DateIntervalRequirements(true)] public readonly ?string $durationFrom = null,
+        #[Compound\DateIntervalRequirements(true)] public readonly ?string $durationTo = null,
+        #[Compound\DecimalRequirements(true)] public readonly ?string $estimatedPriceFrom = null,
+        #[Compound\DecimalRequirements(true)] public readonly ?string $estimatedPriceTo = null,
+        ?string $createdFrom = null,
+        ?string $createdTo = null,
+        ?string $updatedFrom = null,
+        ?string $updatedTo = null,
+    )
+    {
+        $this->createdFrom = $createdFrom;
+        $this->createdTo = $createdTo;
+        $this->updatedFrom = $updatedFrom;
+        $this->updatedTo = $updatedTo;
+    }
+}

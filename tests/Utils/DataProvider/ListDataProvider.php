@@ -164,6 +164,16 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => '2025-05-13T12:30:00+00:00'],
                 [$columnName => '2025-06-13T12:20:00+00:00'],
             ],
+            'dateinterval' => [
+                [$columnName => 'P0Y0M0DT12H20M0S'],
+                [$columnName => 'P0Y0M0DT12H40M0S'],
+                [$columnName => 'P0Y0M1DT1H0M0S'],
+            ],
+            'decimal' => [
+                [$columnName => '10.20'],
+                [$columnName => '10.30'],
+                [$columnName => '20.00'],
+            ],
             'organization_role' => [
                 [$columnName => OrganizationRole::ADMIN->value],
                 [$columnName => OrganizationRole::MEMBER->value],

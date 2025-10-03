@@ -18,9 +18,13 @@ class ServiceAuthDataProvider extends BaseDataProvider
         ];
     }
 
-    public static function serviceAdminOnlyPaths()
+    public static function serviceManagementPrivilegesOnlyPaths()
     {
         return [
+            ['/api/service', 'POST', null],
+            ['/api/service', 'POST', null, ['organization_id' => 0]],
+            ['/api/service', 'POST', null, ['organization_id' => '{organization}']],
+            ['/api/service', 'POST', OrganizationRole::MEMBER->value, ['organization_id' => '{organization}']],
             ['/api/service/{service}', 'PATCH', null],
             ['/api/service/{service}', 'DELETE', null],
             ['/api/service/{service}', 'PATCH', OrganizationRole::MEMBER->value],

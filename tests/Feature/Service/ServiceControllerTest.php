@@ -175,22 +175,24 @@ class ServiceControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([UserFixtures::class, OrganizationAdminFixtures::class, ServiceFixtures::class])]
-    #[DataProviderExternal(ServiceAuthDataProvider::class, 'serviceAdminOnlyPaths')]
-    public function testServiceAdminRoleRequirementForProtectedPaths(string $path, string $method, ?string $role): void
+    #[DataProviderExternal(ServiceAuthDataProvider::class, 'serviceManagementPrivilegesOnlyPaths')]
+    public function testServiceManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role, array $parameters = []): void
     {
         $service = $this->serviceRepository->findOneBy([]);
         $path = str_replace('{service}', (string)($service->getId()), $path);
         $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $organization = $service->getOrganization();
+        $parameters = array_map(fn($val) => $val == '{organization}' ? $organization->getId() : $val, $parameters);
         if(!empty($role)){
             $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($service->getOrganization());
+            $organizationMember->setOrganization($organization);
             $organizationMember->setAppUser($user);
             $organizationMember->setRole($role);
             $this->organizationMemberRepository->save($organizationMember, true);
         }
 
         $this->client->loginUser($user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, $parameters, expectedCode: 403);
         $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
     }
 }

@@ -25,7 +25,7 @@ final class DateIntervalPropertyProcessor
             foreach ($schema->properties as $property) {
                 if ($property->ref == '#/components/schemas/DateInterval') {
                     $property->type = 'string';
-                    $property->example = Generator::isDefault($property->example) ? 'PT01H30M' : $property->example;
+                    $property->example = Generator::isDefault($property->example) ? 'P0Y0M0DT1H30M0S' : $property->example;
                     $property->ref = Generator::UNDEFINED;
                 }
                 

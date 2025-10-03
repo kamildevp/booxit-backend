@@ -44,6 +44,7 @@ class ServiceController extends AbstractController
         dataModelGroups: ServiceNormalizerGroup::PRIVATE
     )]
     #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
     #[Route('service', name: 'service_new', methods: ['POST'])]
@@ -110,7 +111,7 @@ class ServiceController extends AbstractController
     #[OA\Delete(
         summary: 'Delete service',
         description: 'Deletes the specified service.
-        </br>**Important:** This action can only be performed by organization admin. The service is soft-deleted, meaning a new service cannot be created with the same name.'
+        </br>**Important:** This action can only be performed by organization admin.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Service removed successfully'])]
     #[ForbiddenResponseDoc]

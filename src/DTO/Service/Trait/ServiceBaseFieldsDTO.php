@@ -19,7 +19,7 @@ trait ServiceBaseFieldsDTO
     #[Compound\DateIntervalRequirements]
     public readonly string $duration; 
 
-    #[OA\Property(example: '25.5')]
+    #[OA\Property(example: '25.50')]
     #[Compound\DecimalRequirements]
     public readonly string $estimatedPrice;
 }

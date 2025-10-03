@@ -17,11 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
 use OpenApi\Attributes as OA;
-use Symfony\Component\Serializer\Attribute\Context;
 
-    #[Context(['entity_reference' => [
-        'class' => Organization::class
-    ]])]
 #[ORM\Entity(repositoryClass: ServiceRepository::class)]
 class Service
 {
@@ -50,7 +46,7 @@ class Service
     #[ORM\Column]
     private ?\DateInterval $duration = null;
 
-    #[OA\Property(example: '25.5')]
+    #[OA\Property(example: '25.50')]
     #[Groups([ServiceNormalizerGroup::PUBLIC->value])]
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $estimatedPrice = null;
@@ -75,11 +71,6 @@ class Service
     public function getOrganization(): ?Organization
     {
         return $this->organization;
-    }
-
-    public function getOrganizationId(): int
-    {
-        return $this->organization->getId();
     }
 
     public function setOrganization(?Organization $organization): self

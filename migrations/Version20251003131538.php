@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250929102128 extends AbstractMigration
+final class Version20251003131538 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -21,7 +21,6 @@ final class Version20250929102128 extends AbstractMigration
     {
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SEQUENCE reservation_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
-        $this->addSql('CREATE SEQUENCE schedule_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE schedule_assignment_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE time_window_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE working_hours_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
@@ -29,8 +28,6 @@ final class Version20250929102128 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_42C84955A40BC2D5 ON reservation (schedule_id)');
         $this->addSql('CREATE INDEX IDX_42C84955ED5CA9E6 ON reservation (service_id)');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_42C84955137F1495 ON reservation (time_window_id)');
-        $this->addSql('CREATE TABLE schedule (id INT NOT NULL, organization_id INT NOT NULL, name VARCHAR(50) NOT NULL, description TEXT NOT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE INDEX IDX_5A3811FB32C8A3DE ON schedule (organization_id)');
         $this->addSql('CREATE TABLE schedule_service (schedule_id INT NOT NULL, service_id INT NOT NULL, PRIMARY KEY(schedule_id, service_id))');
         $this->addSql('CREATE INDEX IDX_6CF7B663A40BC2D5 ON schedule_service (schedule_id)');
         $this->addSql('CREATE INDEX IDX_6CF7B663ED5CA9E6 ON schedule_service (service_id)');
@@ -46,7 +43,6 @@ final class Version20250929102128 extends AbstractMigration
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955A40BC2D5 FOREIGN KEY (schedule_id) REFERENCES schedule (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955ED5CA9E6 FOREIGN KEY (service_id) REFERENCES service (id) ON DELETE SET NULL NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE reservation ADD CONSTRAINT FK_42C84955137F1495 FOREIGN KEY (time_window_id) REFERENCES time_window (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
-        $this->addSql('ALTER TABLE schedule ADD CONSTRAINT FK_5A3811FB32C8A3DE FOREIGN KEY (organization_id) REFERENCES organization (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE schedule_service ADD CONSTRAINT FK_6CF7B663A40BC2D5 FOREIGN KEY (schedule_id) REFERENCES schedule (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE schedule_service ADD CONSTRAINT FK_6CF7B663ED5CA9E6 FOREIGN KEY (service_id) REFERENCES service (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE schedule_assignment ADD CONSTRAINT FK_600F33F8A40BC2D5 FOREIGN KEY (schedule_id) REFERENCES schedule (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
@@ -60,14 +56,12 @@ final class Version20250929102128 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('DROP SEQUENCE reservation_id_seq CASCADE');
-        $this->addSql('DROP SEQUENCE schedule_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE schedule_assignment_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE time_window_id_seq CASCADE');
         $this->addSql('DROP SEQUENCE working_hours_id_seq CASCADE');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955A40BC2D5');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955ED5CA9E6');
         $this->addSql('ALTER TABLE reservation DROP CONSTRAINT FK_42C84955137F1495');
-        $this->addSql('ALTER TABLE schedule DROP CONSTRAINT FK_5A3811FB32C8A3DE');
         $this->addSql('ALTER TABLE schedule_service DROP CONSTRAINT FK_6CF7B663A40BC2D5');
         $this->addSql('ALTER TABLE schedule_service DROP CONSTRAINT FK_6CF7B663ED5CA9E6');
         $this->addSql('ALTER TABLE schedule_assignment DROP CONSTRAINT FK_600F33F8A40BC2D5');
@@ -76,7 +70,6 @@ final class Version20250929102128 extends AbstractMigration
         $this->addSql('ALTER TABLE working_hours_time_window DROP CONSTRAINT FK_266B86ED55A755D4');
         $this->addSql('ALTER TABLE working_hours_time_window DROP CONSTRAINT FK_266B86ED137F1495');
         $this->addSql('DROP TABLE reservation');
-        $this->addSql('DROP TABLE schedule');
         $this->addSql('DROP TABLE schedule_service');
         $this->addSql('DROP TABLE schedule_assignment');
         $this->addSql('DROP TABLE time_window');

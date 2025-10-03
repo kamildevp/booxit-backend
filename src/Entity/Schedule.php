@@ -3,49 +3,39 @@
 namespace App\Entity;
 
 use App\Repository\ScheduleRepository;
-use App\Service\DataHandlingHelper\DataHandlingHelper;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Schedule\OrganizationTask;
-use App\Service\SetterHelper\Task\Schedule\ScheduleAssignmentsTask;
-use App\Service\SetterHelper\Task\Schedule\ServicesTask;
-use App\Service\SetterHelper\Task\Schedule\WorkingHoursTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Schedule\ScheduleNormalizerGroup;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ScheduleRepository::class)]
 class Schedule
 {
-    const DATE_FORMAT = 'Y-m-d';
-    const TIME_FORMAT = 'H:i';
-    const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    use Timestampable, Blameable, SoftDeleteableEntity;
 
+    #[Groups([ScheduleNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups([ScheduleNormalizerGroup::ORGANIZATION->value])]
     #[ORM\ManyToOne(inversedBy: 'schedules')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Organization $organization = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
+    #[Groups([ScheduleNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[Assert\Length(
-        max: 500,
-        maxMessage: 'Max length of description is 500 characters'
-    )]
+    #[Groups([ScheduleNormalizerGroup::PUBLIC->value])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
@@ -69,24 +59,16 @@ class Schedule
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['organization-schedules', 'reservation-schedule'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups:['schedule'])]
     public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
-    
-    public function getOrganizationId(): int
-    {
-        return $this->organization->getId();
-    }
 
-    #[Setter(targetParameter: 'organization_id', setterTask: OrganizationTask::class, groups: ['initOnly'])]
     public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
@@ -94,13 +76,11 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups:['schedule', 'organization-schedules', 'reservation-schedule'])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -108,20 +88,17 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups:['schedule'])]
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    #[Setter]
     public function setDescription(string $description): self
     {
         $this->description = $description;
         return $this;
     }
 
-    #[Getter(groups: ['schedule-services'])]
     /**
      * @return Collection<int, Service>
      */
@@ -130,15 +107,6 @@ class Schedule
         return $this->services;
     }
 
-    public function hasService(Service $service):bool
-    {
-        $serviceExists = $this->services->exists(function($key, $value) use ($service){
-            return $value === $service;
-        });
-        return $serviceExists;
-    }
-
-    #[Setter(setterTask: ServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services)
     {
         $this->services = $services;
@@ -160,14 +128,6 @@ class Schedule
         return $this;
     }
 
-    public function clearServices(): self
-    {
-        $this->services->clear();
-
-        return $this;
-    }
-
-    #[Getter(groups: ['schedule-working_hours'])]
     /**
      * @return Collection<int, WorkingHours>
      */
@@ -176,14 +136,6 @@ class Schedule
         return $this->workingHours;
     }
 
-    public function getDayWorkingHours(string $day): ?WorkingHours
-    {
-        return $this->workingHours->findFirst(function($key, $value) use ($day){
-            return $value->getDay() === $day;
-        });
-    }
-
-    #[Setter(setterTask: WorkingHoursTask::class, groups: ['workingHours'])]
     public function setWorkingHours(Collection $workingHours): self
     {
         $this->workingHours = $workingHours;
@@ -212,7 +164,6 @@ class Schedule
         return $this;
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
     /**
      * @return Collection<int, ScheduleAssignment>
      */
@@ -243,8 +194,6 @@ class Schedule
         return $this;
     }
 
-
-    #[Setter(setterTask: ScheduleAssignmentsTask::class, groups: ['assignments'])]
     public function setAssignments(Collection $assignments): self
     {
         $this->assignments = $assignments;
@@ -257,13 +206,6 @@ class Schedule
     public function getReservations(): Collection
     {
         return $this->reservations;
-    }
-
-    public function getDateReservations(string $date): ?Collection
-    {
-        return $this->reservations->filter(function($element) use ($date){
-            return $element->getDate() === $date;
-        });
     }
 
     public function addReservation(Reservation $reservation): self
@@ -288,34 +230,18 @@ class Schedule
         return $this;
     }
 
-    public function getDateFreeTerms(string $date): Collection
+    public static function getFilterDefs(): array
     {
-        $workingHours = $this->getDayWorkingHours($date);
-        $dataHandlingHelper = new DataHandlingHelper;
-        if(!$workingHours){
-            $weekDay = $dataHandlingHelper->getWeekDay($date, self::DATE_FORMAT);
-            $workingHours = $this->getDayWorkingHours($weekDay);
-        } 
-
-        if(!$workingHours){
-            return new ArrayCollection([]);
-        }
-
-        $workingHoursTimeWindows = $workingHours->getTimeWindows();
-        if($workingHoursTimeWindows->count() === 0){
-            return new ArrayCollection([]);
-        }
-
-        $reservations = $this->getDateReservations($date);
-        $reservedTimeWindows = $reservations->map(function($element){
-            return $element->getTimeWindow();
-        });
-
-        $diff =  $dataHandlingHelper->TimeWindowCollectionDiff($workingHoursTimeWindows, $reservedTimeWindows);
-
-        return $diff;
-
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+        ]);
     }
-    
 
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+        ]);
+    }
 }

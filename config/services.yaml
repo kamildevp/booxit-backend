@@ -93,7 +93,7 @@ services:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_expired, method: onJWTExpired }
 
     App\ValueResolver\EntityValueResolver:
-        arguments: ['@doctrine.orm.entity_manager']
-        tags:
-            - { name: controller.argument_value_resolver, priority: 150 }
+        decorates: 'doctrine.orm.entity_value_resolver'
+        arguments:
+            $inner: '@App\ValueResolver\EntityValueResolver.inner'
 

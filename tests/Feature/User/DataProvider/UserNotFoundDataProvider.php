@@ -12,11 +12,11 @@ class UserNotFoundDataProvider extends BaseDataProvider
     {
         return [
             [
-                '/api/user/1000',
+                '/api/users/1000',
                 'GET',
             ],
             [
-                '/api/user/1000/organization-membership',
+                '/api/users/1000/organization-memberships',
                 'GET',
             ],
         ];

@@ -59,7 +59,7 @@ class UserController extends AbstractController
         dataModelGroups: UserNormalizerGroup::PRIVATE
     )]
     #[ValidationErrorResponseDoc]
-    #[Route('user', name: 'user_new', methods: ['POST'])]
+    #[Route('users', name: 'user_new', methods: ['POST'])]
     public function create(
         UserService $userService, 
         #[MapRequestPayload] UserCreateDTO $dto,
@@ -79,7 +79,7 @@ class UserController extends AbstractController
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
     #[ValidationErrorResponseDoc]
-    #[Route('user/verify', name: 'user_verify', methods: ['POST'])]
+    #[Route('users/verify', name: 'user_verify', methods: ['POST'])]
     public function verify(UserService $userService, #[MapRequestPayload] UserVerifyEmailDTO $dto): ApiResponse
     {
         $verified = $userService->verifyUserEmail($dto);
@@ -100,7 +100,7 @@ class UserController extends AbstractController
     )]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('user/me', name: 'user_me_get', methods: ['GET'])]
+    #[Route('users/me', name: 'user_me_get', methods: ['GET'])]
     public function me(EntitySerializerInterface $entitySerializer): SuccessResponse
     {
         $user = $this->getUser();
@@ -119,7 +119,7 @@ class UserController extends AbstractController
         dataModelGroups: UserNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('User not found')]
-    #[Route('user/{user}', name: 'user_get', methods: ['GET'], requirements: ['user' => '\d+'])]
+    #[Route('users/{user}', name: 'user_get', methods: ['GET'], requirements: ['user' => '\d+'])]
     public function get(EntitySerializerInterface $entitySerializer, User $user): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
@@ -143,7 +143,7 @@ class UserController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('user/me', name: 'user_me_patch', methods: ['PATCH'])]
+    #[Route('users/me', name: 'user_me_patch', methods: ['PATCH'])]
     public function patch(
         UserService $userService, 
         EntitySerializerInterface $entitySerializer, 
@@ -166,7 +166,7 @@ class UserController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('user/change_password', name: 'user_change_password', methods: ['PATCH'])]
+    #[Route('users/me/change-password', name: 'user_change_password', methods: ['PATCH'])]
     public function changePassword(
         AuthServiceInterface $authService, 
         UserService $userService, 
@@ -189,7 +189,7 @@ class UserController extends AbstractController
     #[ConflictResponseDoc('This user cannot be removed because they are the sole administrator of one or more organizations. Please remove those organizations first.')]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('user/me', name: 'user_me_delete', methods: ['DELETE'])]
+    #[Route('users/me', name: 'user_me_delete', methods: ['DELETE'])]
     public function delete(UserService $userService): SuccessResponse
     {
         $user = $this->getUser();
@@ -208,7 +208,7 @@ class UserController extends AbstractController
         dataModelGroups: UserNormalizerGroup::PUBLIC
     )]
     #[ValidationErrorResponseDoc]
-    #[Route('user', name: 'user_list', methods: ['GET'])]
+    #[Route('users', name: 'user_list', methods: ['GET'])]
     public function list(
         UserRepository $userRepository, 
         EntitySerializerInterface $entitySerializer, 
@@ -230,7 +230,7 @@ class UserController extends AbstractController
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'If user with specified email exists, password reset link was sent to specified email'])]
     #[ValidationErrorResponseDoc]
-    #[Route('user/reset_password_request', name: 'user_reset_password_request', methods: ['POST'])]
+    #[Route('users/reset-password-request', name: 'user_reset_password_request', methods: ['POST'])]
     public function resetPasswordRequest(UserService $userService, #[MapRequestPayload] UserResetPasswordRequestDTO $dto): SuccessResponse
     {
         $userService->handleResetUserPasswordRequest($dto);
@@ -244,7 +244,7 @@ class UserController extends AbstractController
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Password reset successful'])]
     #[ValidationErrorResponseDoc]
-    #[Route('user/reset_password', name: 'user_reset_password', methods: ['PATCH'])]
+    #[Route('users/reset-password', name: 'user_reset_password', methods: ['PATCH'])]
     public function resetPassword(UserService $userService, #[MapRequestPayload] UserResetPasswordDTO $dto): ApiResponse
     {
         $result = $userService->resetUserPassword($dto);
@@ -265,7 +265,7 @@ class UserController extends AbstractController
     )]
     #[NotFoundResponseDoc('User not found')]
     #[ValidationErrorResponseDoc]
-    #[Route('user/{user}/organization-membership', name: 'user_organization_membership_list', methods: ['GET'], requirements: ['user' => '\d+'])]
+    #[Route('users/{user}/organization-memberships', name: 'user_organization_membership_list', methods: ['GET'], requirements: ['user' => '\d+'])]
     public function listOrganizationMemberships(
         User $user,
         EntitySerializerInterface $entitySerializer, 

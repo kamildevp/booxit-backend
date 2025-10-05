@@ -53,7 +53,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserCreateDataProvider::class, 'validDataCases')]
     public function testCreate(array $params, array $expectedResponseData): void
     {
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/user', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/users', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
         $this->assertCount(1, $this->mailerTransport->getSent());
@@ -63,7 +63,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserCreateDataProvider::class, 'validationDataCases')]
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
-        $this->assertPathValidation($this->client, 'POST', '/api/user', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/users', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
@@ -72,7 +72,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testVerifySuccess(EmailConfirmationType $type): void
     {
         $params = $this->prepareEmailConfirmationVerifyParams($type);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/user/verify', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/users/verify', $params);
 
         $this->assertEquals('Verification Successful', $responseData['message']);
     }
@@ -83,7 +83,7 @@ class UserControllerTest extends BaseWebTestCase
     {
         $validParams = $this->prepareEmailConfirmationVerifyParams($type);
         $params = array_merge($validParams, $verifyParams);
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/user/verify', $params);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/users/verify', $params);
 
         $this->assertEquals('Verification Failed', $responseData['message']);
     }
@@ -91,14 +91,14 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserVerifyDataProvider::class, 'validationDataCases')]
     public function testVerifyValidation(array $params, array $expectedErrors): void
     {
-        $this->assertPathValidation($this->client, 'POST', '/api/user/verify', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/users/verify', $params, $expectedErrors);
     }
 
     public function testMe(): void
     {
         $expectedResponseData = $this->normalize($this->user, UserNormalizerGroup::PRIVATE->normalizationGroups());
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/user/me');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/users/me');
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -109,7 +109,7 @@ class UserControllerTest extends BaseWebTestCase
         $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
         $expectedResponseData = $this->normalize($user, UserNormalizerGroup::PUBLIC->normalizationGroups());
         $userId = $user->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/user/$userId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/users/$userId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -120,7 +120,7 @@ class UserControllerTest extends BaseWebTestCase
         $normalizedUser = $this->normalize($this->user, UserNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedUser, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/me', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/users/me', $params);
 
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, ['updated_at']);
         $this->assertCount($mailSent ? 1 : 0, $this->mailerTransport->getSent());
@@ -131,7 +131,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/user/me', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/users/me', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
@@ -140,7 +140,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testChangePassword(array $params, int $expectedRefreshTokensCount): void
     {
         $this->fullLogin($this->client);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/change_password', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/users/me/change-password', $params);
 
         $this->assertEquals('Password changed successfully', $responseData['message']);
         $this->assertCount($expectedRefreshTokensCount, $this->user->getRefreshTokens());
@@ -150,14 +150,14 @@ class UserControllerTest extends BaseWebTestCase
     public function testChangePasswordValidation(array $params, array $expectedErrors): void
     {
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/user/change_password', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/users/me/change-password', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
     public function testDelete(): void
     {
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/user/me');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/users/me');
 
         $this->assertEquals('User removed successfully', $responseData['message']);
     }
@@ -166,7 +166,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testDeleteConflictResponse(): void
     {
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'DELETE', '/api/user/me', expectedCode: 409);
+        $responseData = $this->getFailureResponseData($this->client, 'DELETE', '/api/users/me', expectedCode: 409);
 
         $this->assertEquals('This user cannot be removed because they are the sole administrator of one or more organizations. Please remove those organizations first.', $responseData['message']);
     }
@@ -175,7 +175,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $path = '/api/user?' . http_build_query([
+        $path = '/api/users?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -192,7 +192,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/user?' . http_build_query(['filters' => $filters]);
+        $path = '/api/users?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -203,7 +203,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/user?' . http_build_query(['order' => $sorting]);
+        $path = '/api/users?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -216,7 +216,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/user?' . http_build_query($params);
+        $path = '/api/users?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
@@ -225,7 +225,7 @@ class UserControllerTest extends BaseWebTestCase
     public function testResetPasswordRequest(array $params): void
     {
         $expectedResponseData = ['message' => 'If user with specified email exists, password reset link was sent to specified email'];
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/user/reset_password_request', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/users/reset-password-request', $params);
 
         $this->assertEquals($expectedResponseData, $responseData);
         $this->assertCount(1, $this->mailerTransport->getSent());
@@ -234,7 +234,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserResetPasswordRequestDataProvider::class, 'validationDataCases')]
     public function testResetPasswordRequestValidation(array $params, array $expectedErrors): void
     {
-        $this->assertPathValidation($this->client, 'POST', '/api/user/reset_password_request', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/users/reset-password-request', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
@@ -244,7 +244,7 @@ class UserControllerTest extends BaseWebTestCase
     {
         $verifyParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::PASSWORD_RESET);
         $params = array_merge($verifyParams, $params);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/user/reset_password', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/users/reset-password', $params);
 
         $this->assertEquals('Password reset successful', $responseData['message']);
     }
@@ -255,7 +255,7 @@ class UserControllerTest extends BaseWebTestCase
     {
         $verifyParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::PASSWORD_RESET);
         $params = array_merge($verifyParams, $params);
-        $responseData = $this->getFailureResponseData($this->client, 'PATCH', '/api/user/reset_password', $params);
+        $responseData = $this->getFailureResponseData($this->client, 'PATCH', '/api/users/reset-password', $params);
         
         $this->assertEquals('Password reset failed', $responseData['message']);
     }
@@ -263,14 +263,14 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserResetPasswordDataProvider::class, 'validationDataCases')]
     public function testResetPasswordValidation(array $params, array $expectedErrors): void
     {
-        $this->assertPathValidation($this->client, 'PATCH', '/api/user/reset_password', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/users/reset-password', $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationFixtures::class])]
     #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'listDataCases')]
     public function testListOrganizationMemberships(int $page, int $perPage, int $total): void
     {
-        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query([
+        $path = '/api/users/'.$this->user->getId().'/organization-memberships?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -287,7 +287,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'filtersDataCases')]
     public function testListOrganizationMembershipsFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query(['filters' => $filters]);
+        $path = '/api/users/'.$this->user->getId().'/organization-memberships?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -300,7 +300,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'sortingDataCases')]
     public function testListOrganizationMembershipsSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query(['order' => $sorting]);
+        $path = '/api/users/'.$this->user->getId().'/organization-memberships?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -314,7 +314,7 @@ class UserControllerTest extends BaseWebTestCase
     #[DataProviderExternal(UserOrganizationMembershipListDataProvider::class, 'validationDataCases')]
     public function testListOrganizationMembershipsValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/user/'.$this->user->getId().'/organization-membership?' . http_build_query($params);
+        $path = '/api/users/'.$this->user->getId().'/organization-memberships?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 

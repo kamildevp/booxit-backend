@@ -24,7 +24,7 @@ use App\Repository\OrganizationRepository;
 use App\Response\NotFoundResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
-use App\Service\Auth\AccessRule\OrganizationAdminRule;
+use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\FileService;
 use App\Service\Entity\OrganizationMemberService;
@@ -103,7 +103,7 @@ class OrganizationController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
     #[Route('organization/{organization}', name: 'organization_patch', methods: ['PATCH'], requirements: ['organization' => '\d+'])]
     public function patch(
         Organization $organization, 
@@ -127,7 +127,7 @@ class OrganizationController extends AbstractController
     #[SuccessResponseDoc(dataExample: ['message' => 'Organization removed successfully'])]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
     #[Route('organization/{organization}', name: 'organization_delete', methods: ['DELETE'], requirements: ['organization' => '\d+'])]
     public function delete(        
         Organization $organization, 
@@ -172,7 +172,7 @@ class OrganizationController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[NotFoundResponseDoc('Organization not found')]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
     #[Route('organization/{organization}/banner', name: 'organization_banner_put', methods: ['PUT'], requirements: ['organization' => '\d+'])]
     public function updateBanner(
         Organization $organization,  

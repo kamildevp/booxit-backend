@@ -56,7 +56,7 @@ class OrganizationController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('organization', name: 'organization_new', methods: ['POST'])]
+    #[Route('organizations', name: 'organization_new', methods: ['POST'])]
     public function create(
         #[MapRequestPayload] OrganizationCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
@@ -82,7 +82,7 @@ class OrganizationController extends AbstractController
         dataModelGroups: OrganizationNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('Organization not found')]
-    #[Route('organization/{organization}', name: 'organization_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
+    #[Route('organizations/{organization}', name: 'organization_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
     public function get(Organization $organization, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($organization, OrganizationNormalizerGroup::PUBLIC->normalizationGroups());
@@ -104,7 +104,7 @@ class OrganizationController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
-    #[Route('organization/{organization}', name: 'organization_patch', methods: ['PATCH'], requirements: ['organization' => '\d+'])]
+    #[Route('organizations/{organization}', name: 'organization_patch', methods: ['PATCH'], requirements: ['organization' => '\d+'])]
     public function patch(
         Organization $organization, 
         EntitySerializerInterface $entitySerializer, 
@@ -128,7 +128,7 @@ class OrganizationController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
-    #[Route('organization/{organization}', name: 'organization_delete', methods: ['DELETE'], requirements: ['organization' => '\d+'])]
+    #[Route('organizations/{organization}', name: 'organization_delete', methods: ['DELETE'], requirements: ['organization' => '\d+'])]
     public function delete(        
         Organization $organization, 
         OrganizationRepository $organizationRepository
@@ -149,7 +149,7 @@ class OrganizationController extends AbstractController
         dataModelGroups: OrganizationNormalizerGroup::PUBLIC
     )]
     #[ValidationErrorResponseDoc]
-    #[Route('organization', name: 'organization_list', methods: ['GET'])]
+    #[Route('organizations', name: 'organization_list', methods: ['GET'])]
     public function list(
         OrganizationRepository $organizationRepository, 
         EntitySerializerInterface $entitySerializer, 
@@ -173,7 +173,7 @@ class OrganizationController extends AbstractController
     #[UnauthorizedResponseDoc]
     #[NotFoundResponseDoc('Organization not found')]
     #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
-    #[Route('organization/{organization}/banner', name: 'organization_banner_put', methods: ['PUT'], requirements: ['organization' => '\d+'])]
+    #[Route('organizations/{organization}/banner', name: 'organization_banner_put', methods: ['PUT'], requirements: ['organization' => '\d+'])]
     public function updateBanner(
         Organization $organization,  
         OrganizationRepository $organizationRepository,
@@ -197,7 +197,7 @@ class OrganizationController extends AbstractController
     )]
     #[BinaryFileResponseDoc(UploadType::ORGANIZATION_BANNER)]
     #[NotFoundResponseDoc(messages: ['Organization not found', 'Organization banner not found'])]
-    #[Route('organization/{organization}/banner', name: 'organization_banner_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
+    #[Route('organizations/{organization}/banner', name: 'organization_banner_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
     public function getBanner(Organization $organization): NotFoundResponse|BinaryFileResponse
     {
         $banner = $organization->getBannerFile();

@@ -12,19 +12,19 @@ class OrganizationNotFoundDataProvider extends BaseDataProvider
     {
         return [
             [
-                '/api/organization/1000',
+                '/api/organizations/1000',
                 'GET',
             ],
             [
-                '/api/organization/1000',
+                '/api/organizations/1000',
                 'PATCH',
             ],
             [
-                '/api/organization/1000/banner',
+                '/api/organizations/1000/banner',
                 'PUT',
             ],
             [
-                '/api/organization/1000/banner',
+                '/api/organizations/1000/banner',
                 'GET',
             ],
         ];

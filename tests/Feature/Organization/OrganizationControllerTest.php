@@ -45,7 +45,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     public function testCreate(array $params, array $expectedResponseData): void
     {
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/organization', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/organizations', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
@@ -55,7 +55,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/organization', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/organizations', $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationFixtures::class])]
@@ -64,7 +64,7 @@ class OrganizationControllerTest extends BaseWebTestCase
         $organization = $this->organizationRepository->findOneBy(['name' => 'Test Organization 1']);
         $expectedResponseData = $this->normalize($organization, OrganizationNormalizerGroup::PUBLIC->normalizationGroups());
         $organizationId = $organization->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organization/$organizationId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organizations/$organizationId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -77,7 +77,7 @@ class OrganizationControllerTest extends BaseWebTestCase
         $normalizedOrganization = $this->normalize($organization, OrganizationNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedOrganization, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/organization/'.$organization->getId(), $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/organizations/'.$organization->getId(), $params);
 
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
@@ -88,7 +88,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     {
         $organization = $this->organizationRepository->findOneBy(['name' => 'Test Organization 1']);
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/organization/'.$organization->getId(), $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/organizations/'.$organization->getId(), $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationFixtures::class])]
@@ -96,7 +96,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     {
         $organization = $this->organizationRepository->findOneBy(['name' => 'Test Organization 1']);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/organization/'.$organization->getId());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/organizations/'.$organization->getId());
 
         $this->assertEquals('Organization removed successfully', $responseData['message']);
     }
@@ -105,7 +105,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     #[DataProviderExternal(OrganizationListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $path = '/api/organization?' . http_build_query([
+        $path = '/api/organizations?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -122,7 +122,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     #[DataProviderExternal(OrganizationListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/organization?' . http_build_query(['filters' => $filters]);
+        $path = '/api/organizations?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -133,7 +133,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     #[DataProviderExternal(OrganizationListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/organization?' . http_build_query(['order' => $sorting]);
+        $path = '/api/organizations?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -145,7 +145,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     #[DataProviderExternal(OrganizationListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/organization?' . http_build_query($params);
+        $path = '/api/organizations?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
@@ -161,7 +161,7 @@ class OrganizationControllerTest extends BaseWebTestCase
 
         $this->client->request(
             'PUT',
-            '/api/organization/'.$organization->getId().'/banner',
+            '/api/organizations/'.$organization->getId().'/banner',
             server: $contentType ? ['CONTENT_TYPE' => $contentType] : [],
             content: file_get_contents($filePath)
         );
@@ -185,7 +185,7 @@ class OrganizationControllerTest extends BaseWebTestCase
 
         $this->client->request(
             'PUT',
-            '/api/organization/'.$organization->getId().'/banner',
+            '/api/organizations/'.$organization->getId().'/banner',
             server: $contentType ? ['CONTENT_TYPE' => $contentType] : [],
             content: $filePath ? file_get_contents($filePath) : null
         );
@@ -203,7 +203,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     {
         $organization = $this->organizationRepository->findOneBy(['name' => 'Test Organization']);
         $this->client->loginUser($this->user, 'api');
-        $this->client->request('GET', '/api/organization/'.$organization->getId().'/banner');
+        $this->client->request('GET', '/api/organizations/'.$organization->getId().'/banner');
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseHeaderSame('Content-Type', OrganizationBannerFixtures::BANNER_FILE_MIME_TYPE);
@@ -214,7 +214,7 @@ class OrganizationControllerTest extends BaseWebTestCase
     {
         $organization = $this->organizationRepository->findOneBy(['name' => 'Test Organization 1']);
         $this->client->loginUser($this->user, 'api');
-        $this->client->request('GET', '/api/organization/'.$organization->getId().'/banner');
+        $this->client->request('GET', '/api/organizations/'.$organization->getId().'/banner');
 
         $response = $this->getJsonResponse($this->client);
         $this->assertResponseStatusCodeSame(404);

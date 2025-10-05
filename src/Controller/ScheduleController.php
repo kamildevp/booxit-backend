@@ -47,7 +47,7 @@ class ScheduleController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedule', name: 'schedule_new', methods: ['POST'])]
+    #[Route('schedules', name: 'schedule_new', methods: ['POST'])]
     public function create(
         #[MapRequestPayload] ScheduleCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
@@ -71,7 +71,7 @@ class ScheduleController extends AbstractController
         dataModelGroups: ScheduleNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('Schedule not found')]
-    #[Route('schedule/{schedule}', name: 'schedule_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
+    #[Route('schedules/{schedule}', name: 'schedule_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
     public function get(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($schedule, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
@@ -93,7 +93,7 @@ class ScheduleController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedule/{schedule}', name: 'schedule_patch', methods: ['PATCH'], requirements: ['schedule' => '\d+'])]
+    #[Route('schedules/{schedule}', name: 'schedule_patch', methods: ['PATCH'], requirements: ['schedule' => '\d+'])]
     public function patch(
         Schedule $schedule, 
         EntitySerializerInterface $entitySerializer, 
@@ -117,7 +117,7 @@ class ScheduleController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedule/{schedule}', name: 'schedule_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+'])]
+    #[Route('schedules/{schedule}', name: 'schedule_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+'])]
     public function delete(        
         Schedule $schedule, 
         ScheduleRepository $scheduleRepository
@@ -138,7 +138,7 @@ class ScheduleController extends AbstractController
         dataModelGroups: ScheduleNormalizerGroup::PUBLIC
     )]
     #[ValidationErrorResponseDoc]
-    #[Route('schedule', name: 'schedule_list', methods: ['GET'])]
+    #[Route('schedules', name: 'schedule_list', methods: ['GET'])]
     public function list(
         ScheduleRepository $scheduleRepository, 
         EntitySerializerInterface $entitySerializer, 

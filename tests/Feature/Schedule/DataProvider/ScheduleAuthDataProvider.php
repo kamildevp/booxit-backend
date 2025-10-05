@@ -12,23 +12,23 @@ class ScheduleAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/schedule', 'POST'],
-            ['/api/schedule/{schedule}', 'PATCH'],
-            ['/api/schedule/{schedule}', 'DELETE'],
+            ['/api/schedules', 'POST'],
+            ['/api/schedules/{schedule}', 'PATCH'],
+            ['/api/schedules/{schedule}', 'DELETE'],
         ];
     }
 
     public static function scheduleManagementPrivilegesOnlyPaths()
     {
         return [
-            ['/api/schedule', 'POST', null],
-            ['/api/schedule', 'POST', null, ['organization_id' => 0]],
-            ['/api/schedule', 'POST', null, ['organization_id' => '{organization}']],
-            ['/api/schedule', 'POST', OrganizationRole::MEMBER->value, ['organization_id' => '{organization}']],
-            ['/api/schedule/{schedule}', 'PATCH', null],
-            ['/api/schedule/{schedule}', 'DELETE', null],
-            ['/api/schedule/{schedule}', 'PATCH', OrganizationRole::MEMBER->value],
-            ['/api/schedule/{schedule}', 'DELETE', OrganizationRole::MEMBER->value],
+            ['/api/schedules', 'POST', null],
+            ['/api/schedules', 'POST', null, ['organization_id' => 0]],
+            ['/api/schedules', 'POST', null, ['organization_id' => '{organization}']],
+            ['/api/schedules', 'POST', OrganizationRole::MEMBER->value, ['organization_id' => '{organization}']],
+            ['/api/schedules/{schedule}', 'PATCH', null],
+            ['/api/schedules/{schedule}', 'DELETE', null],
+            ['/api/schedules/{schedule}', 'PATCH', OrganizationRole::MEMBER->value],
+            ['/api/schedules/{schedule}', 'DELETE', OrganizationRole::MEMBER->value],
         ];
     }
 }

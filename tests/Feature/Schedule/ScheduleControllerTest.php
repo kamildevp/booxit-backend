@@ -50,7 +50,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $params['organization_id'] = $organizationId;
         $expectedResponseData['organization']['id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/schedule', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/schedules', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
@@ -62,7 +62,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $organizationId = $this->organizationRepository->findOneBy([])->getId();
         $params['organization_id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/schedule', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/schedules', $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
@@ -71,7 +71,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
         $expectedResponseData = $this->normalize($schedule, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
         $scheduleId = $schedule->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/schedule/$scheduleId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/schedules/$scheduleId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -84,7 +84,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $normalizedSchedule = $this->normalize($schedule, ScheduleNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedSchedule, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/schedule/'.$schedule->getId(), $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/schedules/'.$schedule->getId(), $params);
 
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
@@ -95,7 +95,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/schedule/'.$schedule->getId(), $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/schedules/'.$schedule->getId(), $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
@@ -103,7 +103,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/schedule/'.$schedule->getId());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/schedules/'.$schedule->getId());
 
         $this->assertEquals('Schedule removed successfully', $responseData['message']);
     }
@@ -112,7 +112,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $path = '/api/schedule?' . http_build_query([
+        $path = '/api/schedules?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -129,7 +129,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/schedule?' . http_build_query(['filters' => $filters]);
+        $path = '/api/schedules?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -140,7 +140,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/schedule?' . http_build_query(['order' => $sorting]);
+        $path = '/api/schedules?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -152,7 +152,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/schedule?' . http_build_query($params);
+        $path = '/api/schedules?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 

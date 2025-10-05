@@ -12,11 +12,11 @@ class ScheduleNotFoundDataProvider extends BaseDataProvider
     {
         return [
             [
-                '/api/schedule/1000',
+                '/api/schedules/1000',
                 'GET',
             ],
             [
-                '/api/schedule/1000',
+                '/api/schedules/1000',
                 'PATCH',
             ],
         ];

@@ -28,7 +28,7 @@ class EmailConfirmationControllerTest extends BaseWebTestCase
     public function testValidateSuccess(EmailConfirmationType $type): void
     {
         $params = $this->prepareEmailConfirmationVerifyParams($type);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/email_confirmation/validate', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/email-confirmations/validate', $params);
 
         $this->assertEquals(['valid' => true], $responseData);
     }
@@ -39,7 +39,7 @@ class EmailConfirmationControllerTest extends BaseWebTestCase
     {
         $validParams = $this->prepareEmailConfirmationVerifyParams($type);
         $params = array_merge($validParams, $verifyParams);
-        $responseData = $this->getFailureResponseData($this->client, 'GET', '/api/email_confirmation/validate', $params);
+        $responseData = $this->getFailureResponseData($this->client, 'GET', '/api/email-confirmations/validate', $params);
 
         $this->assertEquals('Validation Failed', $responseData['message']);
     }
@@ -47,6 +47,6 @@ class EmailConfirmationControllerTest extends BaseWebTestCase
     #[DataProviderExternal(EmailConfirmationValidateDataProvider::class, 'validationDataCases')]
     public function testValidateValidation(array $params, array $expectedErrors): void
     {
-        $this->assertPathValidation($this->client, 'GET', '/api/email_confirmation/validate', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'GET', '/api/email-confirmations/validate', $params, $expectedErrors);
     }
 }

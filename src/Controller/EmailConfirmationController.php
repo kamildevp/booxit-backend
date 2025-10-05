@@ -27,7 +27,7 @@ class EmailConfirmationController extends AbstractController
     )]
     #[SuccessResponseDoc(dataExample: ['valid' => true])]
     #[ValidationErrorResponseDoc]
-    #[Route('email_confirmation/validate', name: 'email_confirmation_validate', methods: ['GET'])]
+    #[Route('email-confirmations/validate', name: 'email_confirmation_validate', methods: ['GET'])]
     public function validate(EmailConfirmationService $emailConfirmationService, #[MapQueryString] ValidateEmailConfirmationDTO $dto)
     {
         $valid = $emailConfirmationService->validateEmailConfirmation($dto);

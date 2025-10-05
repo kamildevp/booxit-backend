@@ -22,17 +22,27 @@ class OrganizationMemberNotFoundDataProvider extends BaseDataProvider
                 'Organization not found'
             ],
             [
-                '/api/organization-member/1000',
+                '/api/organization/{organization}/member/1000',
                 'GET',
                 'OrganizationMember not found'
             ],
             [
-                '/api/organization-member/1000',
+                '/api/organization/1000/member/1000',
+                'DELETE',
+                'Organization not found'
+            ],
+            [
+                '/api/organization/{organization}/member/1000',
                 'DELETE',
                 'OrganizationMember not found'
             ],
             [
-                '/api/organization-member/1000',
+                '/api/organization/1000/member/1000',
+                'PATCH',
+                'Organization not found'
+            ],
+            [
+                '/api/organization/{organization}/member/1000',
                 'PATCH',
                 'OrganizationMember not found'
             ],

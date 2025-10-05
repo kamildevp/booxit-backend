@@ -23,6 +23,7 @@ use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
 use App\Repository\OrganizationMemberRepository;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\OrganizationAdminRule;
+use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\OrganizationMemberService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
@@ -31,6 +32,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('OrganizationMember')]
@@ -51,7 +53,7 @@ class OrganizationMemberController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
     #[Route('organization/{organization}/member', name: 'organization_member_add', methods: ['POST'], requirements: ['organization' => '\d+'])]
     public function add(
         Organization $organization,
@@ -105,8 +107,11 @@ class OrganizationMemberController extends AbstractController
         dataModelGroups: OrganizationMemberNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('OrganizationMember not found')]
-    #[Route('organization-member/{organizationMember}', name: 'organization_member_get', methods: ['GET'], requirements: ['organizationMember' => '\d+'])]
-    public function get(OrganizationMember $organizationMember, EntitySerializerInterface $entitySerializer): SuccessResponse
+    #[Route('organization/{organization}/member/{organizationMember}', name: 'organization_member_get', methods: ['GET'], requirements: ['organizationMember' => '\d+'])]
+    public function get(
+        #[MapEntity(mapping:['organization' => 'organization', 'organizationMember' => 'id'])] OrganizationMember $organizationMember, 
+        EntitySerializerInterface $entitySerializer
+    ): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($organizationMember, OrganizationMemberNormalizerGroup::PUBLIC->normalizationGroups());
 
@@ -128,10 +133,10 @@ class OrganizationMemberController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
-    #[Route('organization-member/{organizationMember}', name: 'organization_member_patch', methods: ['PATCH'], requirements: ['organizationMember' => '\d+'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organization/{organization}/member/{organizationMember}', name: 'organization_member_patch', methods: ['PATCH'], requirements: ['organizationMember' => '\d+'])]
     public function patch(
-        OrganizationMember $organizationMember,
+        #[MapEntity(mapping:['organization' => 'organization', 'organizationMember' => 'id'])] OrganizationMember $organizationMember,
         #[MapRequestPayload] OrganizationMemberPatchDTO $dto,
         EntitySerializerInterface $entitySerializer,
         OrganizationMemberService $organizationMemberService,
@@ -153,9 +158,12 @@ class OrganizationMemberController extends AbstractController
     #[NotFoundResponseDoc('OrganizationMember not found')]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(OrganizationAdminRule::class)]
-    #[Route('organization-member/{organizationMember}', name: 'organization_member_remove', methods: ['DELETE'], requirements: ['organizationMember' => '\d+'])]
-    public function remove(OrganizationMemberService $organizationMemberService, OrganizationMember $organizationMember): SuccessResponse
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organization/{organization}/member/{organizationMember}', name: 'organization_member_remove', methods: ['DELETE'], requirements: ['organizationMember' => '\d+'])]
+    public function remove(
+        OrganizationMemberService $organizationMemberService, 
+        #[MapEntity(mapping:['organization' => 'organization', 'organizationMember' => 'id'])] OrganizationMember $organizationMember
+    ): SuccessResponse
     {
         $organizationMemberService->removeOrganizationMember($organizationMember);
         

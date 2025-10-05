@@ -73,7 +73,8 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organizationMember = $this->organizationMemberRepository->findOneBy([]);
         $expectedResponseData = $this->normalize($organizationMember, OrganizationMemberNormalizerGroup::PUBLIC->normalizationGroups());
         $organizationMemberId = $organizationMember->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organization-member/$organizationMemberId");
+        $organizationId = $organizationMember->getOrganization()->getId();
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organization/$organizationId/member/$organizationMemberId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -83,10 +84,12 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testPatch(array $params, array $expectedFieldValues): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
         $normalizedOrganizationMember = $this->normalize($organizationMember, OrganizationMemberNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedOrganizationMember, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/organization-member/'.$organizationMember->getId(), $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params);
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -96,8 +99,10 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testPatchMemberValidation(array $params, array $expectedErrors): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/organization-member/'.$organizationMember->getId(), $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params, $expectedErrors);
     }
 
     #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
@@ -105,8 +110,10 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testPatchMemberConflictResponse(array $params, string $expectedMessage): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::ADMIN]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'PATCH', '/api/organization-member/'.$organizationMember->getId(), $params, expectedCode: 409);
+        $responseData = $this->getFailureResponseData($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params, expectedCode: 409);
 
         $this->assertEquals($expectedMessage, $responseData['message']);
     }
@@ -115,8 +122,10 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testDelete(): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/organization-member/'.$organizationMember->getId());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/organization/$organizationId/member/$organizationMemberId");
 
         $this->assertEquals('Organization member removed successfully', $responseData['message']);
     }
@@ -125,8 +134,10 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testDeleteConflictResponse(): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::ADMIN]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'DELETE', '/api/organization-member/'.$organizationMember->getId(), expectedCode: 409);
+        $responseData = $this->getFailureResponseData($this->client, 'DELETE', "/api/organization/$organizationId/member/$organizationMemberId", expectedCode: 409);
 
         $this->assertEquals('Cannot remove the only administrator of organization.', $responseData['message']);
     }
@@ -188,9 +199,12 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
     {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $path = str_replace('{organization}', (string)($organization->getId()), $path);
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
         $this->assertEquals($expectedMessage, $responseData['message']);
@@ -209,7 +223,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationAdminOnlyPaths')]
+    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationManagementPrivilegesOnlyPaths')]
     public function testOrganizationAdminRoleRequirementForProtectedPaths(string $path, string $method, ?string $role): void
     {
         $organization = $this->organizationRepository->findOneBy([]);

@@ -12,21 +12,21 @@ class OrganizationMemberAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/organization/{organization}/member', 'POST'],
-            ['/api/organization/{organization}/member/{organizationMember}', 'DELETE'],
-            ['/api/organization/{organization}/member/{organizationMember}', 'PATCH'],
+            ['/api/organizations/{organization}/members', 'POST'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH'],
         ];
     }
 
     public static function organizationManagementPrivilegesOnlyPaths()
     {
         return [
-            ['/api/organization/{organization}/member', 'POST', null],
-            ['/api/organization/{organization}/member/{organizationMember}', 'DELETE', null],
-            ['/api/organization/{organization}/member/{organizationMember}', 'PATCH', null],
-            ['/api/organization/{organization}/member', 'POST', OrganizationRole::MEMBER->value],
-            ['/api/organization/{organization}/member/{organizationMember}', 'DELETE', OrganizationRole::MEMBER->value],
-            ['/api/organization/{organization}/member/{organizationMember}', 'PATCH', OrganizationRole::MEMBER->value],
+            ['/api/organizations/{organization}/members', 'POST', null],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', null],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', null],
+            ['/api/organizations/{organization}/members', 'POST', OrganizationRole::MEMBER->value],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', OrganizationRole::MEMBER->value],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', OrganizationRole::MEMBER->value],
         ];
     }
 }

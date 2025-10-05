@@ -20,7 +20,7 @@ use App\Response\ForbiddenResponse;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
-use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberAddDataProvider;
+use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberCreateDataProvider;
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberAuthDataProvider;
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberListDataProvider;
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberNotFoundDataProvider;
@@ -41,7 +41,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([OrganizationFixtures::class, UserFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAddDataProvider::class, 'validDataCases')]
+    #[DataProviderExternal(OrganizationMemberCreateDataProvider::class, 'validDataCases')]
     public function testAddMember(array $params, array $expectedResponseData): void
     {
         $this->client->loginUser($this->user, 'api');
@@ -50,13 +50,13 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $params['user_id'] = $user->getId();
         $expectedResponseData['app_user'] = $this->normalize($user, UserNormalizerGroup::BASE_INFO->normalizationGroups());
         
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/organization/'.$organization->getId().'/member', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/organizations/'.$organization->getId().'/members', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
 
     #[Fixtures([OrganizationFixtures::class, UserFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAddDataProvider::class, 'validationDataCases')]
+    #[DataProviderExternal(OrganizationMemberCreateDataProvider::class, 'validationDataCases')]
     public function testAddMemberValidation(array $params, array $expectedErrors): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
@@ -64,7 +64,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $params = array_merge(['user_id' => $user->getId()], $params);
 
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/organization/'.$organization->getId().'/member', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/organizations/'.$organization->getId().'/members', $params, $expectedErrors);
     }
 
     #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
@@ -74,7 +74,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $expectedResponseData = $this->normalize($organizationMember, OrganizationMemberNormalizerGroup::PUBLIC->normalizationGroups());
         $organizationMemberId = $organizationMember->getId();
         $organizationId = $organizationMember->getOrganization()->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organization/$organizationId/member/$organizationMemberId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organizations/$organizationId/members/$organizationMemberId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -89,7 +89,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $normalizedOrganizationMember = $this->normalize($organizationMember, OrganizationMemberNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedOrganizationMember, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', "/api/organizations/$organizationId/members/$organizationMemberId", $params);
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -102,7 +102,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organizationMemberId = $organizationMember->getId();
         $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', "/api/organizations/$organizationId/members/$organizationMemberId", $params, $expectedErrors);
     }
 
     #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
@@ -113,7 +113,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organizationMemberId = $organizationMember->getId();
         $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'PATCH', "/api/organization/$organizationId/member/$organizationMemberId", $params, expectedCode: 409);
+        $responseData = $this->getFailureResponseData($this->client, 'PATCH', "/api/organizations/$organizationId/members/$organizationMemberId", $params, expectedCode: 409);
 
         $this->assertEquals($expectedMessage, $responseData['message']);
     }
@@ -125,7 +125,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organizationMemberId = $organizationMember->getId();
         $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/organization/$organizationId/member/$organizationMemberId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/organizations/$organizationId/members/$organizationMemberId");
 
         $this->assertEquals('Organization member removed successfully', $responseData['message']);
     }
@@ -137,7 +137,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $organizationMemberId = $organizationMember->getId();
         $organizationId = $organizationMember->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'DELETE', "/api/organization/$organizationId/member/$organizationMemberId", expectedCode: 409);
+        $responseData = $this->getFailureResponseData($this->client, 'DELETE', "/api/organizations/$organizationId/members/$organizationMemberId", expectedCode: 409);
 
         $this->assertEquals('Cannot remove the only administrator of organization.', $responseData['message']);
     }
@@ -147,7 +147,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testList(int $page, int $perPage, int $total): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
-        $path = '/api/organization/'.$organization->getId().'/member?' . http_build_query([
+        $path = '/api/organizations/'.$organization->getId().'/members?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -165,7 +165,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testListFilters(array $filters, array $expectedItemData): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
-        $path = '/api/organization/'.$organization->getId().'/member?' . http_build_query(['filters' => $filters]);
+        $path = '/api/organizations/'.$organization->getId().'/members?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -179,7 +179,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testListSorting(string $sorting, array $orderedItems): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
-        $path = '/api/organization/'.$organization->getId().'/member?'. http_build_query(['order' => $sorting]);
+        $path = '/api/organizations/'.$organization->getId().'/members?'. http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -195,7 +195,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     public function testListValidation(array $params, array $expectedErrors): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
-        $path = '/api/organization/'.$organization->getId().'/member?' . http_build_query($params);
+        $path = '/api/organizations/'.$organization->getId().'/members?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 

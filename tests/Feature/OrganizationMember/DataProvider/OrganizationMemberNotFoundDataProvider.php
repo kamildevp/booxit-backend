@@ -12,37 +12,37 @@ class OrganizationMemberNotFoundDataProvider extends BaseDataProvider
     {
         return [
             [
-                '/api/organization/1000/member',
+                '/api/organizations/1000/members',
                 'GET',
                 'Organization not found'
             ],
             [
-                '/api/organization/1000/member',
+                '/api/organizations/1000/members',
                 'POST',
                 'Organization not found'
             ],
             [
-                '/api/organization/{organization}/member/1000',
+                '/api/organizations/{organization}/members/1000',
                 'GET',
                 'OrganizationMember not found'
             ],
             [
-                '/api/organization/1000/member/1000',
+                '/api/organizations/1000/members/1000',
                 'DELETE',
                 'Organization not found'
             ],
             [
-                '/api/organization/{organization}/member/1000',
+                '/api/organizations/{organization}/members/1000',
                 'DELETE',
                 'OrganizationMember not found'
             ],
             [
-                '/api/organization/1000/member/1000',
+                '/api/organizations/1000/members/1000',
                 'PATCH',
                 'Organization not found'
             ],
             [
-                '/api/organization/{organization}/member/1000',
+                '/api/organizations/{organization}/members/1000',
                 'PATCH',
                 'OrganizationMember not found'
             ],

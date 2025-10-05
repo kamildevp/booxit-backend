@@ -9,7 +9,7 @@ use App\DTO\OrganizationMember\Trait\OrganizationMemberRoleFieldDTO;
 use App\Entity\User;
 use App\Validator\Constraints as CustomAssert;
 
-class OrganizationMemberAddDTO extends AbstractDTO 
+class OrganizationMemberCreateDTO extends AbstractDTO 
 {
     use OrganizationMemberRoleFieldDTO;
 

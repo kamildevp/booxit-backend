@@ -7,7 +7,7 @@ namespace App\Tests\Feature\OrganizationMember\DataProvider;
 use App\Enum\Organization\OrganizationRole;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
-class OrganizationMemberAddDataProvider extends BaseDataProvider 
+class OrganizationMemberCreateDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()

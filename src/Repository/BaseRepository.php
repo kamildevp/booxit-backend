@@ -59,16 +59,24 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
         return $paginationBuilder->paginate($qb, $queryDTO);
     }
 
-    protected function joinRelations(QueryBuilder $qb, array $relations = []): array
+    protected function joinRelations(QueryBuilder $qb, array $relations = [], string $qbIdentifier = self::QB_IDENTIFIER): array
     {
         $relationMap = [];
         $relationIndx = 0;
-        foreach($relations as $relation => $entityClass){
-            $qbIdentifier = "r$relationIndx";
-            $qb->leftJoin(self::QB_IDENTIFIER.".$relation", $qbIdentifier)
-                ->addSelect($qbIdentifier);
+        foreach($relations as $relation => $joinDef){
+            $relationQbIdentifier = "{$qbIdentifier}r$relationIndx";
+            $qb->leftJoin("$qbIdentifier.$relation", $relationQbIdentifier)
+                ->addSelect($relationQbIdentifier);
 
-            $relationMap[$relation] = ['qbIdentifier' => $qbIdentifier, 'class' => $entityClass];
+            if(is_array($joinDef)){
+                [$entityClass, $subRelations] = $joinDef;
+                $subRelationMap = $this->joinRelations($qb, $subRelations, $relationQbIdentifier);
+            }
+            else{
+                $entityClass = $joinDef;
+            }
+
+            $relationMap[$relation] = ['qbIdentifier' => $relationQbIdentifier, 'class' => $entityClass, 'relationMap' => $subRelationMap ?? []];
             $relationIndx++;
         }
         return $relationMap;
@@ -85,6 +93,9 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
         foreach($relationMap as $relation => $map){
             if(isset($filtersDTO->{$relation}) && $filtersDTO->{$relation} instanceof FiltersDTOInterface){
                 $filtersBuilder->applyFilters($qb, $map['class'], $filtersDTO->{$relation}, $map['qbIdentifier']);
+                if(!empty($map['relationMap'])){
+                    $this->applyRelatedFilters($filtersBuilder, $qb, $map['relationMap'], $filtersDTO->{$relation});
+                }
             }
         }
     }

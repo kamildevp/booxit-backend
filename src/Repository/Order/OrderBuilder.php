@@ -34,7 +34,7 @@ class OrderBuilder
         }
     }
 
-    private function getRelationOrderDefs(array $relationMap): array
+    private function getRelationOrderDefs(array $relationMap, string $parameterNamePrefix = ''): array
     {
         $availableOrderDefs = [];
         foreach($relationMap as $relation => $map){
@@ -44,12 +44,14 @@ class OrderBuilder
 
             $relationSnakeCase = (new CamelCaseToSnakeCaseNameConverter)->normalize($relation);
             $classOrderDefs = $map['class']::{self::ORDER_DEFS_METHOD_NAME}();
+            $relationParameterNamePrefix = "{$parameterNamePrefix}$relationSnakeCase.";
             $relationOrderDefs = array_combine(
-                array_map(fn($parameterName) => "$relationSnakeCase.$parameterName", array_keys($classOrderDefs)),
+                array_map(fn($parameterName) => "{$relationParameterNamePrefix}$parameterName", array_keys($classOrderDefs)),
                 array_map(fn($order) => $order->setQbIdentifier($map['qbIdentifier']), array_values($classOrderDefs)),
             );
 
-            $availableOrderDefs = array_merge($availableOrderDefs, $relationOrderDefs);
+            $subRelationOrderDefs = !empty($map['relationMap']) ? $this->getRelationOrderDefs($map['relationMap'], $relationParameterNamePrefix) : [];
+            $availableOrderDefs = array_merge($availableOrderDefs, $relationOrderDefs, $subRelationOrderDefs);
         }
 
         return $availableOrderDefs;

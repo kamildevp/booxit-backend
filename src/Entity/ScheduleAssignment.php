@@ -2,36 +2,36 @@
 
 namespace App\Entity;
 
+use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
+use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ScheduleAssignmentRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\ScheduleAssignment\AccessTypeTask;
-use App\Service\SetterHelper\Task\ScheduleAssignment\MemberTask;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ScheduleAssignmentRepository::class)]
 class ScheduleAssignment
 {
-
-    const ACCESS_TYPES = ['READ', 'WRITE'];
-
+    #[Groups([ScheduleAssignmentNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'scheduleAssignments')]
+    #[Groups([ScheduleAssignmentNormalizerGroup::SCHEDULE->value])]
+    #[ORM\ManyToOne(inversedBy: 'assignments')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
+    #[Groups([ScheduleAssignmentNormalizerGroup::ORGANIZATION_MEMBER->value])]
     #[ORM\ManyToOne(inversedBy: 'scheduleAssignments')]
     #[ORM\JoinColumn(nullable: false)]
     private ?OrganizationMember $organizationMember = null;
 
+    #[Groups([ScheduleAssignmentNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 255)]
     private ?string $accessType = null;
 
-    #[Getter(groups: ['schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -49,13 +49,11 @@ class ScheduleAssignment
         return $this;
     }
 
-    #[Getter(propertyNameAlias: 'member', groups: ['schedule-assignments'])]
     public function getOrganizationMember(): ?OrganizationMember
     {
         return $this->organizationMember;
     }
 
-    #[Setter(targetParameter: 'member_id', setterTask: MemberTask::class)]
     public function setOrganizationMember(?OrganizationMember $organizationMember): self
     {
         $this->organizationMember = $organizationMember;
@@ -63,17 +61,30 @@ class ScheduleAssignment
         return $this;
     }
 
-    #[Getter(groups: ['schedule-assignments'])]
     public function getAccessType(): ?string
     {
         return $this->accessType;
     }
 
-    #[Setter(setterTask: AccessTypeTask::class)]
     public function setAccessType(string $accessType): self
     {
         $this->accessType = $accessType;
 
         return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return [
+            'accessType' => new FieldValue('accessType', '='),
+        ];
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return [
+            'id' => new BaseFieldOrder('id'),
+            'access_type' => new BaseFieldOrder('accessType'),
+        ];
     }
 }

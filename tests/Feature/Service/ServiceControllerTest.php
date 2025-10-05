@@ -50,7 +50,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $params['organization_id'] = $organizationId;
         $expectedResponseData['organization']['id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/service', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/services', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
@@ -62,7 +62,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $organizationId = $this->organizationRepository->findOneBy([])->getId();
         $params['organization_id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/service', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', '/api/services', $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
@@ -71,7 +71,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $service = $this->serviceRepository->findOneBy(['name' => 'Test Service 1']);
         $expectedResponseData = $this->normalize($service, ServiceNormalizerGroup::PUBLIC->normalizationGroups());
         $serviceId = $service->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/service/$serviceId");
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/services/$serviceId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -84,7 +84,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $normalizedService = $this->normalize($service, ServiceNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedService, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/service/'.$service->getId(), $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/services/'.$service->getId(), $params);
 
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
@@ -95,7 +95,7 @@ class ServiceControllerTest extends BaseWebTestCase
     {
         $service = $this->serviceRepository->findOneBy(['name' => 'Test Service 1']);
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/service/'.$service->getId(), $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', '/api/services/'.$service->getId(), $params, $expectedErrors);
     }
 
     #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
@@ -103,7 +103,7 @@ class ServiceControllerTest extends BaseWebTestCase
     {
         $service = $this->serviceRepository->findOneBy(['name' => 'Test Service 1']);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/service/'.$service->getId());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/services/'.$service->getId());
 
         $this->assertEquals('Service removed successfully', $responseData['message']);
     }
@@ -112,7 +112,7 @@ class ServiceControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ServiceListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $path = '/api/service?' . http_build_query([
+        $path = '/api/services?' . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -129,7 +129,7 @@ class ServiceControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ServiceListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/service?' . http_build_query(['filters' => $filters]);
+        $path = '/api/services?' . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -140,7 +140,7 @@ class ServiceControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ServiceListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/service?' . http_build_query(['order' => $sorting]);
+        $path = '/api/services?' . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -152,7 +152,7 @@ class ServiceControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ServiceListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/service?' . http_build_query($params);
+        $path = '/api/services?' . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 

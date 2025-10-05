@@ -47,7 +47,7 @@ class ServiceController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('service', name: 'service_new', methods: ['POST'])]
+    #[Route('services', name: 'service_new', methods: ['POST'])]
     public function create(
         #[MapRequestPayload] ServiceCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
@@ -71,7 +71,7 @@ class ServiceController extends AbstractController
         dataModelGroups: ServiceNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('Service not found')]
-    #[Route('service/{service}', name: 'service_get', methods: ['GET'], requirements: ['service' => '\d+'])]
+    #[Route('services/{service}', name: 'service_get', methods: ['GET'], requirements: ['service' => '\d+'])]
     public function get(Service $service, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($service, ServiceNormalizerGroup::PUBLIC->normalizationGroups());
@@ -93,7 +93,7 @@ class ServiceController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('service/{service}', name: 'service_patch', methods: ['PATCH'], requirements: ['service' => '\d+'])]
+    #[Route('services/{service}', name: 'service_patch', methods: ['PATCH'], requirements: ['service' => '\d+'])]
     public function patch(
         Service $service, 
         EntitySerializerInterface $entitySerializer, 
@@ -117,7 +117,7 @@ class ServiceController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('service/{service}', name: 'service_delete', methods: ['DELETE'], requirements: ['service' => '\d+'])]
+    #[Route('services/{service}', name: 'service_delete', methods: ['DELETE'], requirements: ['service' => '\d+'])]
     public function delete(        
         Service $service, 
         ServiceRepository $serviceRepository
@@ -138,7 +138,7 @@ class ServiceController extends AbstractController
         dataModelGroups: ServiceNormalizerGroup::PUBLIC
     )]
     #[ValidationErrorResponseDoc]
-    #[Route('service', name: 'service_list', methods: ['GET'])]
+    #[Route('services', name: 'service_list', methods: ['GET'])]
     public function list(
         ServiceRepository $serviceRepository, 
         EntitySerializerInterface $entitySerializer, 

@@ -12,23 +12,23 @@ class ServiceAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/service', 'POST'],
-            ['/api/service/{service}', 'PATCH'],
-            ['/api/service/{service}', 'DELETE'],
+            ['/api/services', 'POST'],
+            ['/api/services/{service}', 'PATCH'],
+            ['/api/services/{service}', 'DELETE'],
         ];
     }
 
     public static function serviceManagementPrivilegesOnlyPaths()
     {
         return [
-            ['/api/service', 'POST', null],
-            ['/api/service', 'POST', null, ['organization_id' => 0]],
-            ['/api/service', 'POST', null, ['organization_id' => '{organization}']],
-            ['/api/service', 'POST', OrganizationRole::MEMBER->value, ['organization_id' => '{organization}']],
-            ['/api/service/{service}', 'PATCH', null],
-            ['/api/service/{service}', 'DELETE', null],
-            ['/api/service/{service}', 'PATCH', OrganizationRole::MEMBER->value],
-            ['/api/service/{service}', 'DELETE', OrganizationRole::MEMBER->value],
+            ['/api/services', 'POST', null],
+            ['/api/services', 'POST', null, ['organization_id' => 0]],
+            ['/api/services', 'POST', null, ['organization_id' => '{organization}']],
+            ['/api/services', 'POST', OrganizationRole::MEMBER->value, ['organization_id' => '{organization}']],
+            ['/api/services/{service}', 'PATCH', null],
+            ['/api/services/{service}', 'DELETE', null],
+            ['/api/services/{service}', 'PATCH', OrganizationRole::MEMBER->value],
+            ['/api/services/{service}', 'DELETE', OrganizationRole::MEMBER->value],
         ];
     }
 }

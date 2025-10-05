@@ -12,11 +12,11 @@ class ServiceNotFoundDataProvider extends BaseDataProvider
     {
         return [
             [
-                '/api/service/1000',
+                '/api/services/1000',
                 'GET',
             ],
             [
-                '/api/service/1000',
+                '/api/services/1000',
                 'PATCH',
             ],
         ];

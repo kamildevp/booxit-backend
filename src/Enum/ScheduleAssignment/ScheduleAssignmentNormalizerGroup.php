@@ -18,7 +18,7 @@ enum ScheduleAssignmentNormalizerGroup: string implements NormalizerGroupInterfa
     case BASE_INFO = 'schedule_assignment-base_info';
     case ORGANIZATION_MEMBER = 'schedule_assignment-organization_member';
     case SCHEDULE = 'schedule_assignment-schedule';
-    case USER_SCHEDULES = 'schedule_assignment-user_schedules';
+    case ORGANIZATION_MEMBER_SCHEDULE_ASSIGNMENTS = 'schedule_assignment-user_schedule_assignments';
 
     protected function appendGroups(): array
     {
@@ -26,11 +26,10 @@ enum ScheduleAssignmentNormalizerGroup: string implements NormalizerGroupInterfa
             self::PUBLIC => [self::BASE_INFO->value, ...self::ORGANIZATION_MEMBER->normalizationGroups()],
             self::PRIVATE => self::PUBLIC->normalizationGroups(),
             self::ORGANIZATION_MEMBER => [self::BASE_INFO->value, ...OrganizationMemberNormalizerGroup::PUBLIC->normalizationGroups()],
-            self::USER_SCHEDULES => [
+            self::ORGANIZATION_MEMBER_SCHEDULE_ASSIGNMENTS => [
                 self::BASE_INFO->value, 
                 self::SCHEDULE->value, 
-                ScheduleNormalizerGroup::BASE_INFO->value, 
-                ...ScheduleNormalizerGroup::ORGANIZATION->normalizationGroups()
+                ScheduleNormalizerGroup::BASE_INFO->value,
             ],
             default => []
         };

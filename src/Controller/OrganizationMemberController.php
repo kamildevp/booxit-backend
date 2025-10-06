@@ -15,15 +15,20 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\OrganizationMember\OrganizationMemberCreateDTO;
 use App\DTO\OrganizationMember\OrganizationMemberListQueryDTO;
 use App\DTO\OrganizationMember\OrganizationMemberPatchDTO;
+use App\DTO\OrganizationMember\OrganizationMemberScheduleAssignmentListQueryDTO;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
+use App\Entity\Schedule;
+use App\Entity\ScheduleAssignment;
 use App\Entity\User;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
+use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
 use App\Repository\OrganizationMemberRepository;
+use App\Repository\ScheduleAssignmentRepository;
 use App\Response\SuccessResponse;
-use App\Service\Auth\AccessRule\OrganizationAdminRule;
 use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
+use App\Service\Auth\AccessRule\OrganizationMemberScheduleAssignmentsViewPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\OrganizationMemberService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
@@ -168,5 +173,36 @@ class OrganizationMemberController extends AbstractController
         $organizationMemberService->removeOrganizationMember($organizationMember);
         
         return new SuccessResponse(['message' => 'Organization member removed successfully']);
+    }
+
+    #[OA\Get(
+        summary: 'List organization member schedule assignments',
+        description: 'Retrieves a paginated list of organization member\'s schedule assignments'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated schedule assignments list', 
+        dataModel: ScheduleAssignment::class,
+        dataModelGroups: ScheduleAssignmentNormalizerGroup::ORGANIZATION_MEMBER_SCHEDULE_ASSIGNMENTS
+    )]
+    #[NotFoundResponseDoc('OrganizationMember not found')]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(OrganizationMemberScheduleAssignmentsViewPrivilegesRule::class)]
+    #[Route('organizations/{organization}/members/{organizationMember}/schedule-assignments', name: 'organization_member_schedule_assignment_list', methods: ['GET'], requirements: ['organization' => '\d+', 'organizationMember' => '\d+'])]
+    public function getMemberScheduleAssignments(
+        #[MapEntity(mapping:['organization' => 'organization', 'organizationMember' => 'id'])] OrganizationMember $organizationMember, 
+        EntitySerializerInterface $entitySerializer,
+        ScheduleAssignmentRepository $scheduleAssignmentRepository,
+        #[MapQueryString] OrganizationMemberScheduleAssignmentListQueryDTO $queryDTO = new OrganizationMemberScheduleAssignmentListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $scheduleAssignmentRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['organizationMember' => $organizationMember], 
+            ['schedule' => Schedule::class]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleAssignmentNormalizerGroup::ORGANIZATION_MEMBER_SCHEDULE_ASSIGNMENTS->normalizationGroups());
+
+        return new SuccessResponse($result);
     }
 }

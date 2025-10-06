@@ -35,7 +35,7 @@ class Schedule
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[Groups([ScheduleNormalizerGroup::PUBLIC->value])]
+    #[Groups([ScheduleNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 

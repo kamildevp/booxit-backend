@@ -33,7 +33,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Groups([UserNormalizerGroup::PRIVATE->value])]
+    #[Groups([UserNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
@@ -50,14 +50,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[Groups([UserNormalizerGroup::PRIVATE->value])]
+    #[Groups([UserNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column]
     private array $roles = [UserRole::REGULAR->value];
 
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;
 
-    #[Groups([UserNormalizerGroup::PUBLIC->value])]
+    #[Groups([UserNormalizerGroup::DETAILS->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 

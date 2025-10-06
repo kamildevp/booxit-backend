@@ -30,7 +30,7 @@ class Organization
     #[ORM\Column(length: 50, unique: true)]
     private ?string $name = null;
 
-    #[Groups([OrganizationNormalizerGroup::PUBLIC->value])]
+    #[Groups([OrganizationNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 

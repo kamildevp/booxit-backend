@@ -10,9 +10,10 @@ use App\Entity\Schedule;
 use App\Tests\Utils\DataProvider\ListDataProvider;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ScheduleSortingFixtures extends Fixture
+class ScheduleSortingFixtures extends Fixture implements DependentFixtureInterface
 {    
     const SERVICE_REFERENCE = 'schedule-sort';
 
@@ -43,5 +44,12 @@ class ScheduleSortingFixtures extends Fixture
         }
 
         $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            OrganizationAdminFixtures::class
+        ];
     }
 }

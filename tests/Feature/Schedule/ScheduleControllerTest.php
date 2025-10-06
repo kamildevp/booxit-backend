@@ -125,7 +125,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleSortingFixtures::class])]
+    #[Fixtures([ScheduleSortingFixtures::class])]
     #[DataProviderExternal(ScheduleListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
@@ -136,7 +136,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleSortingFixtures::class])]
+    #[Fixtures([ScheduleSortingFixtures::class])]
     #[DataProviderExternal(ScheduleListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
@@ -164,7 +164,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertEquals('Schedule not found', $responseData['message']);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleSortingFixtures::class])]
+    #[Fixtures([ScheduleSortingFixtures::class])]
     #[DataProviderExternal(ScheduleAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {

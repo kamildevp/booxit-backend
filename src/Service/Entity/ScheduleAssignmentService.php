@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service\Entity;
 
 use App\Repository\OrganizationMemberRepository;
-use App\Service\EntitySerializer\EntitySerializerInterface;
 use App\Entity\Schedule;
 use App\Entity\ScheduleAssignment;
 use App\Enum\Schedule\ScheduleAccessType;
@@ -15,7 +14,6 @@ use App\Repository\ScheduleAssignmentRepository;
 class ScheduleAssignmentService
 {
     public function __construct(
-        protected EntitySerializerInterface $entitySerializer,
         protected ScheduleAssignmentRepository $scheduleAssignmentRepository,
         protected OrganizationMemberRepository $organizationMemberRepository,
     )
@@ -27,7 +25,7 @@ class ScheduleAssignmentService
     {
         $organizationMember = $this->organizationMemberRepository->findOrFail($organizationMemberId);
 
-        if($schedule->getOrganization() != $organizationMember->getOrganization()){
+        if($schedule->getOrganization() !== $organizationMember->getOrganization()){
             throw new ConflictException('This organization member belongs to different organization.');
         }
 

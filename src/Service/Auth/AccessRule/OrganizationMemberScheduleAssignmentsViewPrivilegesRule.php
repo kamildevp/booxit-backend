@@ -38,7 +38,7 @@ class OrganizationMemberScheduleAssignmentsViewPrivilegesRule implements AccessR
             'appUser' => $user,
         ]) : null;
         
-        if(!$actionMember || $actionMember->getRole() != OrganizationRole::ADMIN->value || $actionMember->getId() == $organizationMemberId){
+        if(!$actionMember || ($actionMember->getRole() != OrganizationRole::ADMIN->value && $actionMember->getId() != $organizationMemberId)){
             throw new ForbiddenException;
         }
     }

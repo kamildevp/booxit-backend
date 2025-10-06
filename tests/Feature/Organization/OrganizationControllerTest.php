@@ -7,14 +7,18 @@ namespace App\Tests\Feature\Organization;
 use App\DataFixtures\Test\Organization\OrganizationBannerFixtures;
 use App\DataFixtures\Test\Organization\OrganizationFixtures;
 use App\DataFixtures\Test\Organization\OrganizationSortingFixtures;
+use App\DataFixtures\Test\Schedule\ScheduleFixtures;
+use App\DataFixtures\Test\Schedule\ScheduleSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Entity\OrganizationMember;
 use App\Enum\BlameableColumns;
 use App\Enum\File\UploadType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\TimestampsColumns;
 use App\Repository\OrganizationMemberRepository;
 use App\Repository\OrganizationRepository;
+use App\Repository\ScheduleRepository;
 use App\Repository\UserRepository;
 use App\Response\ForbiddenResponse;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -26,12 +30,14 @@ use App\Tests\Feature\Organization\DataProvider\OrganizationListDataProvider;
 use App\Tests\Feature\Organization\DataProvider\OrganizationNotFoundDataProvider;
 use App\Tests\Feature\Organization\DataProvider\OrganizationPatchDataProvider;
 use App\Tests\Feature\Organization\DataProvider\OrganizationUpdateBannerDataProvider;
+use App\Tests\Feature\Schedule\DataProvider\ScheduleListDataProvider;
 
 class OrganizationControllerTest extends BaseWebTestCase
 {
     protected OrganizationRepository $organizationRepository;
     protected OrganizationMemberRepository $organizationMemberRepository;
     protected UserRepository $userRepository;
+    protected ScheduleRepository $scheduleRepository;
 
     protected function setUp(): void
     {
@@ -39,6 +45,7 @@ class OrganizationControllerTest extends BaseWebTestCase
         $this->organizationRepository = $this->container->get(OrganizationRepository::class);
         $this->organizationMemberRepository = $this->container->get(OrganizationMemberRepository::class);
         $this->userRepository = $this->container->get(UserRepository::class);
+        $this->scheduleRepository = $this->container->get(ScheduleRepository::class);
     }
 
     #[DataProviderExternal(OrganizationCreateDataProvider::class, 'validDataCases')]
@@ -220,6 +227,63 @@ class OrganizationControllerTest extends BaseWebTestCase
         $this->assertResponseStatusCodeSame(404);
         $this->assertFailureResponse($response);
         $this->assertEquals("Organization banner not found", $response['data']['message']);
+    }
+
+    #[Fixtures([ScheduleFixtures::class])]
+    #[DataProviderExternal(ScheduleListDataProvider::class, 'listDataCases')]
+    public function testListOrganizationSchedules(int $page, int $perPage, int $total): void
+    {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $organizationId = $organization->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query([
+            'page' => $page,
+            'per_page' => $perPage,
+        ]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->scheduleRepository->findBy(['organization' => $organization], ['id' => 'ASC'], $perPage, $offset);
+        $formattedItems = $this->normalize($items, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
+
+        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
+    }
+
+    #[Fixtures([ScheduleSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleListDataProvider::class, 'filtersDataCases')]
+    public function testListOrganizationSchedulesFilters(array $filters, array $expectedItemData): void
+    {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $organizationId = $organization->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query(['filters' => $filters]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertCount(1, $responseData['items']);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
+    }
+
+    #[Fixtures([ScheduleSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleListDataProvider::class, 'sortingDataCases')]
+    public function testListOrganizationSchedulesSorting(string $sorting, array $orderedItems): void
+    {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $organizationId = $organization->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query(['order' => $sorting]);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
+        foreach($orderedItems as $indx => $item){
+            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($item, $responseData['items'][$indx], array_keys($item));
+        }
+    }
+
+    #[Fixtures([ScheduleSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleListDataProvider::class, 'validationDataCases')]
+    public function testListOrganizationSchedulesValidation(array $params, array $expectedErrors): void
+    {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $organizationId = $organization->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query($params);
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
     #[DataProviderExternal(OrganizationNotFoundDataProvider::class, 'dataCases')]

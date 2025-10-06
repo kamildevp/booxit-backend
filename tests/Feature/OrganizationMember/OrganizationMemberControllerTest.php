@@ -6,14 +6,18 @@ namespace App\Tests\Feature\OrganizationMember;
 
 use App\DataFixtures\Test\Organization\OrganizationFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberScheduleAssignmentsFixtures;
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberScheduleAssignmentsSortingFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Entity\OrganizationMember;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
+use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
 use App\Enum\User\UserNormalizerGroup;
 use App\Repository\OrganizationMemberRepository;
 use App\Repository\OrganizationRepository;
+use App\Repository\ScheduleAssignmentRepository;
 use App\Repository\UserRepository;
 use App\Response\ForbiddenResponse;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -24,12 +28,14 @@ use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberAuthData
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberListDataProvider;
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberNotFoundDataProvider;
 use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberPatchDataProvider;
+use App\Tests\Feature\OrganizationMember\DataProvider\OrganizationMemberScheduleAssignmentsListDataProvider;
 
 class OrganizationMemberControllerTest extends BaseWebTestCase
 {
     protected OrganizationRepository $organizationRepository;
     protected OrganizationMemberRepository $organizationMemberRepository;
     protected UserRepository $userRepository;
+    protected ScheduleAssignmentRepository $scheduleAssignmentRepository;
 
     protected function setUp(): void
     {
@@ -37,6 +43,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->organizationRepository = $this->container->get(OrganizationRepository::class);
         $this->organizationMemberRepository = $this->container->get(OrganizationMemberRepository::class);
         $this->userRepository = $this->container->get(UserRepository::class);
+        $this->scheduleAssignmentRepository = $this->container->get(ScheduleAssignmentRepository::class);
     }
 
     #[Fixtures([OrganizationFixtures::class, UserFixtures::class])]
@@ -198,6 +205,75 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
+    #[Fixtures([OrganizationMemberScheduleAssignmentsFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberScheduleAssignmentsListDataProvider::class, 'listDataCases')]
+    public function testListOrganizationMemberScheduleAssignments(int $page, int $perPage, int $total): void
+    {
+        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
+        $path = "/api/organizations/$organizationId/members/$organizationMemberId/schedule-assignments?" . http_build_query([
+            'page' => $page,
+            'per_page' => $perPage,
+        ]);
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->scheduleAssignmentRepository->findBy(['organizationMember' => $organizationMember], ['id' => 'ASC'], $perPage, $offset);
+        $formattedItems = $this->normalize($items, ScheduleAssignmentNormalizerGroup::ORGANIZATION_MEMBER_SCHEDULE_ASSIGNMENTS->normalizationGroups());
+
+        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
+    }
+
+    #[Fixtures([OrganizationMemberScheduleAssignmentsSortingFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberScheduleAssignmentsListDataProvider::class, 'filtersDataCases')]
+    public function testListOrganizationMemberScheduleAssignmentsFilters(array $filters, array $expectedItemData): void
+    {
+        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
+        $path = "/api/organizations/$organizationId/members/$organizationMemberId/schedule-assignments?" . http_build_query(['filters' => $filters]);
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertCount(1, $responseData['items']);
+        $dotExpectedItemData = array_dot($expectedItemData);
+        $dotResponseItemData = array_dot($responseData['items'][0]);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+    }
+
+    #[Fixtures([OrganizationMemberScheduleAssignmentsSortingFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberScheduleAssignmentsListDataProvider::class, 'sortingDataCases')]
+    public function testListOrganizationMemberScheduleAssignmentsSorting(string $sorting, array $orderedItems): void
+    {
+        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
+        $path = "/api/organizations/$organizationId/members/$organizationMemberId/schedule-assignments?" . http_build_query(['order' => $sorting]);
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
+        foreach($orderedItems as $indx => $item){
+            $dotExpectedItemData = array_dot($item);
+            $dotResponseItemData = array_dot($responseData['items'][$indx]);
+            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+        }
+    }
+
+    #[Fixtures([OrganizationMemberScheduleAssignmentsSortingFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberScheduleAssignmentsListDataProvider::class, 'validationDataCases')]
+    public function testListOrganizationMemberScheduleAssignmentsValidation(array $params, array $expectedErrors): void
+    {
+        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
+        $organizationMemberId = $organizationMember->getId();
+        $organizationId = $organizationMember->getOrganization()->getId();
+        $path = "/api/organizations/$organizationId/members/$organizationMemberId/schedule-assignments?" . http_build_query($params);
+        $this->client->loginUser($this->user, 'api');
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
+    }
+
     #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
@@ -222,8 +298,8 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([UserFixtures::class, OrganizationFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationManagementPrivilegesOnlyPaths')]
-    public function testOrganizationManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role): void
+    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationAdminPaths')]
+    public function testOrganizationAdminRequirementForProtectedPaths(string $path, string $method, ?string $role): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
         $organizationMember = $this->organizationMemberRepository->findOneBy([]);
@@ -241,5 +317,26 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
         $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
+    }
+
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'restrictedAccessPaths')]
+    public function testPathAccessIsGranted(string $path, string $method, string $as): void
+    {
+        $organization = $this->organizationRepository->findOneBy([]);
+        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
+        $path = str_replace('{organization}', (string)($organization->getId()), $path);
+        $path = str_replace('{organizationMember}', (string)($organizationMember->getId()), $path);
+        $user = $as == '{organizationMember}' ? $organizationMember->getAppUser() : $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        if(in_array($as, OrganizationRole::values())){
+            $organizationMember = new OrganizationMember();
+            $organizationMember->setOrganization($organization);
+            $organizationMember->setAppUser($user);
+            $organizationMember->setRole($as);
+            $this->organizationMemberRepository->save($organizationMember, true);
+        }
+
+        $this->client->loginUser($user, 'api');
+        $this->getSuccessfulResponseData($this->client, $method, $path);
     }
 }

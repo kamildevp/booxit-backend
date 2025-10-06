@@ -46,6 +46,16 @@ class OrganizationMemberNotFoundDataProvider extends BaseDataProvider
                 'PATCH',
                 'OrganizationMember not found'
             ],
+            [
+                '/api/organizations/1000/members/1000/schedule-assignments',
+                'GET',
+                'Organization not found'
+            ],
+            [
+                '/api/organizations/{organization}/members/1000/schedule-assignments',
+                'GET',
+                'OrganizationMember not found'
+            ],
         ];
     }
 }

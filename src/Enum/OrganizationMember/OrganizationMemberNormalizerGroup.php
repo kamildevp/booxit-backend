@@ -26,7 +26,7 @@ enum OrganizationMemberNormalizerGroup: string implements NormalizerGroupInterfa
     protected function appendGroups(): array
     {
         return match($this){
-            self::PUBLIC => [self::BASE_INFO->value, ...self::USER->normalizationGroups()],
+            self::PUBLIC => [self::BASE_INFO->value, self::DETAILS->value, ...self::USER->normalizationGroups()],
             self::PRIVATE => [self::SENSITIVE->value, ...self::PUBLIC->normalizationGroups()],
             self::USER => [self::BASE_INFO->value, UserNormalizerGroup::BASE_INFO->value],
             self::USER_MEMBERSHIPS => [self::BASE_INFO->value, self::ORGANIZATION->value, OrganizationNormalizerGroup::BASE_INFO->value],

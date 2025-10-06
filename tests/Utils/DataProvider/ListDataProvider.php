@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Utils\DataProvider;
 
 use App\Enum\Organization\OrganizationRole;
+use App\Enum\Schedule\ScheduleAccessType;
 
 class ListDataProvider extends BaseDataProvider 
 {    
@@ -178,6 +179,11 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => OrganizationRole::ADMIN->value],
                 [$columnName => OrganizationRole::MEMBER->value],
                 [$columnName => OrganizationRole::MEMBER->value],
+            ],
+            'schedule_access_type' => [
+                [$columnName => ScheduleAccessType::READ->value],
+                [$columnName => ScheduleAccessType::WRITE->value],
+                [$columnName => ScheduleAccessType::WRITE->value],
             ],
         ];
 

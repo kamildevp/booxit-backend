@@ -8,7 +8,6 @@ use App\DataFixtures\Test\Organization\OrganizationFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
-use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\Entity\OrganizationMember;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
@@ -67,7 +66,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/organizations/'.$organization->getId().'/members', $params, $expectedErrors);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     public function testGet(): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy([]);
@@ -79,7 +78,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberPatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedFieldValues): void
     {
@@ -94,7 +93,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberPatchDataProvider::class, 'validationDataCases')]
     public function testPatchMemberValidation(array $params, array $expectedErrors): void
     {
@@ -105,7 +104,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'PATCH', "/api/organizations/$organizationId/members/$organizationMemberId", $params, $expectedErrors);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberPatchDataProvider::class, 'conflictDataCases')]
     public function testPatchMemberConflictResponse(array $params, string $expectedMessage): void
     {
@@ -118,7 +117,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedMessage, $responseData['message']);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     public function testDelete(): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER]);
@@ -130,7 +129,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals('Organization member removed successfully', $responseData['message']);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     public function testDeleteConflictResponse(): void
     {
         $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::ADMIN]);
@@ -142,7 +141,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals('Cannot remove the only administrator of organization.', $responseData['message']);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
@@ -160,7 +159,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }
 
-    #[Fixtures([UserSortingFixtures::class, OrganizationMemberSortingFixtures::class])]
+    #[Fixtures([OrganizationMemberSortingFixtures::class])]
     #[DataProviderExternal(OrganizationMemberListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
@@ -174,7 +173,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
     }
 
-    #[Fixtures([UserSortingFixtures::class, OrganizationMemberSortingFixtures::class])]
+    #[Fixtures([OrganizationMemberSortingFixtures::class])]
     #[DataProviderExternal(OrganizationMemberListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
@@ -190,7 +189,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         }
     }
 
-    #[Fixtures([UserSortingFixtures::class, OrganizationMemberSortingFixtures::class])]
+    #[Fixtures([OrganizationMemberSortingFixtures::class])]
     #[DataProviderExternal(OrganizationMemberListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
@@ -199,7 +198,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
     {
@@ -210,7 +209,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedMessage, $responseData['message']);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
@@ -222,15 +221,15 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([UserFixtures::class, OrganizationFixtures::class])]
     #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationManagementPrivilegesOnlyPaths')]
-    public function testOrganizationAdminRoleRequirementForProtectedPaths(string $path, string $method, ?string $role): void
+    public function testOrganizationManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
         $organizationMember = $this->organizationMemberRepository->findOneBy([]);
         $path = str_replace('{organization}', (string)($organization->getId()), $path);
         $path = str_replace('{organizationMember}', (string)($organizationMember->getId()), $path);
-        $user = $this->userRepository->findOneBy(['email' => 'user35@example.com']);
+        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
         if(!empty($role)){
             $organizationMember = new OrganizationMember();
             $organizationMember->setOrganization($organization);

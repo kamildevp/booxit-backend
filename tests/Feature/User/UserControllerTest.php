@@ -162,7 +162,7 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertEquals('User removed successfully', $responseData['message']);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[Fixtures([OrganizationMemberFixtures::class])]
     public function testDeleteConflictResponse(): void
     {
         $this->client->loginUser($this->user, 'api');

@@ -4,41 +4,42 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\OrganizationMember;
 
-use App\DataFixtures\Test\Global\VerifiedUserFixtures;
-use App\DataFixtures\Test\User\UserFixtures;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
 use App\Enum\Organization\OrganizationRole;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class OrganizationMemberFixtures extends Fixture
+class OrganizationMemberFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
-        $organization = new Organization();
-        $organization->setName('Test Organization');
-        $manager->persist($organization);
-
-        $admin = $this->createOrganizationMember($organization, VerifiedUserFixtures::VERIFIED_USER_REFERENCE, OrganizationRole::ADMIN);
-        $manager->persist($admin);
+        $organization = $this->getReference(OrganizationAdminFixtures::ORGANIZATION_REFERENCE, Organization::class);
 
         for($i = 1; $i <= 34; $i++){
-            $member = $this->createOrganizationMember($organization, UserFixtures::USER_REFERENCE.$i, OrganizationRole::MEMBER);
-            $manager->persist($member);
+            $user = new User();
+            $user->setName('Test User ' . $i);
+            $user->setEmail("om-user{$i}@example.com");
+            $user->setPassword('dummypass');
+            $user->setVerified(true);
+            $manager->persist($user);
+
+            $organizationMember = new OrganizationMember();
+            $organizationMember->setOrganization($organization);
+            $organizationMember->setAppUser($user);
+            $organizationMember->setRole(OrganizationRole::MEMBER->value);
+            $manager->persist($organizationMember);
         }
 
         $manager->flush();
     }
-
-    private function createOrganizationMember(Organization $organization, string $userRef, OrganizationRole $role): OrganizationMember
+    
+    public function getDependencies(): array
     {
-        $organizationMember = new OrganizationMember();
-        $organizationMember->setOrganization($organization);
-        $organizationMember->setAppUser($this->getReference($userRef, User::class));
-        $organizationMember->setRole($role->value);
-        
-        return $organizationMember;
+        return [
+            OrganizationAdminFixtures::class
+        ];
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\OrganizationMember;
 
-use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
@@ -18,6 +17,7 @@ class OrganizationMemberSortingFixtures extends Fixture
     {
         $sortedData = ListDataProvider::getSortedColumnsValuesSequence([
             'role' => 'organization_role',
+            'app_user.name' => 'string'
         ]);
 
         $data = [
@@ -31,9 +31,16 @@ class OrganizationMemberSortingFixtures extends Fixture
         $manager->persist($organization);
 
         foreach($data as $i => $item){
+            $user = new User();
+            $user->setName($item['app_user.name']);
+            $user->setEmail("om-user{$i}@example.com");
+            $user->setPassword('dummypass');
+            $user->setVerified(true);
+            $manager->persist($user);
+
             $organizationMember = new OrganizationMember();
             $organizationMember->setOrganization($organization);
-            $organizationMember->setAppUser($this->getReference(UserSortingFixtures::USER_REFERENCE.$i, User::class));
+            $organizationMember->setAppUser($user);
             $organizationMember->setRole($item['role']);
             $manager->persist($organizationMember);
         }

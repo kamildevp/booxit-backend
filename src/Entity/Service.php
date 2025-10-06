@@ -38,16 +38,16 @@ class Service
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[Groups([ServiceNormalizerGroup::PUBLIC->value])]
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[Groups([ServiceNormalizerGroup::PUBLIC->value])]
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column]
     private ?\DateInterval $duration = null;
 
     #[OA\Property(example: '25.50')]
-    #[Groups([ServiceNormalizerGroup::PUBLIC->value])]
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $estimatedPrice = null;
 

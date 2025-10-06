@@ -65,7 +65,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/schedules', $params, $expectedErrors);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     public function testGet(): void
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
@@ -76,7 +76,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     #[DataProviderExternal(SchedulePatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedFieldValues): void
     {
@@ -89,7 +89,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     #[DataProviderExternal(SchedulePatchDataProvider::class, 'validationDataCases')]
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
@@ -98,7 +98,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'PATCH', '/api/schedules/'.$schedule->getId(), $params, $expectedErrors);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     public function testDelete(): void
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
@@ -108,7 +108,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertEquals('Schedule removed successfully', $responseData['message']);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     #[DataProviderExternal(ScheduleListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
@@ -174,7 +174,7 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationAdminFixtures::class, ScheduleFixtures::class])]
+    #[Fixtures([UserFixtures::class, ScheduleFixtures::class])]
     #[DataProviderExternal(ScheduleAuthDataProvider::class, 'scheduleManagementPrivilegesOnlyPaths')]
     public function testScheduleManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role, array $parameters = []): void
     {

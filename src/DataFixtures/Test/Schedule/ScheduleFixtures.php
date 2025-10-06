@@ -8,12 +8,11 @@ use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ScheduleFixtures extends Fixture
+class ScheduleFixtures extends Fixture implements DependentFixtureInterface
 {
-    const SERVICE_REFERENCE = 'schedule';
-
     public function load(ObjectManager $manager): void
     {
         for ($i = 1; $i <= 35; $i++) {
@@ -23,9 +22,15 @@ class ScheduleFixtures extends Fixture
             $schedule->setDescription('test');
 
             $manager->persist($schedule);
-            $this->addReference(self::SERVICE_REFERENCE.$i, $schedule);
         }
 
         $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            OrganizationAdminFixtures::class
+        ];
     }
 }

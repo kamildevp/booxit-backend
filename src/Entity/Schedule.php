@@ -51,12 +51,16 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: Reservation::class, orphanRemoval: true)]
     private Collection $reservations;
 
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayWorkingHours::class, cascade: ['persist', 'remove'])]
+    private Collection $weekdayWorkingHours;
+
     public function __construct()
     {
         $this->services = new ArrayCollection();
         $this->workingHours = new ArrayCollection();
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
+        $this->weekdayWorkingHours = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -248,5 +252,35 @@ class Schedule
             'id' => new BaseFieldOrder('id'),
             'name' => new BaseFieldOrder('name'),
         ]);
+    }
+
+    /**
+     * @return Collection<int, WeekdayWorkingHours>
+     */
+    public function getWeekdayWorkingHours(): Collection
+    {
+        return $this->weekdayWorkingHours;
+    }
+
+    public function addWeekdayWorkingHour(WeekdayWorkingHours $weekdayWorkingHour): static
+    {
+        if (!$this->weekdayWorkingHours->contains($weekdayWorkingHour)) {
+            $this->weekdayWorkingHours->add($weekdayWorkingHour);
+            $weekdayWorkingHour->setSchedule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWeekdayWorkingHour(WeekdayWorkingHours $weekdayWorkingHour): static
+    {
+        if ($this->weekdayWorkingHours->removeElement($weekdayWorkingHour)) {
+            // set the owning side to null (unless already changed)
+            if ($weekdayWorkingHour->getSchedule() === $this) {
+                $weekdayWorkingHour->setSchedule(null);
+            }
+        }
+
+        return $this;
     }
 }

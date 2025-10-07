@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\PaginatorResponseDoc;
@@ -14,6 +15,7 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Schedule\ScheduleCreateDTO;
 use App\DTO\Schedule\ScheduleListQueryDTO;
 use App\DTO\Schedule\SchedulePatchDTO;
+use App\DTO\Schedule\ScheduleServiceAddDTO;
 use App\Entity\Schedule;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Repository\ScheduleRepository;
@@ -21,6 +23,7 @@ use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleManagementPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
+use App\Service\Entity\ScheduleService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
@@ -149,5 +152,28 @@ class ScheduleController extends AbstractController
         $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
 
         return new SuccessResponse($result);
+    }
+
+    #[OA\Post(
+        summary: 'Add new schedule service',
+        description: 'Adds new schedule service.
+        </br>**Important:** This action can only be performed by the organization administrator'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Service has been added to the schedule'])]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[ConflictResponseDoc('This service is already assigned to this schedule.')]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
+    #[Route('schedules/{schedule}/services', name: 'schedule_service_add', methods: ['POST'], requirements: ['schedule' => '\d+'])]
+    public function addService(
+        Schedule $schedule,
+        ScheduleService $scheduleService,
+        #[MapRequestPayload] ScheduleServiceAddDTO $dto,
+    ): SuccessResponse
+    {
+        $scheduleService->addScheduleService($schedule, $dto->serviceId);
+        return new SuccessResponse(['message' => 'Service has been added to the schedule']);
     }
 }

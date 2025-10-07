@@ -39,7 +39,7 @@ class Schedule
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules')]
+    #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules', fetch: 'EXTRA_LAZY')]
     private Collection $services;
 
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WorkingHours::class, orphanRemoval: true, cascade: ['persist'])]
@@ -126,6 +126,11 @@ class Schedule
         $this->services->removeElement($service);
 
         return $this;
+    }
+
+    public function hasService(Service $service): bool
+    {
+        return $this->services->contains($service);
     }
 
     /**

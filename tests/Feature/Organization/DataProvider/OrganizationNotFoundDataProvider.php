@@ -20,11 +20,23 @@ class OrganizationNotFoundDataProvider extends BaseDataProvider
                 'PATCH',
             ],
             [
+                '/api/organizations/1000',
+                'DELETE',
+            ],
+            [
                 '/api/organizations/1000/banner',
                 'PUT',
             ],
             [
                 '/api/organizations/1000/banner',
+                'GET',
+            ],
+            [
+                '/api/organizations/1000/schedules',
+                'GET',
+            ],
+            [
+                '/api/organizations/1000/services',
                 'GET',
             ],
         ];

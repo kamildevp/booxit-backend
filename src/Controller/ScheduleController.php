@@ -16,10 +16,13 @@ use App\DTO\Schedule\ScheduleCreateDTO;
 use App\DTO\Schedule\ScheduleListQueryDTO;
 use App\DTO\Schedule\SchedulePatchDTO;
 use App\DTO\Schedule\ScheduleServiceAddDTO;
+use App\DTO\Service\ServiceListQueryDTO;
 use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
+use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\ScheduleRepository;
+use App\Repository\ServiceRepository;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleManagementPrivilegesRule;
@@ -199,5 +202,33 @@ class ScheduleController extends AbstractController
         $scheduleService->removeScheduleService($schedule, $service);
         
         return new SuccessResponse(['message' => 'Service has been removed from schedule']);
+    }
+
+    #[OA\Get(
+        summary: 'List schedule services',
+        description: 'Retrieves a paginated list of schedule services.'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated schedule services list', 
+        dataModel: Service::class,
+        dataModelGroups: ServiceNormalizerGroup::ORGANIZATION_SERVICES
+    )]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[ValidationErrorResponseDoc]
+    #[Route('schedules/{schedule}/services', name: 'schedule_service_list', methods: ['GET'], requirements: ['schedule' => '\d+'])]
+    public function listServices(
+        Schedule $schedule,
+        EntitySerializerInterface $entitySerializer, 
+        ServiceRepository $serviceRepository, 
+        #[MapQueryString] ServiceListQueryDTO $queryDTO = new ServiceListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $serviceRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['schedules' => $schedule],
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
+
+        return new SuccessResponse($result);
     }
 }

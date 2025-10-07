@@ -17,14 +17,17 @@ use App\DTO\Organization\OrganizationCreateDTO;
 use App\DTO\Organization\OrganizationListQueryDTO;
 use App\DTO\Organization\OrganizationPatchDTO;
 use App\DTO\Schedule\ScheduleListQueryDTO;
+use App\DTO\Service\ServiceListQueryDTO;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Enum\File\UploadType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
+use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\OrganizationRepository;
 use App\Repository\ScheduleRepository;
+use App\Repository\ServiceRepository;
 use App\Response\NotFoundResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
@@ -239,6 +242,34 @@ class OrganizationController extends AbstractController
             ['organization' => $organization]
         );
         $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
+
+        return new SuccessResponse($result);
+    }
+
+    #[OA\Get(
+        summary: 'List organization services',
+        description: 'Retrieves a paginated list of specified organization’s services'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated list of services', 
+        dataModel: Schedule::class,
+        dataModelGroups: ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES
+    )]
+    #[NotFoundResponseDoc('Organization not found')]
+    #[ValidationErrorResponseDoc]
+    #[Route('organizations/{organization}/services', name: 'organization_service_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
+    public function listOrganizationServices(
+        Organization $organization,
+        EntitySerializerInterface $entitySerializer, 
+        ServiceRepository $serviceRepository, 
+        #[MapQueryString] ServiceListQueryDTO $queryDTO = new ServiceListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $serviceRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['organization' => $organization]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
 
         return new SuccessResponse($result);
     }

@@ -16,6 +16,7 @@ enum ServiceNormalizerGroup: string implements NormalizerGroupInterface
 
     case PUBLIC = 'service-public';
     case PRIVATE = 'service-private';
+    case ORGANIZATION_SERVICES = 'service-organization_services';
 
     case BASE_INFO = 'service-base_info';
     case DETAILS = 'service-details';
@@ -34,6 +35,11 @@ enum ServiceNormalizerGroup: string implements NormalizerGroupInterface
                 ...self::ORGANIZATION->normalizationGroups(),
             ],
             self::PRIVATE => [self::SENSITIVE->value, ...self::PUBLIC->normalizationGroups()],
+            self::ORGANIZATION_SERVICES => [
+                self::BASE_INFO->value, 
+                self::DETAILS->value,
+                self::TIMESTAMP->value, 
+            ],
             self::ORGANIZATION => OrganizationNormalizerGroup::BASE_INFO->normalizationGroups(),
             self::AUTHOR_INFO => NormalizerGroup::AUTHOR_INFO->normalizationGroups(),
             default => []

@@ -14,10 +14,32 @@ class ScheduleNotFoundDataProvider extends BaseDataProvider
             [
                 '/api/schedules/1000',
                 'GET',
+                'Schedule not found'
             ],
             [
                 '/api/schedules/1000',
                 'PATCH',
+                'Schedule not found'
+            ],
+            [
+                '/api/schedules/1000',
+                'DELETE',
+                'Schedule not found'
+            ],
+            [
+                '/api/schedules/1000/services',
+                'POST',
+                'Schedule not found'
+            ],
+            [
+                '/api/schedules/1000/services',
+                'GET',
+                'Schedule not found'
+            ],
+            [
+                '/api/schedules/{schedule}/services/1000',
+                'DELETE',
+                'Service not found'
             ],
         ];
     }

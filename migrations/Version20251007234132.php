@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20251007234132 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Create weekday_working_hours table';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('CREATE TABLE weekday_working_hours (id UUID NOT NULL, schedule_id INT NOT NULL, weekday VARCHAR(255) NOT NULL, start_time TIME(0) WITHOUT TIME ZONE NOT NULL, end_time TIME(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE INDEX IDX_597F16CA40BC2D5 ON weekday_working_hours (schedule_id)');
+        $this->addSql('ALTER TABLE weekday_working_hours ADD CONSTRAINT FK_597F16CA40BC2D5 FOREIGN KEY (schedule_id) REFERENCES schedule (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE weekday_working_hours DROP CONSTRAINT FK_597F16CA40BC2D5');
+        $this->addSql('DROP TABLE weekday_working_hours');
+    }
+}

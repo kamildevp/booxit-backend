@@ -12,9 +12,10 @@ use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ServiceSortingFixtures extends Fixture
+class ServiceSortingFixtures extends Fixture implements DependentFixtureInterface
 {    
     const SERVICE_REFERENCE = 'service-sort';
 
@@ -49,5 +50,12 @@ class ServiceSortingFixtures extends Fixture
         }
 
         $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            OrganizationAdminFixtures::class
+        ];
     }
 }

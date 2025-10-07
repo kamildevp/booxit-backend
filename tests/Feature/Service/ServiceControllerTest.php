@@ -65,7 +65,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/services', $params, $expectedErrors);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([ServiceFixtures::class])]
     public function testGet(): void
     {
         $service = $this->serviceRepository->findOneBy(['name' => 'Test Service 1']);
@@ -76,7 +76,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([ServiceFixtures::class])]
     #[DataProviderExternal(ServicePatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedFieldValues): void
     {
@@ -89,7 +89,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([ServiceFixtures::class])]
     #[DataProviderExternal(ServicePatchDataProvider::class, 'validationDataCases')]
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
@@ -98,7 +98,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'PATCH', '/api/services/'.$service->getId(), $params, $expectedErrors);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([ServiceFixtures::class])]
     public function testDelete(): void
     {
         $service = $this->serviceRepository->findOneBy(['name' => 'Test Service 1']);
@@ -108,7 +108,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertEquals('Service removed successfully', $responseData['message']);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([ServiceFixtures::class])]
     #[DataProviderExternal(ServiceListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
@@ -125,7 +125,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceSortingFixtures::class])]
+    #[Fixtures([ServiceSortingFixtures::class])]
     #[DataProviderExternal(ServiceListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
@@ -136,7 +136,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceSortingFixtures::class])]
+    #[Fixtures([ServiceSortingFixtures::class])]
     #[DataProviderExternal(ServiceListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
@@ -164,7 +164,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertEquals('Service not found', $responseData['message']);
     }
 
-    #[Fixtures([OrganizationAdminFixtures::class, ServiceSortingFixtures::class])]
+    #[Fixtures([ServiceSortingFixtures::class])]
     #[DataProviderExternal(ServiceAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
@@ -174,7 +174,7 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationAdminFixtures::class, ServiceFixtures::class])]
+    #[Fixtures([UserFixtures::class, ServiceFixtures::class])]
     #[DataProviderExternal(ServiceAuthDataProvider::class, 'serviceManagementPrivilegesOnlyPaths')]
     public function testServiceManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role, array $parameters = []): void
     {

@@ -9,9 +9,10 @@ use App\Entity\Organization;
 use App\Entity\Service;;
 use DateInterval;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ServiceFixtures extends Fixture
+class ServiceFixtures extends Fixture implements DependentFixtureInterface
 {
     const SERVICE_REFERENCE = 'service';
 
@@ -30,5 +31,12 @@ class ServiceFixtures extends Fixture
         }
 
         $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            OrganizationAdminFixtures::class
+        ];
     }
 }

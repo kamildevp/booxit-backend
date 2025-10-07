@@ -17,6 +17,7 @@ use App\DTO\Schedule\ScheduleListQueryDTO;
 use App\DTO\Schedule\SchedulePatchDTO;
 use App\DTO\Schedule\ScheduleServiceAddDTO;
 use App\Entity\Schedule;
+use App\Entity\Service;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Repository\ScheduleRepository;
 use App\Response\ResourceCreatedResponse;
@@ -30,6 +31,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('Schedule')]
@@ -175,5 +177,27 @@ class ScheduleController extends AbstractController
     {
         $scheduleService->addScheduleService($schedule, $dto->serviceId);
         return new SuccessResponse(['message' => 'Service has been added to the schedule']);
+    }
+
+    #[OA\Delete(
+        summary: 'Remove schedule service',
+        description: 'Deletes the specified schedule service.
+        </br>**Important:** This action can only be performed by organization admin.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Service has been removed from schedule'])]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
+    #[Route('schedules/{schedule}/services/{service}', name: 'schedule_service_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+', 'service' => '\d+'])]
+    public function deleteService(        
+        Schedule $schedule, 
+        Service $service, 
+        ScheduleService $scheduleService
+    ): SuccessResponse
+    {
+        $scheduleService->removeScheduleService($schedule, $service);
+        
+        return new SuccessResponse(['message' => 'Service has been removed from schedule']);
     }
 }

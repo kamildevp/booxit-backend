@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Service\Entity;
 
 use App\Entity\Schedule;
+use App\Entity\Service;
 use App\Exceptions\ConflictException;
+use App\Exceptions\EntityNotFoundException;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 
@@ -32,6 +34,16 @@ class ScheduleService
         }
 
         $schedule->addService($service);
+        $this->scheduleRepository->save($schedule, true);
+    }
+
+    public function removeScheduleService(Schedule $schedule, Service $service): void
+    {
+        if($schedule->hasService($service)){
+            throw new EntityNotFoundException(Service::class);
+        }
+        
+        $schedule->removeService($service);
         $this->scheduleRepository->save($schedule, true);
     }
 }

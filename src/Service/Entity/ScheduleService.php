@@ -39,7 +39,7 @@ class ScheduleService
 
     public function removeScheduleService(Schedule $schedule, Service $service): void
     {
-        if($schedule->hasService($service)){
+        if(!$schedule->hasService($service)){
             throw new EntityNotFoundException(Service::class);
         }
         

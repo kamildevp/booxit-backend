@@ -203,7 +203,7 @@ class ScheduleControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleServiceFixtures::class])]
-    public function testCreateConflictResponseForAssignedService(): void
+    public function testAddServiceConflictResponseForAssignedService(): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]); 
         $assignedService = $this->serviceRepository->findOneBy([]);
@@ -212,6 +212,28 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/services', $params, expectedCode: 409);
         $this->assertEquals('This service is already assigned to this schedule.', $responseData['message']);
+    }
+
+    #[Fixtures([ScheduleServiceFixtures::class])]
+    public function testRemoveService(): void
+    {
+        $this->client->loginUser($this->user, 'api');
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $serviceId = $this->serviceRepository->findOneBy([])->getId();
+        
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/schedules/$scheduleId/services/$serviceId");
+        $this->assertEquals(['message' => 'Service has been removed from schedule'], $responseData);
+    }
+
+    #[Fixtures([ScheduleFixtures::class, ServiceFixtures::class])]
+    public function testRemoveNotFoundResponseForNotAssignedService(): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId(); 
+        $serviceId = $this->serviceRepository->findOneBy([])->getId();
+
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'DELETE', "/api/schedules/$scheduleId/services/$serviceId", expectedCode: 404);
+        $this->assertEquals('Service not found', $responseData['message']);
     }
 
     #[Fixtures([ScheduleServiceFixtures::class])]

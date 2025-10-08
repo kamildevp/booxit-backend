@@ -22,6 +22,8 @@ class HttpErrorResponse implements ExceptionResponseInterface
             foreach ($previousException->getViolations() as $violation) {
                 $propertyPath = $violation->getPropertyPath();
                 $requestParameterName = $camelCaseConverter->normalize($propertyPath);
+                $requestParameterName = str_replace(['[',']'], '.', $requestParameterName);
+                $requestParameterName = str_replace('..', '.', $requestParameterName);
                 $errors[$requestParameterName][] = $violation->getMessage();
             }
 

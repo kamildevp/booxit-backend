@@ -9,7 +9,7 @@ use App\Enum\Weekday;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Doctrine\Common\Collections\Collection;
 
-class WeekdayTimeWindowsNormalizer implements NormalizerInterface
+class WeeklyWorkingHoursNormalizer implements NormalizerInterface
 {
     public function supportsNormalization($data, ?string $format = null, array $context = []): bool
     {

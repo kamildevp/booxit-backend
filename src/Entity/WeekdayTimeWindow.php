@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Enum\WeekdayWorkingHours\WeekdayWorkingHoursNormalizerGroup;
-use App\Repository\WeekdayWorkingHoursRepository;
+use App\Enum\WeekdayTimeWindow\WeekdayTimeWindowNormalizerGroup;
+use App\Repository\WeekdayTimeWindowRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
@@ -13,27 +13,27 @@ use Symfony\Component\Serializer\Attribute\Context;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
-#[ORM\Entity(repositoryClass: WeekdayWorkingHoursRepository::class)]
-class WeekdayWorkingHours
+#[ORM\Entity(repositoryClass: WeekdayTimeWindowRepository::class)]
+class WeekdayTimeWindow
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID, unique: true)]
     private ?string $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'weekdayWorkingHours')]
+    #[ORM\ManyToOne(inversedBy: 'weekdayTimeWindows')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
-    #[Groups([WeekdayWorkingHoursNormalizerGroup::DEFAULT->value])]
+    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
     #[ORM\Column(length: 255)]
     private ?string $weekday = null;
 
-    #[Groups([WeekdayWorkingHoursNormalizerGroup::DEFAULT->value])]
+    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
     #[Context([DateTimeNormalizer::FORMAT_KEY => 'H:i'])]
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $startTime = null;
 
-    #[Groups([WeekdayWorkingHoursNormalizerGroup::DEFAULT->value])]
+    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
     #[Context([DateTimeNormalizer::FORMAT_KEY => 'H:i'])]
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $endTime = null;

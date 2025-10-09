@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\WeekdayWorkingHours;
+use App\Entity\WeekdayTimeWindow;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<WeekdayWorkingHours>
+ * @extends ServiceEntityRepository<WeekdayTimeWindow>
  */
-class WeekdayWorkingHoursRepository extends ServiceEntityRepository
+class WeekdayTimeWindowRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, WeekdayWorkingHours::class);
+        parent::__construct($registry, WeekdayTimeWindow::class);
     }
 
 //    /**
-//     * @return WeekdayWorkingHours[] Returns an array of WeekdayWorkingHours objects
+//     * @return WeekdayTimeWindow[] Returns an array of WeekdayTimeWindow objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -31,7 +31,7 @@ class WeekdayWorkingHoursRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?WeekdayWorkingHours
+//    public function findOneBySomeField($value): ?WeekdayTimeWindow
 //    {
 //        return $this->createQueryBuilder('w')
 //            ->andWhere('w.exampleField = :val')

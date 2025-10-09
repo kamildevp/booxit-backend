@@ -51,8 +51,8 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: Reservation::class, orphanRemoval: true)]
     private Collection $reservations;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayWorkingHours::class, cascade: ['persist', 'remove'])]
-    private Collection $weekdayWorkingHours;
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayTimeWindow::class, cascade: ['persist', 'remove'])]
+    private Collection $weekdayTimeWindows;
 
     public function __construct()
     {
@@ -60,7 +60,7 @@ class Schedule
         $this->workingHours = new ArrayCollection();
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
-        $this->weekdayWorkingHours = new ArrayCollection();
+        $this->weekdayTimeWindows = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -255,26 +255,26 @@ class Schedule
     }
 
     /**
-     * @return Collection<int, WeekdayWorkingHours>
+     * @return Collection<int, WeekdayTimeWindow>
      */
-    public function getWeekdayWorkingHours(): Collection
+    public function getWeekdayTimeWindows(): Collection
     {
-        return $this->weekdayWorkingHours;
+        return $this->weekdayTimeWindows;
     }
 
-    public function addWeekdayWorkingHour(WeekdayWorkingHours $weekdayWorkingHour): static
+    public function addWeekdayTimeWindow(WeekdayTimeWindow $weekdayWorkingHour): static
     {
-        if (!$this->weekdayWorkingHours->contains($weekdayWorkingHour)) {
-            $this->weekdayWorkingHours->add($weekdayWorkingHour);
+        if (!$this->weekdayTimeWindows->contains($weekdayWorkingHour)) {
+            $this->weekdayTimeWindows->add($weekdayWorkingHour);
             $weekdayWorkingHour->setSchedule($this);
         }
 
         return $this;
     }
 
-    public function removeWeekdayWorkingHour(WeekdayWorkingHours $weekdayWorkingHour): static
+    public function removeWeekdayTimeWindow(WeekdayTimeWindow $weekdayWorkingHour): static
     {
-        if ($this->weekdayWorkingHours->removeElement($weekdayWorkingHour)) {
+        if ($this->weekdayTimeWindows->removeElement($weekdayWorkingHour)) {
             // set the owning side to null (unless already changed)
             if ($weekdayWorkingHour->getSchedule() === $this) {
                 $weekdayWorkingHour->setSchedule(null);

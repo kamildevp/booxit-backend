@@ -37,7 +37,7 @@ class ScheduleWorkingHoursController extends AbstractController
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
-    public function update(
+    public function updateWeeklyWorkingHours(
         Schedule $schedule,
         #[MapRequestPayload] WeeklyWorkingHoursDTO $dto,
         ScheduleWorkingHoursService $scheduleWorkingHoursService,

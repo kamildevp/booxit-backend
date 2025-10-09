@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Documentation\Response;
+
+use App\Enum\Weekday;
+use OpenApi\Attributes as OA;
+
+#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
+class WeeklyWorkingHoursResponseDoc extends SuccessResponseDoc
+{
+    public function __construct(
+        ?string $description = 'Schedule weekly working hours', 
+        array $headers = []
+    )
+    {
+        $properties = [];
+        foreach(Weekday::values() as $weekday){
+            $properties[] = new OA\Property(
+                    $weekday, 
+                    type: 'array', 
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property('start_time', type: 'string', format: 'time', example: '09:00'),
+                            new OA\Property('end_time', type: 'string', format: 'time', example: '17:00')
+                        ]
+                    )
+            );
+        }
+
+        $dataContent = new OA\JsonContent(type: 'object', properties: $properties);
+
+        parent::__construct(
+            description: $description,
+            dataContent: $dataContent,
+            headers: $headers
+        );
+    }
+}

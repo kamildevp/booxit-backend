@@ -48,7 +48,7 @@ class TimeWindowCollectionValidator extends ConstraintValidator
 
         for($i = 0; $i < count($parsedTimeWindows) - 1; $i++){
             if($parsedTimeWindows[$i]['end'] >= $parsedTimeWindows[$i+1]['start']){
-                $this->context->buildViolation($constraint->message)->addViolation();
+                $this->context->buildViolation($constraint->message)->atPath('errors')->addViolation();
                 return;
             }
         }

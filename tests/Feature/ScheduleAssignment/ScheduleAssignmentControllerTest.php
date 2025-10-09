@@ -118,7 +118,7 @@ class ScheduleAssignmentControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleAssignmentPatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedFieldValues): void
     {
-        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy(['accessType' => ScheduleAccessType::READ]);
+        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy([]);
         $scheduleAssignmentId = $scheduleAssignment->getId();
         $scheduleId = $scheduleAssignment->getSchedule()->getId();
         $normalizedScheduleAssignment = $this->normalize($scheduleAssignment, ScheduleAssignmentNormalizerGroup::PRIVATE->normalizationGroups());
@@ -131,9 +131,9 @@ class ScheduleAssignmentControllerTest extends BaseWebTestCase
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
     #[DataProviderExternal(ScheduleAssignmentPatchDataProvider::class, 'validationDataCases')]
-    public function testPatchMemberValidation(array $params, array $expectedErrors): void
+    public function testPatchValidation(array $params, array $expectedErrors): void
     {
-        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy(['accessType' => ScheduleAccessType::READ]);
+        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy([]);
         $scheduleAssignmentId = $scheduleAssignment->getId();
         $scheduleId = $scheduleAssignment->getSchedule()->getId();
         $this->client->loginUser($this->user, 'api');
@@ -143,7 +143,7 @@ class ScheduleAssignmentControllerTest extends BaseWebTestCase
     #[Fixtures([ScheduleAssignmentFixtures::class])]
     public function testDelete(): void
     {
-        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy(['accessType' => ScheduleAccessType::READ]);
+        $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy([]);
         $scheduleAssignmentId = $scheduleAssignment->getId();
         $scheduleId = $scheduleAssignment->getSchedule()->getId();
 

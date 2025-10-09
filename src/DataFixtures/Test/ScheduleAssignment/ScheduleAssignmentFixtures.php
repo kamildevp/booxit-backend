@@ -44,7 +44,7 @@ class ScheduleAssignmentFixtures extends Fixture implements DependentFixtureInte
             $scheduleAssignment = new ScheduleAssignment();
             $scheduleAssignment->setSchedule($schedule);
             $scheduleAssignment->setOrganizationMember($organizationMember);
-            $scheduleAssignment->setAccessType(ScheduleAccessType::READ->value);
+            $scheduleAssignment->setAccessType(ScheduleAccessType::WRITE->value);
             $manager->persist($scheduleAssignment);
         }
 

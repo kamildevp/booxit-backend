@@ -10,12 +10,15 @@ use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
+use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
 use App\Entity\Schedule;
+use App\Enum\WeekdayTimeWindow\WeekdayTimeWindowNormalizerGroup;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\ScheduleWorkingHoursService;
+use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
@@ -46,5 +49,19 @@ class ScheduleWorkingHoursController extends AbstractController
         $scheduleWorkingHoursService->setScheduleWeeklyWorkingHours($schedule, $dto);
 
         return new SuccessResponse(['message' => 'Schedule weekly working hours have been updated']);
+    }
+
+    #[OA\Get(
+        summary: 'Get schedule weekly working hours',
+        description: 'Returns schedule weekly working hours.'
+    )]
+    #[WeeklyWorkingHoursResponseDoc]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
+    public function get(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
+    {
+        $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), WeekdayTimeWindowNormalizerGroup::DEFAULT->normalizationGroups());
+
+        return new SuccessResponse($responseData);
     }
 }

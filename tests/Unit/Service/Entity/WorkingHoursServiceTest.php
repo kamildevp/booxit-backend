@@ -6,7 +6,7 @@ namespace App\Tests\Unit\Service\Entity;
 
 use App\DTO\WorkingHours\DateWorkingHoursDTO;
 use App\DTO\WorkingHours\TimeWindowDTO;
-use App\Service\Entity\ScheduleWorkingHoursService;
+use App\Service\Entity\WorkingHoursService;
 use App\Repository\ScheduleRepository;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
@@ -19,17 +19,17 @@ use PHPUnit\Framework\TestCase;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\MockObject\MockObject;
 
-class ScheduleWorkingHoursServiceTest extends TestCase
+class WorkingHoursServiceTest extends TestCase
 {
     private ScheduleRepository&MockObject $scheduleRepositoryMock;
     private DateTimeWindowRepository&MockObject $dateTimeWindowRepositoryMock;
-    private ScheduleWorkingHoursService $service;
+    private WorkingHoursService $service;
 
     protected function setUp(): void
     {
         $this->scheduleRepositoryMock = $this->createMock(ScheduleRepository::class);
         $this->dateTimeWindowRepositoryMock = $this->createMock(DateTimeWindowRepository::class);
-        $this->service = new ScheduleWorkingHoursService($this->scheduleRepositoryMock, $this->dateTimeWindowRepositoryMock);
+        $this->service = new WorkingHoursService($this->scheduleRepositoryMock, $this->dateTimeWindowRepositoryMock);
     }
 
     public function testSetScheduleWeeklyWorkingHoursCreatesAndRemovesTimeWindows(): void

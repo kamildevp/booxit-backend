@@ -17,7 +17,7 @@ use App\Entity\Schedule;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
-use App\Service\Entity\ScheduleWorkingHoursService;
+use App\Service\Entity\WorkingHoursService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -25,8 +25,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 
 #[ServerErrorResponseDoc]
-#[OA\Tag('ScheduleWorkingHours')]
-class ScheduleWorkingHoursController extends AbstractController
+#[OA\Tag('WorkingHours')]
+class WorkingHoursController extends AbstractController
 {
     #[OA\Put(
         summary: 'Update schedule weekly working hours',
@@ -43,10 +43,10 @@ class ScheduleWorkingHoursController extends AbstractController
     public function updateWeeklyWorkingHours(
         Schedule $schedule,
         #[MapRequestPayload] WeeklyWorkingHoursDTO $dto,
-        ScheduleWorkingHoursService $scheduleWorkingHoursService,
+        WorkingHoursService $workingHoursService,
     ): SuccessResponse
     {
-        $scheduleWorkingHoursService->setScheduleWeeklyWorkingHours($schedule, $dto);
+        $workingHoursService->setScheduleWeeklyWorkingHours($schedule, $dto);
 
         return new SuccessResponse(['message' => 'Schedule weekly working hours have been updated']);
     }
@@ -80,10 +80,10 @@ class ScheduleWorkingHoursController extends AbstractController
     public function updateDateWorkingHours(
         Schedule $schedule,
         #[MapRequestPayload] DateWorkingHoursDTO $dto,
-        ScheduleWorkingHoursService $scheduleWorkingHoursService,
+        WorkingHoursService $workingHoursService,
     ): SuccessResponse
     {
-        $scheduleWorkingHoursService->setScheduleDateWorkingHours($schedule, $dto);
+        $workingHoursService->setScheduleDateWorkingHours($schedule, $dto);
 
         return new SuccessResponse(['message' => 'Schedule date working hours have been updated']);
     }

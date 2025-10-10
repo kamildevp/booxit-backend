@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\ScheduleWorkingHours\DataProvider;
+namespace App\Tests\Feature\WorkingHours\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
-class ScheduleUpdateDateWorkingHoursDataProvider extends BaseDataProvider 
+class UpdateDateWorkingHoursDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()

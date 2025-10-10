@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\ScheduleWorkingHours;
+namespace App\Tests\Feature\WorkingHours;
 
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
-use App\DataFixtures\Test\ScheduleWorkingHours\ScheduleWeeklyWorkingHoursFixtures;
+use App\DataFixtures\Test\WorkingHours\WeeklyWorkingHoursFixtures;
 use App\Repository\ScheduleRepository;
 use App\Repository\UserRepository;
-use App\Tests\Feature\ScheduleWorkingHours\DataProvider\ScheduleGetWeeklyWorkingHoursDataProvider;
-use App\Tests\Feature\ScheduleWorkingHours\DataProvider\ScheduleUpdateDateWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\GetWeeklyWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\UpdateDateWorkingHoursDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
-use App\Tests\Feature\ScheduleWorkingHours\DataProvider\ScheduleUpdateWeeklyWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\UpdateWeeklyWorkingHoursDataProvider;
 
-class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
+class WorkingHoursControllerTest extends BaseWebTestCase
 {
     protected ScheduleRepository $scheduleRepository;
     protected UserRepository $userRepository;
@@ -28,7 +28,7 @@ class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(ScheduleUpdateWeeklyWorkingHoursDataProvider::class, 'validDataCases')]
+    #[DataProviderExternal(UpdateWeeklyWorkingHoursDataProvider::class, 'validDataCases')]
     public function testUpdateWeeklyWorkingHours(array $params): void
     {
         $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
@@ -39,7 +39,7 @@ class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(ScheduleUpdateWeeklyWorkingHoursDataProvider::class, 'validationDataCases')]
+    #[DataProviderExternal(UpdateWeeklyWorkingHoursDataProvider::class, 'validationDataCases')]
     public function testUpdateWeeklyWorkingHoursValidation(array $params, array $expectedErrors): void
     {
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
@@ -47,8 +47,8 @@ class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'PUT', "/api/schedules/$scheduleId/weekly-working-hours", $params, $expectedErrors);
     }
 
-    #[Fixtures([ScheduleWeeklyWorkingHoursFixtures::class])]
-    #[DataProviderExternal(ScheduleGetWeeklyWorkingHoursDataProvider::class, 'dataCases')]
+    #[Fixtures([WeeklyWorkingHoursFixtures::class])]
+    #[DataProviderExternal(GetWeeklyWorkingHoursDataProvider::class, 'dataCases')]
     public function testGetWeeklyWorkingHours(array $expectedResponseData): void
     {
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
@@ -57,7 +57,7 @@ class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(ScheduleUpdateDateWorkingHoursDataProvider::class, 'validDataCases')]
+    #[DataProviderExternal(UpdateDateWorkingHoursDataProvider::class, 'validDataCases')]
     public function testUpdateDateWorkingHours(array $params): void
     {
         $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
@@ -68,7 +68,7 @@ class ScheduleWorkingHoursControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(ScheduleUpdateDateWorkingHoursDataProvider::class, 'validationDataCases')]
+    #[DataProviderExternal(UpdateDateWorkingHoursDataProvider::class, 'validationDataCases')]
     public function testUpdateDateWorkingHoursValidation(array $params, array $expectedErrors): void
     {
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();

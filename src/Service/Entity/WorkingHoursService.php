@@ -14,7 +14,7 @@ use App\Repository\DateTimeWindowRepository;
 use App\Repository\ScheduleRepository;
 use DateTimeImmutable;
 
-class ScheduleWorkingHoursService
+class WorkingHoursService
 {
     public function __construct(
         private ScheduleRepository $scheduleRepository,

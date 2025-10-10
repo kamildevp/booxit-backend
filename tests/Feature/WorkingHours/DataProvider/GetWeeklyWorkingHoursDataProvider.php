@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\ScheduleWorkingHours\DataProvider;
+namespace App\Tests\Feature\WorkingHours\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
-class ScheduleGetWeeklyWorkingHoursDataProvider extends BaseDataProvider
+class GetWeeklyWorkingHoursDataProvider extends BaseDataProvider
 {
-    public static function scheduleWeeklyWorkingHours()
+    public static function weeklyWorkingHours()
     {
         return [
             'monday' => [['start_time' => '09:00', 'end_time' => '17:00']],
@@ -24,7 +24,7 @@ class ScheduleGetWeeklyWorkingHoursDataProvider extends BaseDataProvider
     public static function dataCases()
     {
         return [
-            [self::scheduleWeeklyWorkingHours()]
+            [self::weeklyWorkingHours()]
         ];
     }
 }

@@ -2,24 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\DataFixtures\Test\ScheduleWorkingHours;
+namespace App\DataFixtures\Test\WorkingHours;
 
 use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\Entity\Organization;
-use App\Entity\OrganizationMember;
 use App\Entity\Schedule;
-use App\Entity\ScheduleAssignment;
-use App\Entity\User;
 use App\Entity\WeekdayTimeWindow;
-use App\Enum\Organization\OrganizationRole;
-use App\Enum\Schedule\ScheduleAccessType;
-use App\Tests\Feature\ScheduleWorkingHours\DataProvider\ScheduleGetWeeklyWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\GetWeeklyWorkingHoursDataProvider;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ScheduleWeeklyWorkingHoursFixtures extends Fixture implements DependentFixtureInterface
+class WeeklyWorkingHoursFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -29,7 +24,7 @@ class ScheduleWeeklyWorkingHoursFixtures extends Fixture implements DependentFix
         $schedule->setName('Test Schedule');
         $schedule->setDescription('test');
         
-        $data = ScheduleGetWeeklyWorkingHoursDataProvider::scheduleWeeklyWorkingHours();
+        $data = GetWeeklyWorkingHoursDataProvider::weeklyWorkingHours();
 
         foreach($data as $weekday => $timeWindows){
             foreach($timeWindows as $timeWindow){

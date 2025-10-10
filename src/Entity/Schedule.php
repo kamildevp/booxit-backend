@@ -54,6 +54,12 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $weekdayTimeWindows;
 
+    /**
+     * @var Collection<int, DateTimeWindow>
+     */
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: DateTimeWindow::class, orphanRemoval: true)]
+    private Collection $dateTimeWindows;
+
     public function __construct()
     {
         $this->services = new ArrayCollection();
@@ -61,6 +67,7 @@ class Schedule
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
         $this->weekdayTimeWindows = new ArrayCollection();
+        $this->dateTimeWindows = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -278,6 +285,36 @@ class Schedule
             // set the owning side to null (unless already changed)
             if ($weekdayWorkingHour->getSchedule() === $this) {
                 $weekdayWorkingHour->setSchedule(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DateTimeWindow>
+     */
+    public function getDateTimeWindows(): Collection
+    {
+        return $this->dateTimeWindows;
+    }
+
+    public function addDateTimeWindow(DateTimeWindow $dateTimeWindow): static
+    {
+        if (!$this->dateTimeWindows->contains($dateTimeWindow)) {
+            $this->dateTimeWindows->add($dateTimeWindow);
+            $dateTimeWindow->setSchedule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDateTimeWindow(DateTimeWindow $dateTimeWindow): static
+    {
+        if ($this->dateTimeWindows->removeElement($dateTimeWindow)) {
+            // set the owning side to null (unless already changed)
+            if ($dateTimeWindow->getSchedule() === $this) {
+                $dateTimeWindow->setSchedule(null);
             }
         }
 

@@ -10,7 +10,7 @@ use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
 use OpenApi\Attributes as OA;
 
-class CustomWorkingHoursDTO extends AbstractDTO 
+class CustomWorkingHoursUpdateDTO extends AbstractDTO 
 {
     public function __construct(
         #[OA\Property(format: 'date')]

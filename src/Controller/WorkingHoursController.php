@@ -11,9 +11,10 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
-use App\DTO\WorkingHours\CustomWorkingHoursDTO;
-use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
+use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\Schedule;
+use App\Repository\CustomTimeWindowRepository;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
@@ -42,7 +43,7 @@ class WorkingHoursController extends AbstractController
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
     public function updateWeeklyWorkingHours(
         Schedule $schedule,
-        #[MapRequestPayload] WeeklyWorkingHoursDTO $dto,
+        #[MapRequestPayload] WeeklyWorkingHoursUpdateDTO $dto,
         WorkingHoursService $workingHoursService,
     ): SuccessResponse
     {
@@ -58,7 +59,7 @@ class WorkingHoursController extends AbstractController
     #[WeeklyWorkingHoursResponseDoc]
     #[NotFoundResponseDoc('Schedule not found')]
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
-    public function get(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
+    public function getWeeklyWorkingHours(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
         $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), []);
 
@@ -79,7 +80,7 @@ class WorkingHoursController extends AbstractController
     #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
     public function updateCustomWorkingHours(
         Schedule $schedule,
-        #[MapRequestPayload] CustomWorkingHoursDTO $dto,
+        #[MapRequestPayload] CustomWorkingHoursUpdateDTO $dto,
         WorkingHoursService $workingHoursService,
     ): SuccessResponse
     {

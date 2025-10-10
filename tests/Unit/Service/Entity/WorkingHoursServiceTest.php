@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
-use App\DTO\WorkingHours\CustomWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
 use App\DTO\WorkingHours\TimeWindowDTO;
 use App\Service\Entity\WorkingHoursService;
 use App\Repository\ScheduleRepository;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
-use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
+use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\CustomTimeWindow;
 use App\Enum\Weekday;
 use App\Repository\CustomTimeWindowRepository;
@@ -64,7 +64,7 @@ class WorkingHoursServiceTest extends TestCase
             ->method('save')
             ->with($scheduleMock, true);
 
-        $dto = new WeeklyWorkingHoursDTO([new TimeWindowDTO('13:00', '17:00')], [], [], [], [], [], []);
+        $dto = new WeeklyWorkingHoursUpdateDTO([new TimeWindowDTO('13:00', '17:00')], [], [], [], [], [], []);
         $this->service->setScheduleWeeklyWorkingHours($scheduleMock, $dto);
     }
 
@@ -110,7 +110,7 @@ class WorkingHoursServiceTest extends TestCase
             ->expects($this->once())
             ->method('flush');
 
-        $dto = new CustomWorkingHoursDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
+        $dto = new CustomWorkingHoursUpdateDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
         $this->service->setScheduleCustomWorkingHours($scheduleMock, $dto);
     }
 }

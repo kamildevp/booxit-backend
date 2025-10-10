@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\WorkingHours\CustomWorkingHoursDTO;
-use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
+use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
@@ -24,7 +24,7 @@ class WorkingHoursService
         
     }
 
-    public function setScheduleWeeklyWorkingHours(Schedule $schedule, WeeklyWorkingHoursDTO $dto): void
+    public function setScheduleWeeklyWorkingHours(Schedule $schedule, WeeklyWorkingHoursUpdateDTO $dto): void
     {
         $scheduleWeekdayTimeWindows = $schedule->getWeekdayTimeWindows();
         $updatedTimeWindows = [];
@@ -58,7 +58,7 @@ class WorkingHoursService
         $this->scheduleRepository->save($schedule, true);
     }
 
-    public function setScheduleCustomWorkingHours(Schedule $schedule, CustomWorkingHoursDTO $dto): void
+    public function setScheduleCustomWorkingHours(Schedule $schedule, CustomWorkingHoursUpdateDTO $dto): void
     {
         $date = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date);
         $scheduleCustomTimeWindows = $this->customTimeWindowRepository->findBy(['schedule' => $schedule, 'date' => $date]);

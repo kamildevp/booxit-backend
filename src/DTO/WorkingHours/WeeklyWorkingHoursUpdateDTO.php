@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\Constraints as CustomAssert;
 use OpenApi\Attributes as OA;
 
-class WeeklyWorkingHoursDTO extends AbstractDTO 
+class WeeklyWorkingHoursUpdateDTO extends AbstractDTO 
 {
     public function __construct(
         #[OA\Property(example: [['start_time' => '09:00', 'end_time' => '17:00']])]

@@ -11,6 +11,7 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
+use App\DTO\WorkingHours\DateWorkingHoursDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
 use App\Entity\Schedule;
 use App\Response\SuccessResponse;
@@ -62,5 +63,28 @@ class ScheduleWorkingHoursController extends AbstractController
         $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), []);
 
         return new SuccessResponse($responseData);
+    }
+
+    #[OA\Put(
+        summary: 'Update schedule date working hours',
+        description: 'Updates schedule working hours for specific date.
+        </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Schedule date working hours have been updated'])]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
+    #[Route('schedules/{schedule}/date-working-hours', name: 'schedule_date_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
+    public function updateDateWorkingHours(
+        Schedule $schedule,
+        #[MapRequestPayload] DateWorkingHoursDTO $dto,
+        ScheduleWorkingHoursService $scheduleWorkingHoursService,
+    ): SuccessResponse
+    {
+        $scheduleWorkingHoursService->setScheduleDateWorkingHours($schedule, $dto);
+
+        return new SuccessResponse(['message' => 'Schedule date working hours have been updated']);
     }
 }

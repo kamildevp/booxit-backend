@@ -31,6 +31,89 @@ class ScheduleUpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'monday' => [['start_time' => '', 'end_time' => '']],
+                    'tuesday' => [['start_time' => '', 'end_time' => '']],
+                    'wednesday' => [['start_time' => '', 'end_time' => '']],
+                    'thursday' => [['start_time' => '', 'end_time' => '']],
+                    'friday' => [['start_time' => '', 'end_time' => '']],
+                    'saturday' => [['start_time' => '', 'end_time' => '']],
+                    'sunday' => [['start_time' => '', 'end_time' => '']],
+                ],
+                [
+                    'monday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'tuesday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'wednesday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'thursday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'friday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'saturday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ],
+                    'sunday' => [
+                        '0' => [
+                            'start_time' => [
+                                'This value should not be blank.'
+                            ],
+                            'end_time' => [
+                                'This value should not be blank.'
+                            ]
+                        ],
+                    ]
+                ]
+            ],
+            [
+                [
                     'monday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
                     'tuesday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
                     'wednesday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],

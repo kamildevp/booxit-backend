@@ -6,7 +6,7 @@ namespace App\Tests\Feature\WorkingHours\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
-class UpdateDateWorkingHoursDataProvider extends BaseDataProvider 
+class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()

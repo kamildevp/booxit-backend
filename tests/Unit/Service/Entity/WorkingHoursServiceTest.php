@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
-use App\DTO\WorkingHours\DateWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursDTO;
 use App\DTO\WorkingHours\TimeWindowDTO;
 use App\Service\Entity\WorkingHoursService;
 use App\Repository\ScheduleRepository;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
-use App\Entity\DateTimeWindow;
+use App\Entity\CustomTimeWindow;
 use App\Enum\Weekday;
-use App\Repository\DateTimeWindowRepository;
+use App\Repository\CustomTimeWindowRepository;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -22,14 +22,14 @@ use PHPUnit\Framework\MockObject\MockObject;
 class WorkingHoursServiceTest extends TestCase
 {
     private ScheduleRepository&MockObject $scheduleRepositoryMock;
-    private DateTimeWindowRepository&MockObject $dateTimeWindowRepositoryMock;
+    private CustomTimeWindowRepository&MockObject $customTimeWindowRepositoryMock;
     private WorkingHoursService $service;
 
     protected function setUp(): void
     {
         $this->scheduleRepositoryMock = $this->createMock(ScheduleRepository::class);
-        $this->dateTimeWindowRepositoryMock = $this->createMock(DateTimeWindowRepository::class);
-        $this->service = new WorkingHoursService($this->scheduleRepositoryMock, $this->dateTimeWindowRepositoryMock);
+        $this->customTimeWindowRepositoryMock = $this->createMock(CustomTimeWindowRepository::class);
+        $this->service = new WorkingHoursService($this->scheduleRepositoryMock, $this->customTimeWindowRepositoryMock);
     }
 
     public function testSetScheduleWeeklyWorkingHoursCreatesAndRemovesTimeWindows(): void
@@ -68,49 +68,49 @@ class WorkingHoursServiceTest extends TestCase
         $this->service->setScheduleWeeklyWorkingHours($scheduleMock, $dto);
     }
 
-    public function testSetScheduleDateWorkingHoursCreatesAndRemovesTimeWindows(): void
+    public function testSetScheduleCustomWorkingHoursCreatesAndRemovesTimeWindows(): void
     {
         $date = '2025-10-01';
         $datetime = DateTimeImmutable::createFromFormat('Y-m-d', $date);
-        $existingTimeWindowMock = $this->createMock(DateTimeWindow::class);
+        $existingTimeWindowMock = $this->createMock(CustomTimeWindow::class);
         $existingTimeWindowMock->method('getDate')->willReturn($datetime);
         $existingTimeWindowMock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','08:00'));
         $existingTimeWindowMock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','12:00'));
         $scheduleMock = $this->createMock(Schedule::class);
 
-        $this->dateTimeWindowRepositoryMock
+        $this->customTimeWindowRepositoryMock
             ->method('findBy')
             ->with(['schedule' => $scheduleMock, 'date' => $datetime])
             ->willReturn([$existingTimeWindowMock]);
 
-        $this->dateTimeWindowRepositoryMock
+        $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('save')
             ->with($this->callback(function ($timeWindow) use ($datetime, $scheduleMock) {
                 return 
-                    $timeWindow instanceof DateTimeWindow && 
+                    $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getSchedule() == $scheduleMock &&
                     $timeWindow->getDate() == $datetime &&
                     $timeWindow->getStartTime()->format('H:i')  == '13:00' &&
                     $timeWindow->getEndTime()->format('H:i')  == '17:00';
             }));
 
-        $this->dateTimeWindowRepositoryMock
+        $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('remove')
             ->with($this->callback(function ($timeWindow) use ($datetime) {
                 return 
-                    $timeWindow instanceof DateTimeWindow && 
+                    $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getDate() == $datetime &&
                     $timeWindow->getStartTime()->format('H:i')  == '08:00' &&
                     $timeWindow->getEndTime()->format('H:i')  == '12:00';
             }));
 
-        $this->dateTimeWindowRepositoryMock
+        $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('flush');
 
-        $dto = new DateWorkingHoursDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
-        $this->service->setScheduleDateWorkingHours($scheduleMock, $dto);
+        $dto = new CustomWorkingHoursDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
+        $this->service->setScheduleCustomWorkingHours($scheduleMock, $dto);
     }
 }

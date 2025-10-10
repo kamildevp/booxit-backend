@@ -54,8 +54,8 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $weekdayTimeWindows;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: DateTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
-    private Collection $dateTimeWindows;
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: CustomTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $customTimeWindows;
 
     public function __construct()
     {
@@ -64,7 +64,7 @@ class Schedule
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
         $this->weekdayTimeWindows = new ArrayCollection();
-        $this->dateTimeWindows = new ArrayCollection();
+        $this->customTimeWindows = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -289,29 +289,29 @@ class Schedule
     }
 
     /**
-     * @return Collection<int, DateTimeWindow>
+     * @return Collection<int, CustomTimeWindow>
      */
-    public function getDateTimeWindows(): Collection
+    public function getCustomTimeWindows(): Collection
     {
-        return $this->dateTimeWindows;
+        return $this->customTimeWindows;
     }
 
-    public function addDateTimeWindow(DateTimeWindow $dateTimeWindow): static
+    public function addCustomTimeWindow(CustomTimeWindow $customTimeWindow): static
     {
-        if (!$this->dateTimeWindows->contains($dateTimeWindow)) {
-            $this->dateTimeWindows->add($dateTimeWindow);
-            $dateTimeWindow->setSchedule($this);
+        if (!$this->customTimeWindows->contains($customTimeWindow)) {
+            $this->customTimeWindows->add($customTimeWindow);
+            $customTimeWindow->setSchedule($this);
         }
 
         return $this;
     }
 
-    public function removeDateTimeWindow(DateTimeWindow $dateTimeWindow): static
+    public function removeCustomTimeWindow(CustomTimeWindow $customTimeWindow): static
     {
-        if ($this->dateTimeWindows->removeElement($dateTimeWindow)) {
+        if ($this->customTimeWindows->removeElement($customTimeWindow)) {
             // set the owning side to null (unless already changed)
-            if ($dateTimeWindow->getSchedule() === $this) {
-                $dateTimeWindow->setSchedule(null);
+            if ($customTimeWindow->getSchedule() === $this) {
+                $customTimeWindow->setSchedule(null);
             }
         }
 

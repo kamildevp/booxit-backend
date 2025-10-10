@@ -9,7 +9,7 @@ use App\DataFixtures\Test\WorkingHours\WeeklyWorkingHoursFixtures;
 use App\Repository\ScheduleRepository;
 use App\Repository\UserRepository;
 use App\Tests\Feature\WorkingHours\DataProvider\GetWeeklyWorkingHoursDataProvider;
-use App\Tests\Feature\WorkingHours\DataProvider\UpdateDateWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\UpdateCustomWorkingHoursDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
@@ -57,22 +57,22 @@ class WorkingHoursControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(UpdateDateWorkingHoursDataProvider::class, 'validDataCases')]
-    public function testUpdateDateWorkingHours(array $params): void
+    #[DataProviderExternal(UpdateCustomWorkingHoursDataProvider::class, 'validDataCases')]
+    public function testUpdateCustomWorkingHours(array $params): void
     {
         $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
         $this->client->loginUser($user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PUT', "/api/schedules/$scheduleId/date-working-hours", $params);
-        $this->assertEquals(['message' => 'Schedule date working hours have been updated'], $responseData);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PUT', "/api/schedules/$scheduleId/custom-working-hours", $params);
+        $this->assertEquals(['message' => 'Schedule custom working hours have been updated'], $responseData);
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(UpdateDateWorkingHoursDataProvider::class, 'validationDataCases')]
-    public function testUpdateDateWorkingHoursValidation(array $params, array $expectedErrors): void
+    #[DataProviderExternal(UpdateCustomWorkingHoursDataProvider::class, 'validationDataCases')]
+    public function testUpdateCustomWorkingHoursValidation(array $params, array $expectedErrors): void
     {
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PUT', "/api/schedules/$scheduleId/date-working-hours", $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PUT', "/api/schedules/$scheduleId/custom-working-hours", $params, $expectedErrors);
     }
 }

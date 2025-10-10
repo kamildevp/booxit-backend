@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\DateTimeWindow;
+use App\Entity\CustomTimeWindow;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<DateTimeWindow>
+ * @extends ServiceEntityRepository<CustomTimeWindow>
  */
-class DateTimeWindowRepository extends ServiceEntityRepository
+class CustomTimeWindowRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, DateTimeWindow::class);
+        parent::__construct($registry, CustomTimeWindow::class);
     }
 
     //    /**
-    //     * @return DateTimeWindow[] Returns an array of DateTimeWindow objects
+    //     * @return CustomTimeWindow[] Returns an array of CustomTimeWindow objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -31,7 +31,7 @@ class DateTimeWindowRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?DateTimeWindow
+    //    public function findOneBySomeField($value): ?CustomTimeWindow
     //    {
     //        return $this->createQueryBuilder('d')
     //            ->andWhere('d.exampleField = :val')
@@ -41,7 +41,7 @@ class DateTimeWindowRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    public function save(DateTimeWindow $entity, bool $flush = false): void
+    public function save(CustomTimeWindow $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -50,7 +50,7 @@ class DateTimeWindowRepository extends ServiceEntityRepository
         }
     }
 
-    public function remove(DateTimeWindow $entity, bool $flush = false): void
+    public function remove(CustomTimeWindow $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 

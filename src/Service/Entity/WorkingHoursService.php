@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\WorkingHours\DateWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
-use App\Entity\DateTimeWindow;
+use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
 use App\Enum\Weekday;
-use App\Repository\DateTimeWindowRepository;
+use App\Repository\CustomTimeWindowRepository;
 use App\Repository\ScheduleRepository;
 use DateTimeImmutable;
 
@@ -18,7 +18,7 @@ class WorkingHoursService
 {
     public function __construct(
         private ScheduleRepository $scheduleRepository,
-        private DateTimeWindowRepository $dateTimeWindowRepository
+        private CustomTimeWindowRepository $customTimeWindowRepository
     )
     {
         
@@ -58,40 +58,40 @@ class WorkingHoursService
         $this->scheduleRepository->save($schedule, true);
     }
 
-    public function setScheduleDateWorkingHours(Schedule $schedule, DateWorkingHoursDTO $dto): void
+    public function setScheduleCustomWorkingHours(Schedule $schedule, CustomWorkingHoursDTO $dto): void
     {
         $date = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date);
-        $scheduleDateTimeWindows = $this->dateTimeWindowRepository->findBy(['schedule' => $schedule, 'date' => $date]);
+        $scheduleCustomTimeWindows = $this->customTimeWindowRepository->findBy(['schedule' => $schedule, 'date' => $date]);
 
         $updatedTimeWindows = [];
         foreach($dto->timeWindows as $timeWindow){
-                $matchingDateTimeWindows = array_filter($scheduleDateTimeWindows,
+                $matchingCustomTimeWindows = array_filter($scheduleCustomTimeWindows,
                     fn($element) => 
                         $element->getStartTime()->format('H:i') == $timeWindow->startTime && 
                         $element->getEndTime()->format('H:i') == $timeWindow->endTime
                 );
                 
-                if(count($matchingDateTimeWindows) == 0){
-                    $dateTimeWindow = new DateTimeWindow();
-                    $dateTimeWindow->setDate($date);
-                    $dateTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->startTime));
-                    $dateTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->endTime));
-                    $dateTimeWindow->setSchedule($schedule);
-                    $this->dateTimeWindowRepository->save($dateTimeWindow);
+                if(count($matchingCustomTimeWindows) == 0){
+                    $customTimeWindow = new CustomTimeWindow();
+                    $customTimeWindow->setDate($date);
+                    $customTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->startTime));
+                    $customTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->endTime));
+                    $customTimeWindow->setSchedule($schedule);
+                    $this->customTimeWindowRepository->save($customTimeWindow);
                 }
                 else{
-                    $dateTimeWindow = reset($matchingDateTimeWindows);
+                    $customTimeWindow = reset($matchingCustomTimeWindows);
                 }
 
-                $updatedTimeWindows[] = $dateTimeWindow;
+                $updatedTimeWindows[] = $customTimeWindow;
         }
 
-        foreach($scheduleDateTimeWindows as $dateTimeWindow){
-            if(!in_array($dateTimeWindow, $updatedTimeWindows)){
-                $this->dateTimeWindowRepository->remove($dateTimeWindow);
+        foreach($scheduleCustomTimeWindows as $customTimeWindow){
+            if(!in_array($customTimeWindow, $updatedTimeWindows)){
+                $this->customTimeWindowRepository->remove($customTimeWindow);
             }
         }
 
-        $this->dateTimeWindowRepository->flush();
+        $this->customTimeWindowRepository->flush();
     }
 }

@@ -2,19 +2,19 @@
 
 namespace App\Entity;
 
-use App\Repository\DateTimeWindowRepository;
+use App\Repository\CustomTimeWindowRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 
-#[ORM\Entity(repositoryClass: DateTimeWindowRepository::class)]
-class DateTimeWindow
+#[ORM\Entity(repositoryClass: CustomTimeWindowRepository::class)]
+class CustomTimeWindow
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID, unique: true)]
     private ?string $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'dateTimeWindows')]
+    #[ORM\ManyToOne(inversedBy: 'customTimeWindows')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 

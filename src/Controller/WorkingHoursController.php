@@ -11,7 +11,7 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
-use App\DTO\WorkingHours\DateWorkingHoursDTO;
+use App\DTO\WorkingHours\CustomWorkingHoursDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
 use App\Entity\Schedule;
 use App\Response\SuccessResponse;
@@ -66,25 +66,25 @@ class WorkingHoursController extends AbstractController
     }
 
     #[OA\Put(
-        summary: 'Update schedule date working hours',
-        description: 'Updates schedule working hours for specific date.
+        summary: 'Update custom schedule working hours',
+        description: 'Updates custom schedule working hours for specific date.
         </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
-    #[SuccessResponseDoc(dataExample: ['message' => 'Schedule date working hours have been updated'])]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Schedule custom working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
-    #[Route('schedules/{schedule}/date-working-hours', name: 'schedule_date_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
-    public function updateDateWorkingHours(
+    #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
+    public function updateCustomWorkingHours(
         Schedule $schedule,
-        #[MapRequestPayload] DateWorkingHoursDTO $dto,
+        #[MapRequestPayload] CustomWorkingHoursDTO $dto,
         WorkingHoursService $workingHoursService,
     ): SuccessResponse
     {
-        $workingHoursService->setScheduleDateWorkingHours($schedule, $dto);
+        $workingHoursService->setScheduleCustomWorkingHours($schedule, $dto);
 
-        return new SuccessResponse(['message' => 'Schedule date working hours have been updated']);
+        return new SuccessResponse(['message' => 'Schedule custom working hours have been updated']);
     }
 }

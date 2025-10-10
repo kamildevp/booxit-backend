@@ -13,7 +13,6 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
 use App\DTO\WorkingHours\WeeklyWorkingHoursDTO;
 use App\Entity\Schedule;
-use App\Enum\WeekdayTimeWindow\WeekdayTimeWindowNormalizerGroup;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\ScheduleWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
@@ -60,7 +59,7 @@ class ScheduleWorkingHoursController extends AbstractController
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
     public function get(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
-        $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), WeekdayTimeWindowNormalizerGroup::DEFAULT->normalizationGroups());
+        $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), []);
 
         return new SuccessResponse($responseData);
     }

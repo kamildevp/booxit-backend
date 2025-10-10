@@ -11,10 +11,16 @@ use Symfony\Component\Validator\Constraints\Compound;
 #[Attribute]
 class QuarterHourTimeRequirements extends Compound
 {
+    public function __construct(protected bool $allowNull = false, mixed $options = null)
+    {
+        parent::__construct($options);
+    }
+
     protected function getConstraints(array $options): array
     {
         return [
             new Assert\Sequentially([
+                new Assert\NotBlank(allowNull: $this->allowNull),
                 new Assert\Time(withSeconds: false),
                 new Assert\Regex(
                     pattern: '/^\d{2}:(00|15|30|45)$/',

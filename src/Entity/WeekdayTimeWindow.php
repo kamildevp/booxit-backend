@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Enum\WeekdayTimeWindow\WeekdayTimeWindowNormalizerGroup;
 use App\Repository\WeekdayTimeWindowRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\Serializer\Attribute\Context;
-use Symfony\Component\Serializer\Attribute\Groups;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ORM\Entity(repositoryClass: WeekdayTimeWindowRepository::class)]
 class WeekdayTimeWindow
@@ -24,17 +20,12 @@ class WeekdayTimeWindow
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
-    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
     #[ORM\Column(length: 255)]
     private ?string $weekday = null;
 
-    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
-    #[Context([DateTimeNormalizer::FORMAT_KEY => 'H:i'])]
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $startTime = null;
 
-    #[Groups([WeekdayTimeWindowNormalizerGroup::DEFAULT->value])]
-    #[Context([DateTimeNormalizer::FORMAT_KEY => 'H:i'])]
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $endTime = null;
 

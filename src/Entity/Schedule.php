@@ -54,10 +54,7 @@ class Schedule
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $weekdayTimeWindows;
 
-    /**
-     * @var Collection<int, DateTimeWindow>
-     */
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: DateTimeWindow::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: DateTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $dateTimeWindows;
 
     public function __construct()

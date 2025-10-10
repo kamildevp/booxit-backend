@@ -13,7 +13,9 @@ class WeeklyWorkingHoursNormalizer implements NormalizerInterface
 {
     public function supportsNormalization($data, ?string $format = null, array $context = []): bool
     {
-        return $data instanceof Collection && $data->count() > 0 && $data->first() instanceof WeekdayTimeWindow;
+        return 
+            $data instanceof Collection && $data->first() instanceof WeekdayTimeWindow || 
+            is_array($data) && reset($data) instanceof WeekdayTimeWindow;
     }
 
     public function normalize($collection, ?string $format = null, array $context = []): array

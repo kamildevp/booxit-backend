@@ -42,9 +42,6 @@ class Schedule
     #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules', fetch: 'EXTRA_LAZY')]
     private Collection $services;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WorkingHours::class, orphanRemoval: true, cascade: ['persist'])]
-    private Collection $workingHours;
-
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: ScheduleAssignment::class, orphanRemoval: true, cascade: ['persist'])]
     private Collection $assignments;
 
@@ -60,7 +57,6 @@ class Schedule
     public function __construct()
     {
         $this->services = new ArrayCollection();
-        $this->workingHours = new ArrayCollection();
         $this->assignments = new ArrayCollection();
         $this->reservations = new ArrayCollection();
         $this->weekdayTimeWindows = new ArrayCollection();
@@ -139,42 +135,6 @@ class Schedule
     public function hasService(Service $service): bool
     {
         return $this->services->contains($service);
-    }
-
-    /**
-     * @return Collection<int, WorkingHours>
-     */
-    public function getWorkingHours(): Collection
-    {
-        return $this->workingHours;
-    }
-
-    public function setWorkingHours(Collection $workingHours): self
-    {
-        $this->workingHours = $workingHours;
-        return $this;
-    }
-
-    public function addWorkingHours(WorkingHours $workingHour): self
-    {
-        if (!$this->workingHours->contains($workingHour)) {
-            $this->workingHours->add($workingHour);
-            $workingHour->setSchedule($this);
-        }
-
-        return $this;
-    }
-
-    public function removeWorkingHours(WorkingHours $workingHour): self
-    {
-        if ($this->workingHours->removeElement($workingHour)) {
-            // set the owning side to null (unless already changed)
-            if ($workingHour->getSchedule() === $this) {
-                $workingHour->setSchedule(null);
-            }
-        }
-
-        return $this;
     }
 
     /**

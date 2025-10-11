@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\CustomTimeWindow;
+use App\Entity\Schedule;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -62,5 +64,22 @@ class CustomTimeWindowRepository extends ServiceEntityRepository
     public function flush(): void
     {
         $this->getEntityManager()->flush();
+    }
+
+    public function getScheduleCustomTimeWindows(Schedule $schedule, ?string $dateFrom, ?string $dateTo)
+    {
+        $startDate = !is_null($dateFrom) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateFrom) : (new \DateTimeImmutable())->modify('monday this week');
+        $endDate = !is_null($dateTo) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateTo) : (new \DateTimeImmutable())->modify('sunday this week');
+
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.schedule = :schedule')
+            ->andWhere('e.date >= :startDate')
+            ->andWhere('e.date <= :endDate')
+            ->setParameter('schedule', $schedule)
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->orderBy('e.date', 'asc');
+
+        return $qb->getQuery()->getResult();
     }
 }

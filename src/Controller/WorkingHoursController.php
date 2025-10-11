@@ -11,6 +11,7 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
+use App\DTO\WorkingHours\CustomWorkingHoursGetDTO;
 use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\Schedule;
@@ -24,6 +25,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('WorkingHours')]
@@ -87,5 +89,25 @@ class WorkingHoursController extends AbstractController
         $workingHoursService->setScheduleCustomWorkingHours($schedule, $dto);
 
         return new SuccessResponse(['message' => 'Schedule custom working hours have been updated']);
+    }
+
+    #[OA\Get(
+        summary: 'Get schedule custom working hours',
+        description: 'Returns schedule custom working hours for the specified date range (up to one month). If no range is provided, the current week is used by default.'
+    )]
+    #[WeeklyWorkingHoursResponseDoc]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
+    public function getCustomWorkingHours(
+        Schedule $schedule, 
+        EntitySerializerInterface $entitySerializer,
+        CustomTimeWindowRepository $customTimeWindowRepository,
+        #[MapQueryString] CustomWorkingHoursGetDTO $dto = new CustomWorkingHoursGetDTO,
+    ): SuccessResponse
+    {
+        $items = $customTimeWindowRepository->getScheduleCustomTimeWindows($schedule, $dto->dateFrom, $dto->dateTo);
+        $responseData = $entitySerializer->normalize($items, []);
+
+        return new SuccessResponse($responseData);
     }
 }

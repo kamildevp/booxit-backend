@@ -2,95 +2,91 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Repository\ReservationRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Reservation\ServiceTask;
-use App\Service\SetterHelper\Task\Reservation\TimeWindowTask;
-use App\Service\SetterHelper\Task\Reservation\ScheduleTask;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use App\Validator\Constraints as CustomAssert;
-use DateTime;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 
-#[Assert\GroupSequence(['basic','Reservation'])]
-#[CustomAssert\Reservation]
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 class Reservation
 {
+    use Timestampable, Blameable, SoftDeleteableEntity;
+
+    #[Groups([ReservationNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups([ReservationNormalizerGroup::BASE_INFO->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $reference = null;
+
+    #[Groups([ReservationNormalizerGroup::SCHEDULE->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[Assert\Length(
-        max: 180,
-        maxMessage: 'Max length of email is 180 characters',
-        groups: ['Default','basic']
-    )]
-    #[Assert\Email(
-        message: 'Value is not a valid email.',
-        groups: ['Default','basic']
-    )]
+    #[Groups([ReservationNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[Assert\Regex(
-        pattern: '/^\d{6,20}$/',
-        message: 'Value is not valid phone number',
-        groups: ['Default','basic']
-    )]
+    #[Groups([ReservationNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 255)]
     private ?string $phoneNumber = null;
 
+    #[Groups([ReservationNormalizerGroup::SERVICE->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
     private ?Service $service = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?TimeWindow $timeWindow = null;
-
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 
-    #[ORM\Column]
-    private ?bool $confirmed = null;
-
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[CustomAssert\DateTimeFormat(format: Schedule::DATE_FORMAT,groups: ['Default','basic'])]
-    #[ORM\Column(length: 255)]
-    private ?string $date = null;
-
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
-    #[Getter(groups: ['schedule-reservations'])]
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $estimatedPrice = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $startDateTime = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $endDateTime = null;
+
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $type = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $status = null;
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups: ['reservation-organization'])]
     public function getOrganization(): ?Organization
     {
         return $this->schedule->getOrganization();
     }
 
-    #[Getter(groups: ['reservation-schedule'])]
     public function getSchedule(): ?Schedule
     {
         return $this->schedule;
     }
 
-    #[Setter(targetParameter: 'schedule_id', setterTask: ScheduleTask::class, groups: ['initOnly'])]
     public function setSchedule(?Schedule $schedule): self
     {
         $this->schedule = $schedule;
@@ -98,27 +94,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
-    public function getDate(): ?string
-    {
-        return $this->date;
-    }
-
-    #[Setter]
-    public function setDate(string $date): self
-    {
-        $this->date = $date;
-
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    #[Setter(groups:['initOnly'])]
     public function setEmail(string $email): self
     {
         $this->email = $email;
@@ -126,13 +106,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getPhoneNumber(): ?string
     {
         return $this->phoneNumber;
     }
 
-    #[Setter]
     public function setPhoneNumber(string $phoneNumber): self
     {
         $this->phoneNumber = $phoneNumber;
@@ -140,13 +118,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation-service', 'schedule-reservations'])]
     public function getService(): ?Service
     {
         return $this->service;
     }
 
-    #[Setter(targetParameter: 'service_id', setterTask: ServiceTask::class)]
     public function setService(?Service $service): self
     {
         $this->service = $service;
@@ -154,20 +130,6 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
-    public function getTimeWindow(): ?TimeWindow
-    {
-        return $this->timeWindow;
-    }
-
-    #[Setter(targetParameter: 'start_time', setterTask: TimeWindowTask::class)]
-    public function setTimeWindow(TimeWindow $timeWindow): self
-    {
-        $this->timeWindow = $timeWindow;
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function isVerified(): ?bool
     {
         return $this->verified;
@@ -176,19 +138,6 @@ class Reservation
     public function setVerified(bool $verified): self
     {
         $this->verified = $verified;
-
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
-    public function isConfirmed(): ?bool
-    {
-        return $this->confirmed;
-    }
-
-    public function setConfirmed(bool $confirmed): self
-    {
-        $this->confirmed = $confirmed;
 
         return $this;
     }
@@ -205,16 +154,76 @@ class Reservation
         return $this;
     }
 
-    public function updateTimeWindow(): void
+    public function getReference(): ?string
     {
-        if($this->timeWindow && $this->service){
-            $startTime = $this->timeWindow->getStartTime();
-            $duration = $this->service->getDuration();
-    
-            $endTime = (new DateTime)->setTimestamp($startTime->getTimestamp())->add($duration);
+        return $this->reference;
+    }
 
-            $this->timeWindow->setEndTime($endTime);
-        }
+    public function setReference(string $reference): static
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getEstimatedPrice(): ?string
+    {
+        return $this->estimatedPrice;
+    }
+
+    public function setEstimatedPrice(string $estimatedPrice): static
+    {
+        $this->estimatedPrice = $estimatedPrice;
+
+        return $this;
+    }
+
+    public function getStartDateTime(): ?\DateTimeInterface
+    {
+        return $this->startDateTime;
+    }
+
+    public function setStartDateTime(\DateTimeInterface $startDateTime): static
+    {
+        $this->startDateTime = $startDateTime;
+
+        return $this;
+    }
+
+    public function getEndDateTime(): ?\DateTimeInterface
+    {
+        return $this->endDateTime;
+    }
+
+    public function setEndDateTime(\DateTimeInterface $endDateTime): static
+    {
+        $this->endDateTime = $endDateTime;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
+
+        return $this;
     }
 
 }

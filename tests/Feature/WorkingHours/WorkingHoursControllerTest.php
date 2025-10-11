@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Feature\WorkingHours;
 
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
+use App\DataFixtures\Test\WorkingHours\CustomWorkingHoursFixtures;
 use App\DataFixtures\Test\WorkingHours\WeeklyWorkingHoursFixtures;
 use App\Repository\ScheduleRepository;
 use App\Repository\UserRepository;
+use App\Tests\Feature\WorkingHours\DataProvider\GetCustomWorkingHoursDataProvider;
 use App\Tests\Feature\WorkingHours\DataProvider\GetWeeklyWorkingHoursDataProvider;
 use App\Tests\Feature\WorkingHours\DataProvider\UpdateCustomWorkingHoursDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -74,5 +76,26 @@ class WorkingHoursControllerTest extends BaseWebTestCase
         $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'PUT', "/api/schedules/$scheduleId/custom-working-hours", $params, $expectedErrors);
+    }
+
+    #[Fixtures([CustomWorkingHoursFixtures::class])]
+    #[DataProviderExternal(GetCustomWorkingHoursDataProvider::class, 'dataCases')]
+    public function testGetCustomWorkingHours(array $query, array $expectedResponseData): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $path = '/api/schedules/'.$schedule->getId().'/custom-working-hours?' . http_build_query($query);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertEquals($expectedResponseData, $responseData);
+    }
+
+    #[Fixtures([CustomWorkingHoursFixtures::class])]
+    #[DataProviderExternal(GetCustomWorkingHoursDataProvider::class, 'validationDataCases')]
+    public function testGetCustomWorkingHoursValidation(array $query, array $expectedErrors): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $path = '/api/schedules/'.$schedule->getId().'/custom-working-hours?' . http_build_query($query);
+
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 }

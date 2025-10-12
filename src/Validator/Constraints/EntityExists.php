@@ -16,6 +16,8 @@ class EntityExists extends Constraint
     public function __construct(
         public string $entityClass,
         public string $fieldName = 'id',
+        public array $relatedTo = [],
+        public array $commonRelations = [],
         public $message = '{{ entityClass }} does not exist',
         ?array $groups = null,
         mixed $payload = null,

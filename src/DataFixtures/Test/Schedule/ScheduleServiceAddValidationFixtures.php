@@ -13,7 +13,7 @@ use DateInterval;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
-class ScheduleServiceAddConflictFixtures extends Fixture
+class ScheduleServiceAddValidationFixtures extends Fixture
 {
     const ORGANIZATION_NAME = 'schedule-service-add-conflict-organization';
     const USER_NAME = 'schedule-service-add-conflict-user';

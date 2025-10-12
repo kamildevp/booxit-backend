@@ -11,7 +11,7 @@ use App\Validator\Constraints as CustomAssert;
 class ScheduleServiceAddDTO extends AbstractDTO 
 {
     public function __construct(
-        #[CustomAssert\EntityExists(Service::class)]
+        #[CustomAssert\EntityExists(Service::class, commonRelations: ['organization' => ['schedules', '{route:schedule}']])]
         public readonly int $serviceId,
     )
     {

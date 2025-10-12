@@ -8,7 +8,7 @@ use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleServiceFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleSortingFixtures;
-use App\DataFixtures\Test\Schedule\ScheduleServiceAddConflictFixtures;
+use App\DataFixtures\Test\Schedule\ScheduleServiceAddValidationFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleServiceSortingFixtures;
 use App\DataFixtures\Test\Service\ServiceFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
@@ -23,7 +23,6 @@ use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 use App\Repository\UserRepository;
 use App\Response\ForbiddenResponse;
-use App\Service\Entity\ScheduleService;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
@@ -189,17 +188,17 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/services', $params, $expectedErrors);
     }
 
-    #[Fixtures([ScheduleFixtures::class, ServiceFixtures::class, ScheduleServiceAddConflictFixtures::class])]
-    public function testAddServiceConflictResponseForInvalidService(): void
+    #[Fixtures([ScheduleFixtures::class, ServiceFixtures::class, ScheduleServiceAddValidationFixtures::class])]
+    public function testAddServiceValidationResponseForInvalidService(): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]); 
-        $secondOrganization = $this->organizationRepository->findOneBy(['name' => ScheduleServiceAddConflictFixtures::ORGANIZATION_NAME]);
+        $secondOrganization = $this->organizationRepository->findOneBy(['name' => ScheduleServiceAddValidationFixtures::ORGANIZATION_NAME]);
         $invalidService = $this->serviceRepository->findOneBy(['organization' => $secondOrganization]);
         $params = ['service_id' => $invalidService->getId()];
+        $expectedErrors = ['service_id' => ['Service does not exist']];
 
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/services', $params, expectedCode: 409);
-        $this->assertEquals('This service belongs to different organization.', $responseData['message']);
+        $this->assertPathValidation($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/services', $params, $expectedErrors);
     }
 
     #[Fixtures([ScheduleServiceFixtures::class])]

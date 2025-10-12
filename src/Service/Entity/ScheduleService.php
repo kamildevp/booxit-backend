@@ -25,10 +25,6 @@ class ScheduleService
     {
         $service = $this->serviceRepository->findOrFail($serviceId);
 
-        if($schedule->getOrganization() !== $service->getOrganization()){
-            throw new ConflictException('This service belongs to different organization.');
-        }
-
         if($schedule->hasService($service)){
             throw new ConflictException('This service is already assigned to this schedule.');
         }

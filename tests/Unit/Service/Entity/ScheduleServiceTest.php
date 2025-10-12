@@ -65,31 +65,6 @@ class ScheduleServiceTest extends TestCase
         );
     }
 
-    public function testAddScheduleServiceThrowsConflictForInvalidService(): void
-    {
-        $organizationMock = $this->createMock(Organization::class);
-        $organizationMock2 = $this->createMock(Organization::class);
-        $scheduleMock = $this->createMock(Schedule::class);
-        $serviceId = 1;
-        $serviceMock = $this->createMock(Service::class);
-
-        $this->serviceRepositoryMock
-            ->expects($this->once())
-            ->method('findOrFail')
-            ->with($serviceId)
-            ->willReturn($serviceMock);
-
-        $scheduleMock->method('getOrganization')->willReturn($organizationMock);
-        $serviceMock->method('getOrganization')->willReturn($organizationMock2);
-
-        $this->expectException(ConflictException::class);
-
-        $this->scheduleService->addScheduleService(
-            $scheduleMock,
-            $serviceId,
-        );
-    }
-
     public function testAddScheduleServiceThrowsConflictWhenServiceAlreadyAssigned(): void
     {
         $organizationMock = $this->createMock(Organization::class);

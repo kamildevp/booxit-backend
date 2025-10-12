@@ -74,33 +74,6 @@ class ScheduleAssignmentServiceTest extends TestCase
         $this->assertSame($accessType->value, $scheduleAssignment->getAccessType());
     }
 
-    public function testCreateScheduleAssignmentThrowsConflictForInvalidOrganizationMember(): void
-    {
-        $organizationMock = $this->createMock(Organization::class);
-        $organizationMock2 = $this->createMock(Organization::class);
-        $scheduleMock = $this->createMock(Schedule::class);
-        $organizationMemberId = 1;
-        $organizationMemberMock = $this->createMock(OrganizationMember::class);
-        $accessType = ScheduleAccessType::READ;
-
-        $this->organizationMemberRepositoryMock
-            ->expects($this->once())
-            ->method('findOrFail')
-            ->with($organizationMemberId)
-            ->willReturn($organizationMemberMock);
-
-        $scheduleMock->method('getOrganization')->willReturn($organizationMock);
-        $organizationMemberMock->method('getOrganization')->willReturn($organizationMock2);
-
-        $this->expectException(ConflictException::class);
-
-        $this->scheduleAssignmentService->createScheduleAssignment(
-            $scheduleMock,
-            $organizationMemberId,
-            $accessType
-        );
-    }
-
     public function testCreateScheduleAssignmentThrowsConflictForExistingAssignment(): void
     {
         $organizationMock = $this->createMock(Organization::class);

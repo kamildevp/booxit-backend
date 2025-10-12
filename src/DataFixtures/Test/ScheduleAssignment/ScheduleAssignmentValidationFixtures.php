@@ -13,7 +13,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ScheduleAssignmentConflictFixtures extends Fixture implements DependentFixtureInterface
+class ScheduleAssignmentValidationFixtures extends Fixture implements DependentFixtureInterface
 {
     const ORGANIZATION_NAME = 'schedule-assignment-conflict-organization';
     const USER_NAME = 'schedule-assignment-conflict-user';

@@ -14,7 +14,7 @@ class ScheduleAssignmentCreateDTO extends AbstractDTO
     use ScheduleAssignmentAccessTypeFieldDTO;
 
     public function __construct(
-        #[CustomAssert\EntityExists(OrganizationMember::class)]
+        #[CustomAssert\EntityExists(OrganizationMember::class, commonRelations: ['organization' => ['schedules', '{route:schedule}']])]
         public readonly int $organizationMemberId,
         string $accessType
     )

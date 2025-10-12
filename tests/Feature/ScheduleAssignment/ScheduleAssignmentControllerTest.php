@@ -6,14 +6,13 @@ namespace App\Tests\Feature\ScheduleAssignment;
 
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
-use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentConflictFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentSortingFixtures;
+use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentValidationFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Entity\OrganizationMember;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
-use App\Enum\Schedule\ScheduleAccessType;
 use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
 use App\Repository\ScheduleAssignmentRepository;
 use App\Repository\ScheduleRepository;
@@ -73,18 +72,18 @@ class ScheduleAssignmentControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/assignments', $params, $expectedErrors);
     }
 
-    #[Fixtures([ScheduleFixtures::class, ScheduleAssignmentConflictFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class, ScheduleAssignmentValidationFixtures::class])]
     #[DataProviderExternal(ScheduleAssignmentCreateDataProvider::class, 'validDataCases')]
-    public function testCreateConflictResponseForInvalidOrganizationMember(array $params): void
+    public function testCreateValidationResponseForInvalidOrganizationMember(array $params): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]); 
-        $secondOrganization = $this->organizationRepository->findOneBy(['name' => ScheduleAssignmentConflictFixtures::ORGANIZATION_NAME]);
+        $secondOrganization = $this->organizationRepository->findOneBy(['name' => ScheduleAssignmentValidationFixtures::ORGANIZATION_NAME]);
         $invalidOrganizationMember = $this->organizationMemberRepository->findOneBy(['organization' => $secondOrganization]);
         $params['organization_member_id'] = $invalidOrganizationMember->getId();
+        $expectedErrors = ['organization_member_id' => ['OrganizationMember does not exist']];
 
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/assignments', $params, expectedCode: 409);
-        $this->assertEquals('This organization member belongs to different organization.', $responseData['message']);
+        $this->assertPathValidation($this->client, 'POST', '/api/schedules/'.$schedule->getId().'/assignments', $params, $expectedErrors);
     }
 
     #[Fixtures([ScheduleAssignmentFixtures::class])]

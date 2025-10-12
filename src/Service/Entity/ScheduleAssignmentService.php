@@ -25,10 +25,6 @@ class ScheduleAssignmentService
     {
         $organizationMember = $this->organizationMemberRepository->findOrFail($organizationMemberId);
 
-        if($schedule->getOrganization() !== $organizationMember->getOrganization()){
-            throw new ConflictException('This organization member belongs to different organization.');
-        }
-
         $existingScheduleAssignment = $this->scheduleAssignmentRepository->findOneBy([
             'schedule' => $schedule,
             'organizationMember' => $organizationMember

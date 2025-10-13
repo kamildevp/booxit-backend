@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -66,11 +67,11 @@ class CustomTimeWindowRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function getScheduleCustomTimeWindows(Schedule $schedule, ?string $dateFrom, ?string $dateTo)
+    /**
+     * @return CustomTimeWindow[]
+     */
+    public function getScheduleCustomTimeWindows(Schedule $schedule, DateTimeInterface $startDate, DateTimeInterface $endDate)
     {
-        $startDate = !is_null($dateFrom) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateFrom) : (new \DateTimeImmutable())->modify('monday this week');
-        $endDate = !is_null($dateTo) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateTo) : (new \DateTimeImmutable())->modify('sunday this week');
-
         $qb = $this->createQueryBuilder('e')
             ->where('e.schedule = :schedule')
             ->andWhere('e.date >= :startDate')
@@ -81,5 +82,18 @@ class CustomTimeWindowRepository extends ServiceEntityRepository
             ->orderBy('e.date', 'asc');
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function removeScheduleCustomTimeWindowsForDate(Schedule $schedule, DateTimeInterface|string $date): void
+    {
+        $date = is_string($date) ? DateTimeImmutable::createFromFormat('Y-m-d', $date) : $date;
+        $qb = $this->createQueryBuilder('e')
+            ->delete()
+            ->where('e.schedule = :schedule')
+            ->andWhere('e.date = :date')
+            ->setParameter('schedule', $schedule)
+            ->setParameter('date', $date);
+
+        $qb->getQuery()->execute();
     }
 }

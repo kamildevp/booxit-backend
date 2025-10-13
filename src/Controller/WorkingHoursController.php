@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Documentation\Response\CustomWorkingHoursResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
@@ -13,6 +14,7 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
 use App\DTO\WorkingHours\CustomWorkingHoursGetDTO;
 use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
+use App\DTO\WorkingHours\ScheduleAvailabilityGetDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\Schedule;
 use App\Repository\CustomTimeWindowRepository;
@@ -21,11 +23,14 @@ use App\Service\Auth\AccessRule\ScheduleWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\WorkingHoursService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
+use DateTimeInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('WorkingHours')]
@@ -43,7 +48,7 @@ class WorkingHoursController extends AbstractController
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
-    public function updateWeeklyWorkingHours(
+    public function updateScheduleWeeklyWorkingHours(
         Schedule $schedule,
         #[MapRequestPayload] WeeklyWorkingHoursUpdateDTO $dto,
         WorkingHoursService $workingHoursService,
@@ -61,9 +66,14 @@ class WorkingHoursController extends AbstractController
     #[WeeklyWorkingHoursResponseDoc]
     #[NotFoundResponseDoc('Schedule not found')]
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
-    public function getWeeklyWorkingHours(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
+    public function getScheduleWeeklyWorkingHours(
+        Schedule $schedule, 
+        EntitySerializerInterface $entitySerializer,
+        WorkingHoursService $workingHoursService,    
+    ): SuccessResponse
     {
-        $responseData = $entitySerializer->normalize($schedule->getWeekdayTimeWindows(), []);
+        $workingHours = $workingHoursService->getScheduleWeeklyWorkingHours($schedule);
+        $responseData = $entitySerializer->normalize($workingHours, []);
 
         return new SuccessResponse($responseData);
     }
@@ -80,7 +90,7 @@ class WorkingHoursController extends AbstractController
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
     #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_update', methods: ['PUT'], requirements: ['schedule' => '\d+'])]
-    public function updateCustomWorkingHours(
+    public function updateScheduleCustomWorkingHours(
         Schedule $schedule,
         #[MapRequestPayload] CustomWorkingHoursUpdateDTO $dto,
         WorkingHoursService $workingHoursService,
@@ -95,19 +105,42 @@ class WorkingHoursController extends AbstractController
         summary: 'Get schedule custom working hours',
         description: 'Returns schedule custom working hours for the specified date range (up to one month). If no range is provided, the current week is used by default.'
     )]
-    #[WeeklyWorkingHoursResponseDoc]
+    #[CustomWorkingHoursResponseDoc]
     #[NotFoundResponseDoc('Schedule not found')]
     #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
-    public function getCustomWorkingHours(
+    public function getScheduleCustomWorkingHours(
         Schedule $schedule, 
         EntitySerializerInterface $entitySerializer,
-        CustomTimeWindowRepository $customTimeWindowRepository,
+        WorkingHoursService $workingHoursService, 
         #[MapQueryString] CustomWorkingHoursGetDTO $dto = new CustomWorkingHoursGetDTO,
     ): SuccessResponse
     {
-        $items = $customTimeWindowRepository->getScheduleCustomTimeWindows($schedule, $dto->dateFrom, $dto->dateTo);
-        $responseData = $entitySerializer->normalize($items, []);
+        $workingHours = $workingHoursService->getScheduleCustomWorkingHours($schedule, $dto->dateFrom, $dto->dateTo);
+        $responseData = $entitySerializer->normalize($workingHours, []);
 
         return new SuccessResponse($responseData);
+    }
+
+    #[OA\Delete(
+        summary: 'Remove schedule custom working hours',
+        description: 'Removes schedule custom working hours for the specified date.
+        </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Custom working hours for specified date have been removed'])]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
+    #[Route('schedules/{schedule}/custom-working-hours/{date}', name: 'schedule_custom_working_hours_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+', 'date' => '\d{4}-\d{2}-\d{2}'])]
+    public function removeScheduleCustomWorkingHours(
+        Schedule $schedule, 
+        DateTimeInterface $date,
+        CustomTimeWindowRepository $customTimeWindowRepository
+
+    ): SuccessResponse
+    {
+        $customTimeWindowRepository->removeScheduleCustomTimeWindowsForDate($schedule, $date);
+
+        return new SuccessResponse(['message' => 'Custom working hours for specified date have been removed']);
     }
 }

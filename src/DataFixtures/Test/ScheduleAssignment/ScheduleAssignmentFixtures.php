@@ -18,6 +18,8 @@ use Doctrine\Persistence\ObjectManager;
 
 class ScheduleAssignmentFixtures extends Fixture implements DependentFixtureInterface
 {
+    const SCHEDULE_REFERENCE = 'sa-schedule';
+    
     public function load(ObjectManager $manager): void
     {
         $organization = $this->getReference(OrganizationAdminFixtures::ORGANIZATION_REFERENCE, Organization::class);
@@ -26,6 +28,7 @@ class ScheduleAssignmentFixtures extends Fixture implements DependentFixtureInte
         $schedule->setName('Test Schedule');
         $schedule->setDescription('test');
         $manager->persist($schedule);
+        $this->setReference(self::SCHEDULE_REFERENCE, $schedule);
 
         for($i = 1; $i <= 35; $i++){
             $user = new User();

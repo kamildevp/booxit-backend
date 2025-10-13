@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\WorkingHours;
 
-use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
+use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\Entity\CustomTimeWindow;
-use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Tests\Feature\WorkingHours\DataProvider\GetCustomWorkingHoursDataProvider;
 use DateTimeImmutable;
@@ -18,12 +17,7 @@ class CustomWorkingHoursFixtures extends Fixture implements DependentFixtureInte
 {
     public function load(ObjectManager $manager): void
     {
-        $organization = $this->getReference(OrganizationAdminFixtures::ORGANIZATION_REFERENCE, Organization::class);
-        $schedule = new Schedule();
-        $schedule->setOrganization($organization);
-        $schedule->setName('Test Schedule');
-        $schedule->setDescription('test');
-        $manager->persist($schedule);
+        $schedule = $this->getReference(ScheduleAssignmentFixtures::SCHEDULE_REFERENCE, Schedule::class);
         
         $data = GetCustomWorkingHoursDataProvider::customWorkingHours();
 
@@ -44,7 +38,7 @@ class CustomWorkingHoursFixtures extends Fixture implements DependentFixtureInte
     public function getDependencies(): array
     {
         return [
-            OrganizationAdminFixtures::class
+            ScheduleAssignmentFixtures::class
         ];
     }
 }

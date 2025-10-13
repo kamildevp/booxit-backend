@@ -10,15 +10,19 @@ use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use App\Entity\WeekdayTimeWindow;
 use App\Enum\Weekday;
+use App\Model\TimeWindow;
 use App\Repository\CustomTimeWindowRepository;
 use App\Repository\ScheduleRepository;
+use App\Service\Utils\DateTimeUtils;
 use DateTimeImmutable;
+use DateTimeInterface;
 
 class WorkingHoursService
 {
     public function __construct(
         private ScheduleRepository $scheduleRepository,
-        private CustomTimeWindowRepository $customTimeWindowRepository
+        private CustomTimeWindowRepository $customTimeWindowRepository,
+        private DateTimeUtils $dateTimeUtils,
     )
     {
         
@@ -93,5 +97,39 @@ class WorkingHoursService
         }
 
         $this->customTimeWindowRepository->flush();
+    }
+
+    
+    /** @return array<string,TimeWindow[]> */
+    public function getScheduleCustomWorkingHours(Schedule $schedule, DateTimeInterface|string|null $startDate, DateTimeInterface|string|null $endDate): array
+    {
+        $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($startDate, new DateTimeImmutable('monday this week'));
+        $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($endDate, new DateTimeImmutable('sunday this week'));
+
+        $customTimeWindows = $this->customTimeWindowRepository->getScheduleCustomTimeWindows($schedule, $startDate, $endDate);
+        $customWorkingHours = [];
+        foreach($customTimeWindows as $customTimeWindow){
+            $dateString = $customTimeWindow->getDate()->format('Y-m-d');
+            $customWorkingHours[$dateString][] = new TimeWindow($customTimeWindow->getStartTime(), $customTimeWindow->getEndTime());
+        }
+
+        return $customWorkingHours;
+    }
+
+    /** @return array<string,TimeWindow[]> */
+    public function getScheduleWeeklyWorkingHours(Schedule $schedule): array
+    {
+        /** @var WeekdayTimeWindow[] */
+        $weekdayTimeWindows = $schedule->getWeekdayTimeWindows()->toArray();
+        $weeklyWorkingHours = [];
+        foreach(Weekday::values() as $weekday){
+            $dayTimeWindows = array_filter($weekdayTimeWindows, fn($weekdayTimeWindow) => $weekdayTimeWindow->getWeekday() == $weekday);
+            $weeklyWorkingHours[$weekday] = array_map(
+                fn($weekdayTimeWindow) => new TimeWindow($weekdayTimeWindow->getStartTime(), $weekdayTimeWindow->getEndTime()), 
+                array_values($dayTimeWindows)
+            );
+        }
+
+        return $weeklyWorkingHours;
     }
 }

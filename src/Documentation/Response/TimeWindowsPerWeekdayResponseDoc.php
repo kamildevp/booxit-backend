@@ -8,10 +8,10 @@ use App\Enum\Weekday;
 use OpenApi\Attributes as OA;
 
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-class WeeklyWorkingHoursResponseDoc extends SuccessResponseDoc
+class TimeWindowsPerWeekdayResponseDoc extends SuccessResponseDoc
 {
     public function __construct(
-        ?string $description = 'Schedule weekly working hours', 
+        ?string $description = 'Time windows per weekday', 
         array $headers = []
     )
     {

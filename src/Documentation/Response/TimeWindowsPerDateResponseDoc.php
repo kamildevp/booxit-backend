@@ -7,10 +7,10 @@ namespace App\Documentation\Response;
 use OpenApi\Attributes as OA;
 
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-class CustomWorkingHoursResponseDoc extends SuccessResponseDoc
+class TimeWindowsPerDateResponseDoc extends SuccessResponseDoc
 {
     public function __construct(
-        ?string $description = 'Schedule custom working hours', 
+        ?string $description = 'Time windows per date', 
         array $headers = []
     )
     {

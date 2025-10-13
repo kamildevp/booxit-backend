@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Documentation\Response\CustomWorkingHoursResponseDoc;
+use App\Documentation\Response\TimeWindowsPerDateResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
-use App\Documentation\Response\WeeklyWorkingHoursResponseDoc;
+use App\Documentation\Response\TimeWindowsPerWeekdayResponseDoc;
 use App\DTO\WorkingHours\CustomWorkingHoursGetDTO;
 use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
 use App\DTO\WorkingHours\ScheduleAvailabilityGetDTO;
@@ -63,7 +63,7 @@ class WorkingHoursController extends AbstractController
         summary: 'Get schedule weekly working hours',
         description: 'Returns schedule weekly working hours.'
     )]
-    #[WeeklyWorkingHoursResponseDoc]
+    #[TimeWindowsPerWeekdayResponseDoc]
     #[NotFoundResponseDoc('Schedule not found')]
     #[Route('schedules/{schedule}/weekly-working-hours', name: 'schedule_weekly_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
     public function getScheduleWeeklyWorkingHours(
@@ -105,7 +105,7 @@ class WorkingHoursController extends AbstractController
         summary: 'Get schedule custom working hours',
         description: 'Returns schedule custom working hours for the specified date range (up to one month). If no range is provided, the current week is used by default.'
     )]
-    #[CustomWorkingHoursResponseDoc]
+    #[TimeWindowsPerDateResponseDoc]
     #[NotFoundResponseDoc('Schedule not found')]
     #[Route('schedules/{schedule}/custom-working-hours', name: 'schedule_custom_working_hours_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
     public function getScheduleCustomWorkingHours(

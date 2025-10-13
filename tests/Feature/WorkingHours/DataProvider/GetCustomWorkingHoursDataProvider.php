@@ -118,4 +118,10 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
             ],
         ];
     }
+
+    public static function removeDataCases()
+    {
+        $customWorkingHours = self::customWorkingHours();
+        return array_map(fn($date) => [$date], array_keys($customWorkingHours));
+    }
 }

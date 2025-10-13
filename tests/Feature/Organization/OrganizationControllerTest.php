@@ -7,6 +7,7 @@ namespace App\Tests\Feature\Organization;
 use App\DataFixtures\Test\Organization\OrganizationBannerFixtures;
 use App\DataFixtures\Test\Organization\OrganizationFixtures;
 use App\DataFixtures\Test\Organization\OrganizationSortingFixtures;
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleSortingFixtures;
 use App\DataFixtures\Test\Service\ServiceFixtures;
@@ -368,20 +369,13 @@ class OrganizationControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationFixtures::class])]
-    #[DataProviderExternal(OrganizationAuthDataProvider::class, 'organizationAdminOnlyPaths')]
-    public function testOrganizationAdminRoleRequirementForProtectedPaths(string $path, string $method, ?string $role): void
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[DataProviderExternal(OrganizationAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
         $path = str_replace('{organization}', (string)($organization->getId()), $path);
-        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
-        if(!empty($role)){
-            $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($organization);
-            $organizationMember->setAppUser($user);
-            $organizationMember->setRole($role);
-            $this->organizationMemberRepository->save($organizationMember, true);
-        }
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
 
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);

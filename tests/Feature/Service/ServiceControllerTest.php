@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\Service;
 
 use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Service\ServiceFixtures;
 use App\DataFixtures\Test\Service\ServiceSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
@@ -174,22 +175,15 @@ class ServiceControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, ServiceFixtures::class])]
-    #[DataProviderExternal(ServiceAuthDataProvider::class, 'serviceManagementPrivilegesOnlyPaths')]
-    public function testServiceManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $role, array $parameters = []): void
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ServiceFixtures::class])]
+    #[DataProviderExternal(ServiceAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail, array $parameters = []): void
     {
         $service = $this->serviceRepository->findOneBy([]);
         $path = str_replace('{service}', (string)($service->getId()), $path);
-        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
         $organization = $service->getOrganization();
         $parameters = array_map(fn($val) => $val == '{organization}' ? $organization->getId() : $val, $parameters);
-        if(!empty($role)){
-            $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($organization);
-            $organizationMember->setAppUser($user);
-            $organizationMember->setRole($role);
-            $this->organizationMemberRepository->save($organizationMember, true);
-        }
 
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, $parameters, expectedCode: 403);

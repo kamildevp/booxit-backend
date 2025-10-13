@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Reservation;
+use App\Entity\Schedule;
+use App\Enum\Reservation\ReservationStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
+use DateTimeImmutable;
+use DateTimeInterface;
 
 /**
  * @extends ServiceEntityRepository<Reservation>
@@ -43,28 +47,41 @@ class ReservationRepository extends BaseRepository
         }
     }
 
-//    /**
-//     * @return Reservation[] Returns an array of Reservation objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('r.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @return Reservation[]
+    */
+    public function getScheduleReservations(
+        Schedule $schedule, 
+        DateTimeInterface|string|null $dateFrom, 
+        DateTimeInterface|string|null $dateTo,
+        array $joinRelations = []
+    )
+    {
+        $defaultStartDate = (new DateTimeImmutable())->modify('monday this week')->setTime(0, 0);
+        $defaultEndDate = (new DateTimeImmutable())->modify('sunday this week')->setTime(23, 59);
 
-//    public function findOneBySomeField($value): ?Reservation
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $startDate = is_string($dateFrom) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateFrom)->setTime(0, 0) : $dateFrom;
+        $endDate = is_string($dateTo) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateTo)->setTime(23, 59) : $dateTo;
+
+        $startDate = $startDate instanceof DateTimeInterface ? $startDate : $defaultStartDate;
+        $endDate = $dateTo instanceof DateTimeInterface ? $endDate : $defaultEndDate;
+
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.schedule = :schedule')
+            ->andWhere('e.startDateTime >= :startDate')
+            ->andWhere('e.startDateTime <= :endDate')
+            ->andWhere('e.status NOT IN (:excludedStatuses)')
+            ->setParameter('schedule', $schedule)
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->setParameter('excludedStatuses', [
+                ReservationStatus::CUSTOMER_CANCELLED->value, 
+                ReservationStatus::ORGANIZATION_CANCELLED->value
+            ])
+            ->orderBy('e.startDateTime', 'asc');
+
+        $this->joinRelations($qb, $joinRelations, 'e');
+
+        return $qb->getQuery()->getResult();
+    }
 }

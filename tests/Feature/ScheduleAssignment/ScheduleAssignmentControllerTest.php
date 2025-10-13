@@ -10,7 +10,6 @@ use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentSortingFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentValidationFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
-use App\Entity\OrganizationMember;
 use App\Enum\Organization\OrganizationRole;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
 use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
@@ -235,22 +234,15 @@ class ScheduleAssignmentControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, ScheduleAssignmentFixtures::class])]
-    #[DataProviderExternal(ScheduleAssignmentAuthDataProvider::class, 'scheduleManagementPrivilegesOnlyPaths')]
-    public function testScheduleManagementPrivilegesRequirementForProtectedPaths(string $path, string $method, ?string $organizationRole): void
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ScheduleAssignmentFixtures::class])]
+    #[DataProviderExternal(ScheduleAssignmentAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]);
         $scheduleAssignment = $this->scheduleAssignmentRepository->findOneBy([]);
         $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
         $path = str_replace('{scheduleAssignment}', (string)($scheduleAssignment->getId()), $path);
-        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
-        if(!empty($organizationRole)){
-            $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($schedule->getOrganization());
-            $organizationMember->setAppUser($user);
-            $organizationMember->setRole($organizationRole);
-            $this->organizationMemberRepository->save($organizationMember, true);
-        }
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
 
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);

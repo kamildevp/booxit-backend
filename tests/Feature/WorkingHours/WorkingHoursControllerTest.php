@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\WorkingHours;
 
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
+use App\DataFixtures\Test\User\UserFixtures;
 use App\DataFixtures\Test\WorkingHours\CustomWorkingHoursFixtures;
 use App\DataFixtures\Test\WorkingHours\WeeklyWorkingHoursFixtures;
 use App\Repository\ScheduleRepository;
 use App\Repository\UserRepository;
+use App\Response\ForbiddenResponse;
 use App\Tests\Feature\WorkingHours\DataProvider\GetCustomWorkingHoursDataProvider;
 use App\Tests\Feature\WorkingHours\DataProvider\GetWeeklyWorkingHoursDataProvider;
 use App\Tests\Feature\WorkingHours\DataProvider\UpdateCustomWorkingHoursDataProvider;
@@ -16,6 +19,8 @@ use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
 use App\Tests\Feature\WorkingHours\DataProvider\UpdateWeeklyWorkingHoursDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\WorkingHoursAuthDataProvider;
+use App\Tests\Feature\WorkingHours\DataProvider\WorkingHoursNotFoundDataProvider;
 
 class WorkingHoursControllerTest extends BaseWebTestCase
 {
@@ -111,5 +116,39 @@ class WorkingHoursControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', $path);
 
         $this->assertEquals(['message' => 'Custom working hours for specified date have been removed'], $responseData);
+    }
+
+    #[Fixtures([ScheduleAssignmentFixtures::class])]
+    #[DataProviderExternal(WorkingHoursNotFoundDataProvider::class, 'dataCases')]
+    public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
+        $this->assertEquals($expectedMessage, $responseData['message']);
+    }
+
+    #[Fixtures([ScheduleAssignmentFixtures::class])]
+    #[DataProviderExternal(WorkingHoursAuthDataProvider::class, 'protectedPaths')]
+    public function testAuthRequirementForProtectedPaths(string $path, string $method): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
+
+        $this->assertPathIsProtected($path, $method);
+    }
+
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ScheduleAssignmentFixtures::class])]
+    #[DataProviderExternal(WorkingHoursAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
+
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
+        $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\OrganizationMember\DataProvider;
 
-use App\Enum\Organization\OrganizationRole;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class OrganizationMemberAuthDataProvider extends BaseDataProvider 
@@ -19,24 +18,17 @@ class OrganizationMemberAuthDataProvider extends BaseDataProvider
         ];
     }
 
-    public static function organizationAdminPaths()
+    public static function privilegesOnlyPaths()
     {
         return [
-            ['/api/organizations/{organization}/members', 'POST', null],
-            ['/api/organizations/{organization}/members', 'POST', OrganizationRole::MEMBER->value],
-            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', null],
-            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', OrganizationRole::MEMBER->value],
-            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', null],
-            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', OrganizationRole::MEMBER->value],
-            ['/api/organizations/{organization}/members/{organizationMember}/schedule-assignments', 'GET', null],
-            ['/api/organizations/{organization}/members/{organizationMember}/schedule-assignments', 'GET', OrganizationRole::MEMBER->value],
-        ];
-    }
-
-    public static function restrictedAccessPaths()
-    {
-        return [
-            ['/api/organizations/{organization}/members/{organizationMember}/schedule-assignments', 'GET', '{organizationMember}'],
+            ['/api/organizations/{organization}/members', 'POST', 'user1@example.com'],
+            ['/api/organizations/{organization}/members', 'POST', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', 'user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'PATCH', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', 'user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}', 'DELETE', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}/schedule-assignments', 'GET', 'user1@example.com'],
+            ['/api/organizations/{organization}/members/{organizationMember}/schedule-assignments', 'GET', 'om-user1@example.com'],
         ];
     }
 }

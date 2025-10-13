@@ -216,7 +216,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
             'page' => $page,
             'per_page' => $perPage,
         ]);
-        $this->client->loginUser($this->user, 'api');
+        $this->client->loginUser($organizationMember->getAppUser(), 'api');
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $offset = ($page - 1) * $perPage;
@@ -297,46 +297,18 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'organizationAdminPaths')]
-    public function testOrganizationAdminRequirementForProtectedPaths(string $path, string $method, ?string $role): void
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
+    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
     {
         $organization = $this->organizationRepository->findOneBy([]);
         $organizationMember = $this->organizationMemberRepository->findOneBy([]);
         $path = str_replace('{organization}', (string)($organization->getId()), $path);
         $path = str_replace('{organizationMember}', (string)($organizationMember->getId()), $path);
-        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
-        if(!empty($role)){
-            $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($organization);
-            $organizationMember->setAppUser($user);
-            $organizationMember->setRole($role);
-            $this->organizationMemberRepository->save($organizationMember, true);
-        }
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
 
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
         $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
-    }
-
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class])]
-    #[DataProviderExternal(OrganizationMemberAuthDataProvider::class, 'restrictedAccessPaths')]
-    public function testPathAccessIsGranted(string $path, string $method, string $as): void
-    {
-        $organization = $this->organizationRepository->findOneBy([]);
-        $organizationMember = $this->organizationMemberRepository->findOneBy(['role' => OrganizationRole::MEMBER->value]);
-        $path = str_replace('{organization}', (string)($organization->getId()), $path);
-        $path = str_replace('{organizationMember}', (string)($organizationMember->getId()), $path);
-        $user = $as == '{organizationMember}' ? $organizationMember->getAppUser() : $this->userRepository->findOneBy(['email' => 'user1@example.com']);
-        if(in_array($as, OrganizationRole::values())){
-            $organizationMember = new OrganizationMember();
-            $organizationMember->setOrganization($organization);
-            $organizationMember->setAppUser($user);
-            $organizationMember->setRole($as);
-            $this->organizationMemberRepository->save($organizationMember, true);
-        }
-
-        $this->client->loginUser($user, 'api');
-        $this->getSuccessfulResponseData($this->client, $method, $path);
     }
 }

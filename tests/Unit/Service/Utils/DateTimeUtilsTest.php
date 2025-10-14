@@ -51,4 +51,18 @@ class DateTimeUtilsTest extends TestCase
         $result = $this->utils->timeWindowCollectionDiff($collection1, $collection2);
         $this->assertEquals($expectedResult, $result);
     }
+
+    #[DataProviderExternal(DateTimeUtilsDataProvider::class, 'sortTimeWindowCollectionDataCases')]
+    public function testSortTimeWindowCollection(array $collection, array $expectedResult): void
+    {
+        $result = $this->utils->sortTimeWindowCollection($collection);
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    #[DataProviderExternal(DateTimeUtilsDataProvider::class, 'mergeAdjacentTimeWindowsDataCases')]
+    public function testMergeAdjacentTimeWindows(array $collection, array $expectedResult): void
+    {
+        $result = $this->utils->mergeAdjacentTimeWindows($collection);
+        $this->assertEquals($expectedResult, $result);
+    }
 }

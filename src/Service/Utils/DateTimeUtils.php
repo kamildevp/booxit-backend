@@ -11,9 +11,11 @@ use DateTimeInterface;
 
 class DateTimeUtils
 {
-    /** @param TimeWindow[] $collection1 */
-    /** @param TimeWindow[] $collection2 */
-    /** @return TimeWindow[] */
+    /** 
+     * @param TimeWindow[] $collection1 
+     * @param TimeWindow[] $collection2
+     * @return TimeWindow[]
+    */
     public function timeWindowCollectionDiff(array $collection1, array $collection2): array
     {
         if(empty($collection2)){
@@ -72,17 +74,51 @@ class DateTimeUtils
         return $result;
     }
 
+    /** 
+     * @param TimeWindow[] $collection
+     * @return TimeWindow[]
+     * */
+    public function mergeAdjacentTimeWindows(array $collection): array
+    {
+        $sortedCollection = $this->sortTimeWindowCollection($collection);
+
+        return array_reduce($sortedCollection, 
+            function($merged, $timeWindow){
+                if(empty($merged)){
+                    return [$timeWindow];
+                }
+
+                /** @var TimeWindow */
+                $prevTimeWindow = &$merged[count($merged)-1];
+                if($prevTimeWindow->getEndTime() == $timeWindow->getStartTime()){
+                    $prevTimeWindow = new TimeWindow($prevTimeWindow->getStartTime(), $timeWindow->getEndTime());
+                }
+                else{
+                    $merged[] = $timeWindow;
+                }
+
+                return $merged;
+            }
+        , []);
+    }
+
+    /** 
+     * @param TimeWindow[] $collection
+     * @return TimeWindow[]
+     * */
+    public function sortTimeWindowCollection(array $collection): array
+    {
+        uasort($collection, fn($t1, $t2) => $t1->getStartTime() <=> $t2->getStartTime());
+        return array_values($collection);
+    }
+
     public function compareDateIntervals(DateInterval $dateInterval1, DateInterval $dateInterval2): int
     {
         $dateTime = new DateTimeImmutable();
         $dateTime1 = $dateTime->add($dateInterval1);
         $dateTime2 = $dateTime->add($dateInterval2);
 
-        if($dateTime1 == $dateTime2){
-            return 0;
-        }
-
-        return $dateTime1 > $dateTime2 ? 1 : -1;
+        return $dateTime1 <=> $dateTime2;
     }
 
     public function resolveDateTimeImmutableWithDefault(DateTimeInterface|string|null $date, DateTimeInterface $default, string $format = 'Y-m-d'): DateTimeImmutable

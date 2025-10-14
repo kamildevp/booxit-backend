@@ -106,4 +106,44 @@ class DateTimeUtilsDataProvider extends BaseDataProvider
             ],
         ];
     }
+
+    public static function sortTimeWindowCollectionDataCases()
+    {
+        return [
+            [
+                [
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 14:00'), new DateTimeImmutable('2025-10-01 15:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 08:00'), new DateTimeImmutable('2025-10-01 10:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 15:00'), new DateTimeImmutable('2025-10-01 18:00')),
+                ],
+                [
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 08:00'), new DateTimeImmutable('2025-10-01 10:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 14:00'), new DateTimeImmutable('2025-10-01 15:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 15:00'), new DateTimeImmutable('2025-10-01 18:00')),
+                ]
+            ]
+        ];
+    }
+
+    public static function mergeAdjacentTimeWindowsDataCases()
+    {
+        return [
+            [
+                [
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 19:00'), new DateTimeImmutable('2025-10-01 20:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 14:00'), new DateTimeImmutable('2025-10-01 15:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-02 00:00'), new DateTimeImmutable('2025-10-02 05:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 08:00'), new DateTimeImmutable('2025-10-01 10:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 15:00'), new DateTimeImmutable('2025-10-01 18:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 21:00'), new DateTimeImmutable('2025-10-02 00:00')),
+                ],
+                [
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 08:00'), new DateTimeImmutable('2025-10-01 10:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 14:00'), new DateTimeImmutable('2025-10-01 18:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 19:00'), new DateTimeImmutable('2025-10-01 20:00')),
+                    new TimeWindow(new DateTimeImmutable('2025-10-01 21:00'), new DateTimeImmutable('2025-10-02 05:00')),
+                ]
+            ]
+        ];
+    }
 }

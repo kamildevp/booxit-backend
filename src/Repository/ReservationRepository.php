@@ -69,7 +69,7 @@ class ReservationRepository extends BaseRepository
         $qb = $this->createQueryBuilder('e')
             ->where('e.schedule = :schedule')
             ->andWhere('e.startDateTime >= :startDate')
-            ->andWhere('e.startDateTime <= :endDate')
+            ->andWhere('e.endDateTime <= :endDate')
             ->andWhere('e.status NOT IN (:excludedStatuses)')
             ->setParameter('schedule', $schedule)
             ->setParameter('startDate', $startDate)

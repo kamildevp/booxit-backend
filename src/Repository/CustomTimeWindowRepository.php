@@ -79,7 +79,8 @@ class CustomTimeWindowRepository extends ServiceEntityRepository
             ->setParameter('schedule', $schedule)
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
-            ->orderBy('e.date', 'asc');
+            ->orderBy('e.date', 'asc')
+            ->addOrderBy('e.startTime', 'asc');
 
         return $qb->getQuery()->getResult();
     }

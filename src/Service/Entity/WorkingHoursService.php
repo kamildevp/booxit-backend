@@ -124,10 +124,12 @@ class WorkingHoursService
         $weeklyWorkingHours = [];
         foreach(Weekday::values() as $weekday){
             $dayTimeWindows = array_filter($weekdayTimeWindows, fn($weekdayTimeWindow) => $weekdayTimeWindow->getWeekday() == $weekday);
-            $weeklyWorkingHours[$weekday] = array_map(
+            $dayTimeWindows = array_map(
                 fn($weekdayTimeWindow) => new TimeWindow($weekdayTimeWindow->getStartTime(), $weekdayTimeWindow->getEndTime()), 
                 array_values($dayTimeWindows)
             );
+
+            $weeklyWorkingHours[$weekday] = $this->dateTimeUtils->sortTimeWindowCollection($dayTimeWindows);
         }
 
         return $weeklyWorkingHours;

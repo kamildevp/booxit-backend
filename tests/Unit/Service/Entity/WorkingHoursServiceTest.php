@@ -183,6 +183,7 @@ class WorkingHoursServiceTest extends TestCase
 
         $scheduleMock = $this->createMock(Schedule::class);
         $scheduleMock->method('getWeekdayTimeWindows')->willReturn(new ArrayCollection($weekdayTimeWindowsMock));
+        $this->dateTimeUtilsMock->method('sortTimeWindowCollection')->willReturnCallback(fn($value) => $value);
 
         $result = $this->service->getScheduleWeeklyWorkingHours($scheduleMock);
         

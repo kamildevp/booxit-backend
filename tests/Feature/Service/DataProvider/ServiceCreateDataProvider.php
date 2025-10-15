@@ -23,7 +23,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test Service',
                     'description' => 'test',
-                    'duration' => 'P0Y0M0DT1H30M0S',
+                    'duration' => 'P0Y0M0DT1H30M',
                     'estimated_price' => '15.5',
                     'organization' => [
                         'name' => OrganizationAdminFixtures::ORGANIZATION_NAME
@@ -70,7 +70,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                         'Parameter cannot be longer than 2000 characters',
                     ],
                     'duration' => [
-                        'Invalid duration format. Must be a valid ISO-8601 interval.'
+                        'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
                     ],
                     'estimated_price' => [
                         'Parameter must be a valid number with up to 2 decimals.',
@@ -81,12 +81,28 @@ class ServiceCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test Service',
                     'description' => 'test',
-                    'duration' => 'PT01H30M',
+                    'duration' => 'PT1M',
                     'estimated_price' => str_repeat('1', 11),
                 ],
                 [
                     'estimated_price' => [
                         'Parameter must be between 0 and 999999.99.'
+                    ],
+                    'duration' => [
+                        'Duration cannot be shorter than 10 minutes.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'name' => 'Test Service',
+                    'description' => 'test',
+                    'duration' => 'P1DT1M',
+                    'estimated_price' => '25.25',
+                ],
+                [
+                    'duration' => [
+                        'Duration cannot be longer than 1 day.'
                     ]
                 ]
             ],

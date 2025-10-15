@@ -166,9 +166,9 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => '2025-06-13T12:20:00+00:00'],
             ],
             'dateinterval' => [
-                [$columnName => 'P0Y0M0DT12H20M0S'],
-                [$columnName => 'P0Y0M0DT12H40M0S'],
-                [$columnName => 'P0Y0M1DT1H0M0S'],
+                [$columnName => 'P0Y0M0DT12H20M'],
+                [$columnName => 'P0Y0M0DT12H40M'],
+                [$columnName => 'P0Y0M1DT1H0M'],
             ],
             'decimal' => [
                 [$columnName => '10.20'],

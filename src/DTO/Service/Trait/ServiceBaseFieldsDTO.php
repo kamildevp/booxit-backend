@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTO\Service\Trait;
 
 use App\Validator\Constraints\Compound as Compound;
+use App\Validator\Constraints as CustomAssert;
 use OpenApi\Attributes as OA; 
 
 trait ServiceBaseFieldsDTO
@@ -16,6 +17,12 @@ trait ServiceBaseFieldsDTO
     public readonly string $description; 
 
     #[OA\Property(example: 'PT01H30M')]
+    #[CustomAssert\DateIntervalLength(
+        'PT10M', 
+        'P1D', 
+        'Duration cannot be shorter than 10 minutes.',
+        'Duration cannot be longer than 1 day.'
+    )]
     #[Compound\DateIntervalRequirements]
     public readonly string $duration; 
 

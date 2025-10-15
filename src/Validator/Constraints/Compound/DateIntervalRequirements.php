@@ -21,8 +21,8 @@ class DateIntervalRequirements extends Compound
         return [
             new Assert\NotBlank(allowNull: $this->allowNull),
             new Assert\Regex(
-                pattern: '/^P(?!$)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$/',
-                message: 'Invalid duration format. Must be a valid ISO-8601 interval.'
+                pattern: '/^P(?!$)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?)?$/',
+                message: 'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
             )
         ];
     }

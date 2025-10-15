@@ -24,7 +24,7 @@ class ServiceListDataProvider extends ListDataProvider
                     'duration_from' => 'P1D',
                 ],
                 [
-                    'duration' => 'P0Y0M1DT1H0M0S'
+                    'duration' => 'P0Y0M1DT1H0M'
                 ],
             ],
             [
@@ -32,7 +32,7 @@ class ServiceListDataProvider extends ListDataProvider
                     'duration_to' => 'PT12H30M',
                 ],
                 [
-                    'duration' => 'P0Y0M0DT12H20M0S'
+                    'duration' => 'P0Y0M0DT12H20M'
                 ],
             ],
             [
@@ -136,10 +136,10 @@ class ServiceListDataProvider extends ListDataProvider
                                 'Parameter cannot be longer than 50 characters'
                             ],
                             'duration_from' => [
-                                'Invalid duration format. Must be a valid ISO-8601 interval.'
+                                'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
                             ],
                             'duration_to' => [
-                                'Invalid duration format. Must be a valid ISO-8601 interval.'
+                                'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
                             ],
                             'estimated_price_from' => [
                                 'Parameter must be a valid number with up to 2 decimals.'

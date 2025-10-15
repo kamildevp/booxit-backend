@@ -17,6 +17,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Normalizer\DateIntervalNormalizer;
 
 #[ORM\Entity(repositoryClass: ServiceRepository::class)]
 class Service
@@ -42,6 +44,7 @@ class Service
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[Context([DateIntervalNormalizer::FORMAT_KEY => 'P%yY%mM%dDT%hH%iM'])]
     #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column]
     private ?\DateInterval $duration = null;

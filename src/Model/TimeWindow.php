@@ -26,17 +26,22 @@ class TimeWindow
         DateTimeInterface|string $startTime,
         DateTimeInterface|string $endDate, 
         DateTimeInterface|string $endTime,
-    ): self
+    ): self|false
     {
         $startDateString = $startDate instanceof DateTimeInterface ? $startDate->format('Y-m-d') : $startDate;
         $startTimeString = $startTime instanceof DateTimeInterface ? $startTime->format('H:i') : $startTime;
         $endDateString = $endDate instanceof DateTimeInterface ? $endDate->format('Y-m-d') : $endDate;
         $endTimeString = $endTime instanceof DateTimeInterface ? $endTime->format('H:i') : $endTime;
 
-        return new self(
-            DateTimeImmutable::createFromFormat('Y-m-d H:i', "$startDateString $startTimeString"), 
-            DateTimeImmutable::createFromFormat('Y-m-d H:i', "$endDateString $endTimeString"), 
-        );
+        $startDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$startDateString $startTimeString");
+        $endDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$endDateString $endTimeString");
+        if($startDateTime === false || $endDateTime === false){
+            return false;
+        }
+
+        $endDateTime = $endDateTime <= $startDateTime ? $endDateTime->modify('+1 day') : $endDateTime;
+
+        return new self($startDateTime, $endDateTime);
     }
 
     #[Context([DateTimeNormalizer::FORMAT_KEY => 'H:i'])]

@@ -6,10 +6,11 @@ namespace App\DTO\WorkingHours;
 
 use App\DTO\AbstractDTO;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
+use App\Validator\Constraints as CustomAssert;
 use OpenApi\Attributes as OA;
 
+#[CustomAssert\CustomWorkingHours]
 class CustomWorkingHoursUpdateDTO extends AbstractDTO 
 {
     public function __construct(
@@ -18,9 +19,8 @@ class CustomWorkingHoursUpdateDTO extends AbstractDTO
         public string $date,
 
         #[OA\Property(example: [['start_time' => '09:00', 'end_time' => '12:00']])]
-        /** @var TimeWindowDTO[] */
         #[Assert\Valid]
-        #[CustomAssert\TimeWindowCollection]
+        /** @var TimeWindowDTO[] */
         public readonly array $timeWindows,
     )
     {

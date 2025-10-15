@@ -16,7 +16,7 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'monday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'tuesday' => [['start_time' => '09:00', 'end_time' => '17:00']],
-                    'wednesday' => [['start_time' => '09:00', 'end_time' => '17:00']],
+                    'wednesday' => [['start_time' => '09:00', 'end_time' => '02:00']],
                     'thursday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'friday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'saturday' => [['start_time' => '09:00', 'end_time' => '11:00'], ['start_time' => '15:00', 'end_time' => '18:00']],
@@ -114,19 +114,19 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
             ],
             [
                 [
-                    'monday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'tuesday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'wednesday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'thursday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'friday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'saturday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
-                    'sunday' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
+                    'monday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'tuesday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'wednesday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'thursday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'friday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'saturday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'sunday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
                 ],
                 [
                     'monday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -134,14 +134,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'tuesday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -149,14 +149,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'wednesday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -164,14 +164,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'thursday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -179,14 +179,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'friday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -194,14 +194,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'saturday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -209,14 +209,14 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
                     'sunday' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -224,7 +224,7 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ]
@@ -241,88 +241,24 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'sunday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '09:30', 'end_time' => '14:00']],
                 ],
                 [
-                    'monday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'tuesday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'wednesday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'thursday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'friday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'saturday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'sunday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
+                    'errors' => [
+                        'Provided working hours are overlapping.'
                     ]
                 ]
             ],
             [
                 [
-                    'monday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'tuesday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'wednesday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'thursday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'friday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'saturday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
-                    'sunday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
+                    'monday' => [['start_time' => '09:00', 'end_time' => '04:00']],
+                    'tuesday' => [['start_time' => '03:00', 'end_time' => '10:00']],
+                    'wednesday' => [['start_time' => '09:00', 'end_time' => '10:00']],
+                    'thursday' => [['start_time' => '09:00', 'end_time' => '10:00']],
+                    'friday' => [['start_time' => '09:00', 'end_time' => '10:00']],
+                    'saturday' => [['start_time' => '09:00', 'end_time' => '10:00']],
+                    'sunday' => [['start_time' => '09:00', 'end_time' => '10:00']],
                 ],
                 [
-                    'monday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'tuesday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'wednesday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'thursday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'friday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'saturday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
-                    'sunday' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
+                    'errors' => [
+                        'Provided working hours are overlapping.'
                     ]
                 ]
             ],

@@ -8,13 +8,13 @@ use App\DTO\AbstractDTO;
 use App\Validator\Constraints\Compound as Compound;
 use App\Validator\Constraints as CustomAssert;
 
-#[CustomAssert\TimeWindow]
+#[CustomAssert\TimeWindowLength(minLength: '10 minutes')]
 class TimeWindowDTO extends AbstractDTO 
 {
     public function __construct(
-        #[Compound\QuarterHourTimeRequirements]
+        #[Compound\TimeRequirements]
         public readonly string $startTime,
-        #[Compound\QuarterHourTimeRequirements]
+        #[Compound\TimeRequirements]
         public readonly string $endTime
     )
     {

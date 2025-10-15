@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace App\Validator\Constraints;
 
-use App\Validator\TimeWindowValidator;
+use App\Validator\WeeklyWorkingHoursValidator;
 use Attribute;
 use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint;
 
 #[Attribute]
-class TimeWindow extends Constraint
+class WeeklyWorkingHours extends Constraint
 {
     #[HasNamedArguments]
     public function __construct(
-        public string $startTimeProperty = 'startTime',
-        public string $endTimeProperty = 'endTime',
-        public $message = 'Start time must be earlier than end time.',
+        public string $message = 'Provided working hours are overlapping.',
         ?array $groups = null,
         mixed $payload = null,
     ) 
@@ -26,7 +24,7 @@ class TimeWindow extends Constraint
 
     public function validatedBy()
     {
-        return TimeWindowValidator::class;
+        return WeeklyWorkingHoursValidator::class;
     }
 
     public function getTargets(): string

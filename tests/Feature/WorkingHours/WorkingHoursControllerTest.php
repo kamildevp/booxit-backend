@@ -63,7 +63,7 @@ class WorkingHoursControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([ScheduleAssignmentFixtures::class])]
+    #[Fixtures([CustomWorkingHoursFixtures::class])]
     #[DataProviderExternal(UpdateCustomWorkingHoursDataProvider::class, 'validDataCases')]
     public function testUpdateScheduleCustomWorkingHours(array $params): void
     {
@@ -74,7 +74,7 @@ class WorkingHoursControllerTest extends BaseWebTestCase
         $this->assertEquals(['message' => 'Schedule custom working hours have been updated'], $responseData);
     }
 
-    #[Fixtures([ScheduleAssignmentFixtures::class])]
+    #[Fixtures([CustomWorkingHoursFixtures::class])]
     #[DataProviderExternal(UpdateCustomWorkingHoursDataProvider::class, 'validationDataCases')]
     public function testUpdateScheduleCustomWorkingHoursValidation(array $params, array $expectedErrors): void
     {

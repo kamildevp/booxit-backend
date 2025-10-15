@@ -48,7 +48,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
             [
                 [
                     'date' => 'a',
-                    'time_windows' => [['start_time' => '09:01', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '09:00']],
+                    'time_windows' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
                 ],
                 [
                     'date' => [
@@ -57,7 +57,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                     'time_windows' => [
                         '0' => [
                             'start_time' => [
-                                'Time must be in HH:MM format with minutes being 00, 15, 30, or 45.'
+                                'This value is not a valid time.'
                             ],
                             'end_time' => [
                                 'This value is not a valid time.'
@@ -65,7 +65,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                         ],
                         '1' => [
                             'errors' => [
-                                'Start time must be earlier than end time.',
+                                'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
                     ],
@@ -79,22 +79,20 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'time_windows' => [
                         'errors' => [
-                            'Invalid timewindow collection.'
+                            'Provided working hours are overlapping.'
                         ]
                     ],
                 ]
             ],
             [
                 [
-                    'date' => '2025-01-01',
-                    'time_windows' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '10:00', 'end_time' => '14:00']],
+                    'date' => '2025-10-01',
+                    'time_windows' => [['start_time' => '15:00', 'end_time' => '10:00']],
                 ],
                 [
-                    'time_windows' => [
-                        'errors' => [
-                            'Invalid timewindow collection.'
-                        ]
-                    ],
+                    'errors' => [
+                        'Provided working hours are overlapping with custom hours for 2025-10-02.'
+                    ]
                 ]
             ],
         ];

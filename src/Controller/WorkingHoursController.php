@@ -14,7 +14,6 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\Documentation\Response\TimeWindowsPerWeekdayResponseDoc;
 use App\DTO\WorkingHours\CustomWorkingHoursGetDTO;
 use App\DTO\WorkingHours\CustomWorkingHoursUpdateDTO;
-use App\DTO\WorkingHours\ScheduleAvailabilityGetDTO;
 use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\Schedule;
 use App\Repository\CustomTimeWindowRepository;
@@ -29,8 +28,6 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
-use Symfony\Component\Serializer\Attribute\Context;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('WorkingHours')]
@@ -39,7 +36,10 @@ class WorkingHoursController extends AbstractController
     #[OA\Put(
         summary: 'Update schedule weekly working hours',
         description: 'Updates schedule weekly working hours.
-        </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+        <br><br>**Note:** Working hours that cross midnight are supported. 
+        For example, a time window defined as (start_time=15:00, end_time=02:00) will continue into the next day and end at 02:00.
+        </br></br>**Important:** Working hours must be specified in Europe/Warsaw timezone.
+        </br>This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule weekly working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]
@@ -81,7 +81,9 @@ class WorkingHoursController extends AbstractController
     #[OA\Put(
         summary: 'Update custom schedule working hours',
         description: 'Updates custom schedule working hours for specific date.
-        </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+        <br><br>**Note:** Working hours that cross midnight are supported. 
+        For example, a time window defined as (start_time=15:00, end_time=02:00) will continue into the next day and end at 02:00.
+        </br></br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule custom working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]

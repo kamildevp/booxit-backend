@@ -120,7 +120,7 @@ class EntityExistsValidator extends ConstraintValidator
             $value = $this->request->attributes->get($matches[1]);
         }
         elseif(preg_match('/^\{body:([A-Za-z_][A-Za-z0-9_]+)\}$/', $value, $matches)){
-            $value = $requestContent[$matches[1]] ?? null;
+            $value = $this->requestContent[$matches[1]] ?? null;
         }
 
         return is_string($value) || is_int($value) ? $value : null;

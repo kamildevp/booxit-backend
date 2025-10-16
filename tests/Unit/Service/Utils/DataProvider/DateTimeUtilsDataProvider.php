@@ -37,6 +37,7 @@ class DateTimeUtilsDataProvider extends BaseDataProvider
     {
         return [
             [null, new DateTimeImmutable('2025-10-10'), '2025-10-10'],
+            ['aa', new DateTimeImmutable('2025-10-10'), '2025-10-10'],
             ['2025-11-01', new DateTimeImmutable('2025-10-10'), '2025-11-01'],
             [new DateTime('2025-12-01'), new DateTimeImmutable('2025-10-10'), '2025-12-01'],
             [new DateTimeImmutable('2025-12-01'), new DateTimeImmutable('2025-10-10'), '2025-12-01'],

@@ -131,6 +131,9 @@ class DateTimeUtils
             return DateTimeImmutable::createFromInterface($date);
         }
 
-        return $date ? DateTimeImmutable::createFromFormat($format, $date) : DateTimeImmutable::createFromInterface($default);
+        $defaultImmutable = DateTimeImmutable::createFromInterface($default);
+        $result = $date ? DateTimeImmutable::createFromFormat($format, $date) : $defaultImmutable;
+
+        return $result === false ? $defaultImmutable : $result;
     }
 }

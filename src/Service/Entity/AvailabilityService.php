@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\WorkingHours\ScheduleAvailabilityGetDTO;
 use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Enum\Weekday;
@@ -15,9 +14,16 @@ use App\Service\Utils\DateTimeUtils;
 use DateInterval;
 use DatePeriod;
 use DateTimeImmutable;
+use DateTimeInterface;
 
 class AvailabilityService
 {
+    const DEFAULT_AVAILABILITY_OFFSET = 'PT5M';
+    const DEFAULT_TIME_WINDOW_DIVISION = 15;
+
+    private DateTimeImmutable $availabilityOffset;
+    private DateTimeImmutable $availabilityOffsetDate;
+
     public function __construct(
         private ReservationRepository $reservationRepository,
         private ServiceRepository $serviceRepository,
@@ -25,19 +31,24 @@ class AvailabilityService
         private DateTimeUtils $dateTimeUtils,
     )
     {
-        
+        $this->availabilityOffset = (new DateTimeImmutable())->add(new DateInterval(self::DEFAULT_AVAILABILITY_OFFSET));
+        $this->availabilityOffsetDate = $this->availabilityOffset->setTime(0, 0);
     }
 
-    /** @return array<string, TimeWindow[]> */
-    public function getScheduleAvailability(Schedule $schedule, ScheduleAvailabilityGetDTO $dto): array
+    /** @return array<string, string[]> */
+    public function getScheduleAvailability(
+        Schedule $schedule, 
+        Service $service, 
+        DateTimeImmutable $startDate, 
+        DateTimeImmutable $endDate
+    ): array
     {
-        $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateFrom, new DateTimeImmutable('monday this week'))->setTime(0,0);
-        $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateTo, new DateTimeImmutable('sunday this week'))->setTime(23,59);
-        $service = $dto->serviceId ? $this->serviceRepository->find($dto->serviceId): null;
-
+        $startDate = $startDate->setTime(0,0);
+        $endDate = $endDate->setTime(23,59);
+        $searchStartDate = $startDate < $this->availabilityOffsetDate ? $this->availabilityOffsetDate : $startDate;
         $weeklyWorkingHours = $this->workingHoursService->getScheduleWeeklyWorkingHours($schedule);
-        $customWorkingHours = $this->workingHoursService->getScheduleCustomWorkingHours($schedule, $startDate, $endDate);
-        $reservations = $this->reservationRepository->getScheduleReservations($schedule, $startDate, $endDate);
+        $customWorkingHours = $this->workingHoursService->getScheduleCustomWorkingHours($schedule, $searchStartDate, $endDate);
+        $reservations = $this->reservationRepository->getScheduleReservations($schedule, $searchStartDate, $endDate);
 
         return $this->buildAvailability(
             $startDate,
@@ -53,7 +64,7 @@ class AvailabilityService
      * @param array<string, TimeWindow[]> $weeklyWorkingHours
      * @param array<string, TimeWindow[]> $customWorkingHours
      * @param Reservation[] $reservations
-     * @return array<string, TimeWindow[]>
+     * @return array<string, string[]>
      */
     private function buildAvailability(
         DateTimeImmutable $startDate,
@@ -61,36 +72,53 @@ class AvailabilityService
         array $weeklyWorkingHours,
         array $customWorkingHours,
         array $reservations,
-        ?Service $service
+        Service $service
     ): array 
     {
-        $result = [];
-        $datePeriod = new DatePeriod($startDate, new DateInterval('P1D'), $endDate, DatePeriod::INCLUDE_END_DATE);
-
+        $mappedAvailability = [];
+        $datePeriod = new DatePeriod($startDate, new DateInterval('P1D'), $endDate);
+        $workingHours = [];
         foreach ($datePeriod as $date) {
-            $dateString = $date->format('Y-m-d');
-            $weekday = Weekday::createFromInt((int)$date->format('N'))->value;
-
-            $workingHours = $customWorkingHours[$dateString] ?? $weeklyWorkingHours[$weekday];
-            $availableTimeWindows = $this->buildAvailableTimeWindows($dateString, $workingHours, $reservations, $service);
-            $result[$dateString] = array_values($availableTimeWindows);
+            $mappedAvailability[$date->format('Y-m-d')] = [];
+            $dateWorkingHours = $this->getDateWorkingHours($weeklyWorkingHours, $customWorkingHours, $date);
+            $workingHours = array_merge($workingHours, $dateWorkingHours);
         }
 
-        return $result;
+        $availabilityBorders = $startDate < $this->availabilityOffset ? 
+            [new TimeWindow($startDate, $this->availabilityOffset), new TimeWindow($endDate, $endDate->modify('+1 day'))] : 
+            [new TimeWindow($endDate, $endDate->modify('+1 day'))];
+
+        $workingHours = $this->dateTimeUtils->timeWindowCollectionDiff($workingHours, $availabilityBorders);
+        $workingHours = $this->dateTimeUtils->mergeAdjacentTimeWindows($workingHours);
+        $availableTimeWindows = $this->buildAvailableTimeWindows($workingHours, $reservations, $service);
+
+        $mappedAvailability = array_merge(
+            $mappedAvailability, 
+            $this->mapTimeWindowCollectionToDatesAvailability(
+                $availableTimeWindows, 
+                $service->getDuration(), 
+                self::DEFAULT_TIME_WINDOW_DIVISION
+            )
+        );
+
+        return $mappedAvailability;
     }
 
-    /**
-     * @param TimeWindow[] $workingHours
-     * @param Reservation[] $reservations
-     * @return TimeWindow[]
-     */
-    private function buildAvailableTimeWindows(
-        string $dateString,
-        array $workingHours,
-        array $reservations,
-        ?Service $service
+    /** @return TimeWindow[] */
+    private function getDateWorkingHours(        
+        array $weeklyWorkingHours,
+        array $customWorkingHours,
+        DateTimeImmutable $date,
     ): array
     {
+        if($date < $this->availabilityOffsetDate){
+            return [];
+        }
+
+        $dateString = $date->format('Y-m-d');
+        $weekday = Weekday::createFromInt((int)$date->format('N'))->value;
+
+        $workingHours = $customWorkingHours[$dateString] ?? $weeklyWorkingHours[$weekday];
         $dateTimeWindows = array_map(
             fn($wh) => TimeWindow::createFromDateAndTime(
                 $dateString,
@@ -101,18 +129,59 @@ class AvailabilityService
             $workingHours
         );
 
-        $dateReservations = array_filter($reservations, fn($r) => $r->getStartDateTime()->format('Y-m-d') === $dateString);
-        $reservationsTimeWindows = array_map(fn($r) => new TimeWindow($r->getStartDateTime(), $r->getEndDateTime()), $dateReservations);
+        return array_values($dateTimeWindows);
+    }
 
-        $availableTimeWindows = $this->dateTimeUtils->timeWindowCollectionDiff($dateTimeWindows, $reservationsTimeWindows);
+    /**
+     * @param TimeWindow[] $workingHours
+     * @param Reservation[] $reservations
+     * @return TimeWindow[]
+     */
+    private function buildAvailableTimeWindows(
+        array $workingHours,
+        array $reservations,
+        Service $service
+    ): array
+    {
+        $reservationsTimeWindows = array_map(fn($r) => new TimeWindow($r->getStartDateTime(), $r->getEndDateTime()), $reservations);
+        $availableTimeWindows = $this->dateTimeUtils->timeWindowCollectionDiff($workingHours, $reservationsTimeWindows);
 
-        if($service){
-            $availableTimeWindows = array_filter(
-                $availableTimeWindows,
-                fn($tw) => $this->dateTimeUtils->compareDateIntervals($tw->getLength(), $service->getDuration()) > 0
-            );
+        $availableTimeWindows = array_filter(
+            $availableTimeWindows,
+            fn($tw) => $this->dateTimeUtils->compareDateIntervals($tw->getLength(), $service->getDuration()) >= 0
+        );
+
+        return $availableTimeWindows;
+    }
+
+    /**
+     * @param TimeWindow[] $collection
+     * @return array<string, string[]>
+     */
+    private function mapTimeWindowCollectionToDatesAvailability(array $collection, DateInterval $minLength, int $division)
+    {
+        $mappedAvailability = [];
+        foreach($collection as $timeWindow){
+            $currentStartTime = $this->computeNextAvailabilityDateTime($timeWindow->getStartTime(), $division);
+            $maxStartTime = DateTimeImmutable::createFromInterface($timeWindow->getEndTime())->sub($minLength);
+
+            while($currentStartTime <= $maxStartTime)
+            {
+                $mappedAvailability[$currentStartTime->format('Y-m-d')][] = $currentStartTime->format('H:i');
+                $currentStartTime = $currentStartTime->modify("+{$division} minutes");
+            }
         }
 
-        return array_values($availableTimeWindows);
+        return $mappedAvailability;
+    }
+
+    private function computeNextAvailabilityDateTime(DateTimeInterface $dateTime, int $division): DateTimeImmutable
+    {
+        $rounded = DateTimeImmutable::createFromFormat('Y-m-d H:i', $dateTime->format('Y-m-d H:i'));
+        $rounded = $rounded < $dateTime ? $rounded->modify('+1 minute') : $rounded;
+        $minutes = (int)$rounded->format('i');
+        $addMinutes = ($division - ($minutes % $division)) % $division;
+        
+        return $rounded->modify("+{$addMinutes} minutes");
     }
 }

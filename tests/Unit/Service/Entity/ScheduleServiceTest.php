@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
+use App\DTO\Schedule\ScheduleAvailabilityGetDTO;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Entity\Service;
@@ -11,7 +12,10 @@ use App\Exceptions\ConflictException;
 use App\Exceptions\EntityNotFoundException;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
+use App\Service\Entity\AvailabilityService;
 use App\Service\Entity\ScheduleService;
+use App\Service\Utils\DateTimeUtils;
+use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -19,16 +23,22 @@ class ScheduleServiceTest extends TestCase
 {
     private MockObject&ScheduleRepository $scheduleRepositoryMock;
     private MockObject&ServiceRepository $serviceRepositoryMock;
+    private MockObject&DateTimeUtils $dateTimeUtilsMock;
+    private MockObject&AvailabilityService $availabilityServiceMock;
     private ScheduleService $scheduleService;
 
     protected function setUp(): void
     {
         $this->scheduleRepositoryMock = $this->createMock(ScheduleRepository::class);
         $this->serviceRepositoryMock = $this->createMock(ServiceRepository::class);
+        $this->dateTimeUtilsMock = $this->createMock(DateTimeUtils::class);
+        $this->availabilityServiceMock = $this->createMock(AvailabilityService::class);
 
         $this->scheduleService = new ScheduleService(
             $this->scheduleRepositoryMock,
             $this->serviceRepositoryMock,
+            $this->dateTimeUtilsMock,
+            $this->availabilityServiceMock
         );
     }
 
@@ -126,5 +136,50 @@ class ScheduleServiceTest extends TestCase
             $scheduleMock,
             $serviceMock,
         );
+    }
+
+    public function testGetScheduleAvailabilityReturnsAvailabilityResult(): void
+    {
+        $scheduleMock = $this->createMock(Schedule::class);
+        $serviceMock = $this->createMock(Service::class);
+        $startDate = '2025-10-10';
+        $endDate = '2025-10-12';
+        $availabilityMock = ['2025-10-10' => [], '2025-10-11' => [], '2025-10-12' => ['11:00', '11:15']];
+
+        $scheduleMock->method('hasService')->with($serviceMock)->willReturn(true);
+        $startDateTime = new DateTimeImmutable($startDate);
+        $endDateTime = new DateTimeImmutable($endDate);
+
+        $this->dateTimeUtilsMock
+            ->method('resolveDateTimeImmutableWithDefault')
+            ->willReturnCallback(function($date, $default) use ($startDate, $endDate, $startDateTime, $endDateTime){
+                switch(true){
+                    case $date == $startDate && $default == new DateTimeImmutable('monday this week'):
+                        return $startDateTime;
+                    case $date == $endDate && $default == new DateTimeImmutable('sunday this week'):
+                        return $endDateTime;
+                }
+            });
+
+        $this->availabilityServiceMock
+            ->expects($this->once())
+            ->method('getScheduleAvailability')
+            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
+            ->willReturn($availabilityMock);
+
+        $result = $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleAvailabilityGetDTO($startDate, $endDate));
+        $this->assertEquals($availabilityMock, $result);
+    }
+
+    public function testGetScheduleAvailabilityThrowsNotFoundWhenServiceNotAssigned(): void
+    {
+        $scheduleMock = $this->createMock(Schedule::class);
+        $serviceMock = $this->createMock(Service::class);
+
+        $scheduleMock->method('hasService')->with($serviceMock)->willReturn(false);
+
+        $this->expectException(EntityNotFoundException::class);
+
+        $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleAvailabilityGetDTO());
     }
 }

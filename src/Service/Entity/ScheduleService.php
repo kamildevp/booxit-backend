@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
+use App\DTO\Schedule\ScheduleAvailabilityGetDTO;
 use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Exceptions\ConflictException;
 use App\Exceptions\EntityNotFoundException;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
+use App\Service\Utils\DateTimeUtils;
+use DateTimeImmutable;
 
 class ScheduleService
 {
     public function __construct(
         protected ScheduleRepository $scheduleRepository,
         protected ServiceRepository $serviceRepository,
+        protected DateTimeUtils $dateTimeUtils,
+        protected AvailabilityService $availabilityService,
     )
     {
 
@@ -41,5 +46,18 @@ class ScheduleService
         
         $schedule->removeService($service);
         $this->scheduleRepository->save($schedule, true);
+    }
+
+    /** @return array<string, string[]> */
+    public function getScheduleAvailability(Schedule $schedule, Service $service, ScheduleAvailabilityGetDTO $dto): array
+    {
+        if(!$schedule->hasService($service)){
+            throw new EntityNotFoundException(Service::class);
+        }
+
+        $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateFrom, new DateTimeImmutable('monday this week'));
+        $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateTo, new DateTimeImmutable('sunday this week'));
+
+        return $this->availabilityService->getScheduleAvailability($schedule, $service, $startDate, $endDate);
     }
 }

@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\WorkingHours;
+namespace App\DTO\Schedule;
 
 use App\DTO\AbstractDTO;
-use App\Entity\Service;
-use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
 use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,8 +17,6 @@ class ScheduleAvailabilityGetDTO extends AbstractDTO
         public readonly ?string $dateFrom = null,
         #[Compound\DateStringRequirements(true)]
         public readonly ?string $dateTo = null,
-        #[CustomAssert\EntityExists(Service::class, commonRelations: ['organization' => ['schedules', '{route:schedule}']])]
-        public readonly ?int $serviceId = null,
     )
     {
 

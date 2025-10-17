@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Schedule;
 
+use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
@@ -13,7 +14,6 @@ use App\DataFixtures\Test\Schedule\ScheduleServiceAddValidationFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleServiceSortingFixtures;
 use App\DataFixtures\Test\Service\ServiceFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
-use App\Entity\OrganizationMember;
 use App\Enum\BlameableColumns;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
 use App\Tests\Feature\Schedule\DataProvider\ScheduleAuthDataProvider;
 use App\Tests\Feature\Schedule\DataProvider\ScheduleCreateDataProvider;
+use App\Tests\Feature\Schedule\DataProvider\ScheduleGetAvailabilityDataProvider;
 use App\Tests\Feature\Schedule\DataProvider\ScheduleListDataProvider;
 use App\Tests\Feature\Schedule\DataProvider\ScheduleNotFoundDataProvider;
 use App\Tests\Feature\Schedule\DataProvider\SchedulePatchDataProvider;
@@ -293,6 +294,30 @@ class ScheduleControllerTest extends BaseWebTestCase
     {
         $schedule = $this->scheduleRepository->findOneBy([]);
         $path = '/api/schedules/'.$schedule->getId().'/services?' . http_build_query($params);
+        $this->client->loginUser($this->user, 'api');
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
+    }
+
+    #[Fixtures([AvailabilityFixtures::class])]
+    #[DataProviderExternal(ScheduleGetAvailabilityDataProvider::class, 'validDataCases')]
+    public function testGetAvailability(array $query, string $serviceName, array $expectedData): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $serviceId = $this->serviceRepository->findOneBy(['name' => $serviceName])->getId();
+        
+        $path = "/api/schedules/$scheduleId/services/$serviceId/availability?" . http_build_query($query);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+        $this->assertEquals($expectedData, $responseData);
+    }
+
+    #[Fixtures([AvailabilityFixtures::class])]
+    #[DataProviderExternal(ScheduleGetAvailabilityDataProvider::class, 'validationDataCases')]
+    public function testUpdateScheduleCustomWorkingHoursValidation(array $query, array $expectedErrors): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $serviceId = $this->serviceRepository->findOneBy([])->getId();
+        
+        $path = "/api/schedules/$scheduleId/services/$serviceId/availability?" . http_build_query($query);
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }

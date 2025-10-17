@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Documentation\Response\AvailabilityResponseDoc;
 use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
@@ -12,6 +13,7 @@ use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
+use App\DTO\Schedule\ScheduleAvailabilityGetDTO;
 use App\DTO\Schedule\ScheduleCreateDTO;
 use App\DTO\Schedule\ScheduleListQueryDTO;
 use App\DTO\Schedule\SchedulePatchDTO;
@@ -230,5 +232,25 @@ class ScheduleController extends AbstractController
         $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
 
         return new SuccessResponse($result);
+    }
+
+    #[OA\Get(
+        summary: 'Get schedule service availability',
+        description: 'Returns schedule service availability for the specified date range (up to one month). If no range is provided, the current week is used by default.'
+    )]
+    #[AvailabilityResponseDoc]
+    #[ValidationErrorResponseDoc]
+    #[NotFoundResponseDoc('Schedule not found')]
+    #[Route('schedules/{schedule}/services/{service}/availability', name: 'schedule_availability_get', methods: ['GET'], requirements: ['schedule' => '\d+', 'service' => '\d+'])]
+    public function getAvailability(
+        Schedule $schedule, 
+        Service $service, 
+        ScheduleService $scheduleService,
+        #[MapQueryString] ScheduleAvailabilityGetDTO $dto = new ScheduleAvailabilityGetDTO
+    ): SuccessResponse
+    {
+        $availability = $scheduleService->getScheduleAvailability($schedule, $service, $dto);
+
+        return new SuccessResponse($availability);
     }
 }

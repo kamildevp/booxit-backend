@@ -23,7 +23,7 @@ class Reservation
     private ?int $id = null;
 
     #[Groups([ReservationNormalizerGroup::BASE_INFO->value])]
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $reference = null;
 
     #[Groups([ReservationNormalizerGroup::SCHEDULE->value])]

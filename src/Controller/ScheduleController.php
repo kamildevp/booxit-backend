@@ -236,7 +236,8 @@ class ScheduleController extends AbstractController
 
     #[OA\Get(
         summary: 'Get schedule service availability',
-        description: 'Returns schedule service availability for the specified date range (up to one month). If no range is provided, the current week is used by default.'
+        description: 'Returns schedule service availability for the specified date range (up to one month). If no range is provided, the current week is used by default.
+        </br></br>**Note:** Availability is returned in the Europe/Warsaw timezone.'
     )]
     #[AvailabilityResponseDoc]
     #[ValidationErrorResponseDoc]

@@ -140,5 +140,10 @@ abstract class BaseRepository extends ServiceEntityRepository implements Reposit
 
         return $this->paginate($queryDTO, $joinRelations, $qb);
     }
+    
+    public function flush(): void
+    {
+        $this->getEntityManager()->flush();
+    }
 
 }

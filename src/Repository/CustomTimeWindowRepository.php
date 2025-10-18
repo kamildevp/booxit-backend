@@ -62,11 +62,6 @@ class CustomTimeWindowRepository extends ServiceEntityRepository
         }
     }
 
-    public function flush(): void
-    {
-        $this->getEntityManager()->flush();
-    }
-
     /**
      * @return CustomTimeWindow[]
      */

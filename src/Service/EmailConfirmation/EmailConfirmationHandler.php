@@ -20,9 +20,8 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
 
     public function generateSignedUrl(EmailConfirmation $emailConfirmation, array $extraParams = []): string
     {
-        $user = $emailConfirmation->getCreator();
         $extraParams['id'] = $emailConfirmation->getId();
-        $extraParams['token'] = $this->createToken($user->getId(), $emailConfirmation->getEmail());
+        $extraParams['token'] = $this->createToken($emailConfirmation->getId(), $emailConfirmation->getEmail());
         $extraParams['expires'] = $emailConfirmation->getExpiryDate()->getTimestamp();
         $extraParams['type'] = $emailConfirmation->getType();
         $baseUrl = $this->resolveVerificationHandlerUrl($emailConfirmation->getVerificationHandler());
@@ -64,7 +63,7 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
             return false;
         }
 
-        $validToken = $this->createToken($emailConfirmation->getCreator()->getId(), $emailConfirmation->getEmail());
+        $validToken = $this->createToken($emailConfirmation->getId(), $emailConfirmation->getEmail());
 
         if (!hash_equals($validToken, $token)) {
             return false;
@@ -73,9 +72,9 @@ class EmailConfirmationHandler implements EmailConfirmationHandlerInterface
         return true;
     }
 
-    private function createToken(int $userId, string $email): string
+    private function createToken(int $emailConfirmationId, string $email): string
     {
-        $encodedData = json_encode([$userId, $email]);
+        $encodedData = json_encode([$emailConfirmationId, $email]);
 
         return base64_encode(hash_hmac('sha256', $encodedData, $this->secret, true));
     }

@@ -16,7 +16,7 @@ trait EmailConfirmationUtils
         $emailConfirmationRepository = $this->container->get(EntityManagerInterface::class)->getRepository(EmailConfirmation::class);
         $emailConfirmation = $emailConfirmationRepository->findOneBy(['type' => $type->value]);
 
-        $encodedData = json_encode([$emailConfirmation->getCreator()->getId(), $emailConfirmation->getEmail()]);
+        $encodedData = json_encode([$emailConfirmation->getId(), $emailConfirmation->getEmail()]);
         $token = base64_encode(hash_hmac('sha256', $encodedData, $this->secret, true));
         
         $verifyParams = [

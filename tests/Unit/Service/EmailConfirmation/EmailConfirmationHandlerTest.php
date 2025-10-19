@@ -30,7 +30,6 @@ class EmailConfirmationHandlerTest extends TestCase
 
     public function testGenerateSignatureReturnsSignedUrl(): void
     {
-        $userMock = $this->createMock(User::class);
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
         $userId = 1;
         $emailConfirmationId = 1;
@@ -40,8 +39,6 @@ class EmailConfirmationHandlerTest extends TestCase
         $token = base64_encode(hash_hmac('sha256', $encodedData, $this->secret, true));
         $signedUrlMock = 'signedUrl';
 
-        $userMock->method('getId')->willReturn($userId);
-        $emailConfirmationMock->method('getCreator')->willReturn($userMock);
         $emailConfirmationMock->method('getId')->willReturn($emailConfirmationId);
         $emailConfirmationMock->method('getEmail')->willReturn($email);
         $emailConfirmationMock->method('getExpiryDate')->willReturn($expiryDate);
@@ -64,7 +61,6 @@ class EmailConfirmationHandlerTest extends TestCase
 
     public function testValidateEmailConfirmationReturnsTrueForValidEmailConfirmation(): void
     {
-        $userMock = $this->createMock(User::class);
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
         $userId = 1;
         $emailConfirmationId = 1;
@@ -75,8 +71,6 @@ class EmailConfirmationHandlerTest extends TestCase
         $signatureMock = 'signature';
         $typeMock = 'type';
 
-        $userMock->method('getId')->willReturn($userId);
-        $emailConfirmationMock->method('getCreator')->willReturn($userMock);
         $emailConfirmationMock->method('getId')->willReturn($emailConfirmationId);
         $emailConfirmationMock->method('getEmail')->willReturn($email);
         $emailConfirmationMock->method('getExpiryDate')->willReturn($expiryDate);
@@ -110,11 +104,10 @@ class EmailConfirmationHandlerTest extends TestCase
     public function testValidateEmailConfirmationReturnsFalseForInvalidEmailConfirmation(): void
     {
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
-        $userId = 1;
         $emailConfirmationId = 1;
         $email = 'user@example.com';
         $expiryDate = new DateTime('+1 day');
-        $encodedData = json_encode([$userId, $email]);
+        $encodedData = json_encode([$emailConfirmationId, $email]);
         $token = base64_encode(hash_hmac('sha256', $encodedData, $this->secret, true));
         $signatureMock = 'signature';
         $typeMock = 'type';
@@ -125,7 +118,7 @@ class EmailConfirmationHandlerTest extends TestCase
         $url = $this->baseUrl . '?' . http_build_query([
             '_hash' => $signatureMock,
             'expires' => $expiryDate->getTimestamp(),
-            'id' => $userId,
+            'id' => $emailConfirmationId,
             'token' => $token,
             'type' => $typeMock
         ]);

@@ -26,7 +26,8 @@ class DateTimeNormalizer implements NormalizerInterface, DenormalizerInterface
             throw NotNormalizableValueException::createForUnexpectedDataType($e->getMessage(), $data, ['datetime'], $e->getPath(), false, $e->getCode(), $e);
         }
 
-        if ($datetime instanceof DateTimeImmutable) {
+        if ($datetime instanceof DateTimeInterface) {
+            $datetime = DateTimeImmutable::createFromInterface($datetime);
             return $datetime->setTimezone(new DateTimeZone($this->timezone));
         }
 

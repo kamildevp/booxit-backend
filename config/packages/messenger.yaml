@@ -21,9 +21,7 @@ framework:
             # sync: 'sync://'
 
         routing:
-            'App\Message\EmailMessage': async_mailer
-            'App\Message\AccountActivationMessage': async_mailer
-            'App\Message\EmailConfirmationMessage': async_mailer
+            'App\Message\*': async_mailer
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
 

@@ -8,7 +8,7 @@ use App\DTO\User\UserCreateDTO;
 use App\DTO\User\UserPatchDTO;
 use App\Entity\RefreshToken;
 use App\Entity\User;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\RefreshTokenRepository;
@@ -18,10 +18,16 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\DTO\User\UserResetPasswordDTO;
 use App\DTO\User\UserResetPasswordRequestDTO;
 use App\DTO\User\UserVerifyEmailDTO;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
+use App\Enum\EmailType;
 use App\Exceptions\ConflictException;
 use App\Exceptions\InvalidActionException;
+use App\Message\AccountActivationMessage;
+use App\Message\EmailConfirmationMessage;
 use App\Repository\OrganizationMemberRepository;
+use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class UserService
 {
@@ -33,6 +39,8 @@ class UserService
         protected EmailConfirmationRepository $emailConfirmationRepository,
         protected RefreshTokenRepository $refreshTokenRepository,   
         protected OrganizationMemberRepository $organizationMemberRepository,
+        protected MessageBusInterface $bus,
+        protected EmailConfirmationHandlerInterface $emailConfirmationHandler,
     )
     {
 
@@ -41,38 +49,59 @@ class UserService
     public function createUser(UserCreateDTO $dto): User
     {
         $user = $this->entitySerializer->parseToEntity($dto->toArray(['password']), User::class);
-        $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
+        $expiryDate = new DateTime(EmailConfirmationService::DEFAULT_EMAIL_CONFIRMATION_EXPIRY);
 
+        $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
         $user->setVerified(false);
-        $user->setExpiryDate(new DateTime(EmailConfirmationService::DEFAULT_EMAIL_CONFIRMATION_EXPIRY));
+        $user->setExpiryDate($expiryDate);
         $this->userRepository->save($user, true);
-        $this->emailConfirmationService->setupEmailConfirmation(
-            $user, 
+
+        $emailConfirmation = $this->emailConfirmationService->createEmailConfirmation( 
             $dto->email, 
             $dto->verificationHandler, 
-            EmailConfirmationType::USER_VERIFICATION->value,
-            true
+            EmailConfirmationType::ACCOUNT_ACTIVATION->value,
+            $user,
+            $expiryDate,
         );
+
+        $this->bus->dispatch(new AccountActivationMessage(
+            $emailConfirmation->getId(),
+            $user->getId(),
+            EmailType::ACCOUNT_ACTIVATION->value,
+            $dto->email,
+            [
+                'expiration_date' => $emailConfirmation->getExpiryDate(),
+                'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
+            ]
+        ));
 
         return $user;
     }
 
     public function patchUser(User $user, UserPatchDTO $dto): User
     {
-        $userEmail = $user->getEmail();
-        $user = $this->entitySerializer->parseToEntity($dto, $user);
+        $user = $this->entitySerializer->parseToEntity($dto->toArray(['email']), $user);
 
-        $this->userRepository->save($user, true);
-
-        if($userEmail != $dto->email){
-            $this->emailConfirmationService->setupEmailConfirmation(
-                $user, 
+        if($user->getEmail() != $dto->email){
+            $emailConfirmation = $this->emailConfirmationService->createEmailConfirmation( 
                 $dto->email, 
                 $dto->verificationHandler, 
-                EmailConfirmationType::EMAIL_VERIFICATION->value
+                EmailConfirmationType::EMAIL_VERIFICATION->value,
+                $user,
             );
+
+            $this->bus->dispatch(new EmailConfirmationMessage(
+                $emailConfirmation->getId(),
+                EmailType::EMAIL_VERIFICATION->value,
+                $dto->email,
+                [
+                    'expiration_date' => $emailConfirmation->getExpiryDate(),
+                    'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
+                ]
+            ));
         }
 
+        $this->userRepository->save($user, true);
         return $user;
     }
 
@@ -116,7 +145,8 @@ class UserService
         $user->setEmail($emailConfirmation->getEmail());
         $user->setVerified(true);
         $user->setExpiryDate(null);
-        $this->emailConfirmationRepository->remove($emailConfirmation, true);
+        $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepository->save($emailConfirmation, true);
 
         return true;
     }
@@ -130,12 +160,22 @@ class UserService
                 return;
             }
 
-            $this->emailConfirmationService->setupEmailConfirmation(
-                $user, 
-                $user->getEmail(), 
-                $dto->verificationHandler,
-                EmailConfirmationType::PASSWORD_RESET->value
+            $emailConfirmation = $this->emailConfirmationService->createEmailConfirmation( 
+                $dto->email, 
+                $dto->verificationHandler, 
+                EmailConfirmationType::PASSWORD_RESET->value,
+                $user,
             );
+
+            $this->bus->dispatch(new EmailConfirmationMessage(
+                $emailConfirmation->getId(),
+                EmailType::PASSWORD_RESET->value,
+                $dto->email,
+                [
+                    'expiration_date' => $emailConfirmation->getExpiryDate(),
+                    'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
+                ]
+            ));
         }
     }
 
@@ -157,7 +197,8 @@ class UserService
 
         $user = $emailConfirmation->getCreator();
         $this->changeUserPassword($user, $dto->password, true);
-        $this->emailConfirmationRepository->remove($emailConfirmation, true);
+        $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepository->save($emailConfirmation, true);
 
         return true;
     }

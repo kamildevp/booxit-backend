@@ -7,6 +7,7 @@ namespace App\Service\Entity;
 use App\DTO\EmailConfirmation\ValidateEmailConfirmationDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailVerification;
 use App\Repository\EmailConfirmationRepository;
@@ -28,25 +29,25 @@ class EmailConfirmationService
 
     }
 
-    public function setupEmailConfirmation(
-        User $user, 
+    public function createEmailConfirmation( 
         string $email, 
         string $verificationHandler, 
         string $type,
-        bool $removeUserOnFail = false,
-        ?DateTimeInterface $expiryDate = null 
+        ?User $creator = null,
+        ?DateTimeInterface $expiryDate = null, 
+        array $params = [],
     ){
-        $expiryDate = $expiryDate ?? new DateTime(self::DEFAULT_EMAIL_CONFIRMATION_EXPIRY);
-
         $emailConfirmation = new EmailConfirmation();
-        $emailConfirmation->setCreator($user);
         $emailConfirmation->setEmail($email);
-        $emailConfirmation->setExpiryDate($expiryDate);
+        $emailConfirmation->setExpiryDate($expiryDate ?? new DateTime(self::DEFAULT_EMAIL_CONFIRMATION_EXPIRY));
         $emailConfirmation->setVerificationHandler($verificationHandler);
         $emailConfirmation->setType($type);
+        $emailConfirmation->setCreator($creator);
+        $emailConfirmation->setParams($params);
+        $emailConfirmation->setStatus(EmailConfirmationStatus::PENDING->value);
 
         $this->emailConfirmationRepository->save($emailConfirmation, true);
-        $this->bus->dispatch(new EmailVerification($emailConfirmation->getId(), $removeUserOnFail));
+        return $emailConfirmation;
     }
 
     public function validateEmailConfirmation(ValidateEmailConfirmationDTO $dto): bool
@@ -71,7 +72,7 @@ class EmailConfirmationService
 
     public function resolveEmailConfirmation(int $id, string $token, string $signature, int $expires, string $type): EmailConfirmation
     {
-        $emailConfirmation = $this->emailConfirmationRepository->find($id);
+        $emailConfirmation = $this->emailConfirmationRepository->findOneBy(['id' => $id, 'status' => EmailConfirmationStatus::PENDING->value]);
         if(!$emailConfirmation){
             throw new VerifyEmailConfirmationException();
         }

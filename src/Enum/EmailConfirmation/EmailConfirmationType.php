@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Enum;
+namespace App\Enum\EmailConfirmation;
 
 use App\Enum\Trait\ValuesTrait;
 
@@ -10,7 +10,7 @@ enum EmailConfirmationType: string
 {
     use ValuesTrait;
 
-    case USER_VERIFICATION = 'user_verification';
+    case ACCOUNT_ACTIVATION = 'account_activation';
     case EMAIL_VERIFICATION = 'email_verification';
     case PASSWORD_RESET = 'password_reset';
 }

@@ -94,4 +94,16 @@ class UserRepository extends BaseRepository implements PasswordUpgraderInterface
         
         return $query->getResult();
     }
+
+    public function hardDelete(User $user): void
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $this->createQueryBuilder('u')
+            ->delete()
+            ->where('u.id = :id')
+            ->setParameter('id', $user->getId())
+            ->getQuery()
+            ->execute();
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+    }
 }

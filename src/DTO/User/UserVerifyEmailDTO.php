@@ -6,7 +6,7 @@ namespace App\DTO\User;
 
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\EmailConfirmationBaseDTOFields;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 
 class UserVerifyEmailDTO extends AbstractDTO
 {
@@ -28,6 +28,6 @@ class UserVerifyEmailDTO extends AbstractDTO
     
     public static function getAllowedTypes(): array
     {
-        return [EmailConfirmationType::USER_VERIFICATION->value, EmailConfirmationType::EMAIL_VERIFICATION->value];
+        return [EmailConfirmationType::ACCOUNT_ACTIVATION->value, EmailConfirmationType::EMAIL_VERIFICATION->value];
     }
 }

@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -51,9 +52,11 @@ class EmailConfirmationRepository extends BaseRepository
            ->andWhere('e.creator = :user')
            ->andWhere('e.type = :type')
            ->andWhere('e.expiryDate > :expiry_date')
+           ->andWhere('e.status = :status')
            ->setParameter('user', $user)
            ->setParameter('type', $type)
            ->setParameter('expiry_date', new DateTime())
+           ->setParameter('status', EmailConfirmationStatus::PENDING->value)
            ->getQuery()
            ->getOneOrNullResult()
        ;

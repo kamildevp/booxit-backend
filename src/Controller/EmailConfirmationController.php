@@ -25,13 +25,13 @@ class EmailConfirmationController extends AbstractController
         which should be handled by other dedicated verification endpoints. 
         It is intended for use when the client needs to confirm the validity of an email confirmation before initiating the full verification process.'
     )]
-    #[SuccessResponseDoc(dataExample: ['valid' => true])]
+    #[SuccessResponseDoc(dataModel: ValidateEmailConfirmationDTO::class)]
     #[ValidationErrorResponseDoc]
     #[Route('email-confirmations/validate', name: 'email_confirmation_validate', methods: ['GET'])]
     public function validate(EmailConfirmationService $emailConfirmationService, #[MapQueryString] ValidateEmailConfirmationDTO $dto)
     {
         $valid = $emailConfirmationService->validateEmailConfirmation($dto);
 
-        return $valid ? new SuccessResponse(['valid' => true]) : new ValidationFailedResponse();
+        return $valid ? new SuccessResponse($dto->toArray()) : new ValidationFailedResponse();
     }
 }

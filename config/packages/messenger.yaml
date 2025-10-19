@@ -9,6 +9,7 @@ framework:
                 dsn: '%env(RABBITMQ_URL)%'
                 retry_strategy:
                     max_retries: 3
+                    delay: 1000
                     multiplier: 2
                 options:
                     exchange:
@@ -20,7 +21,9 @@ framework:
             # sync: 'sync://'
 
         routing:
-            'App\Message\EmailVerification': async_mailer
+            'App\Message\EmailMessage': async_mailer
+            'App\Message\AccountActivationMessage': async_mailer
+            'App\Message\EmailConfirmationMessage': async_mailer
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
 

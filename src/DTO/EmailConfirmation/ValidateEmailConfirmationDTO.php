@@ -6,7 +6,7 @@ namespace App\DTO\EmailConfirmation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\EmailConfirmationBaseDTOFields;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 
 class ValidateEmailConfirmationDTO extends AbstractDTO
 {

@@ -7,7 +7,7 @@ namespace App\DTO\User;
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\EmailConfirmationBaseDTOFields;
 use App\DTO\User\Trait\UserPasswordFieldDTO;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 
 class UserResetPasswordDTO extends AbstractDTO
 {

@@ -72,9 +72,14 @@ class Reservation
     #[ORM\Column(length: 255)]
     private ?string $status = null;
 
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Organization $organization = null;
+
+    #[Groups([ReservationNormalizerGroup::USER->value])]
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?User $reservedBy = null;
 
     public function getId(): ?int
     {
@@ -233,6 +238,18 @@ class Reservation
     public function setOrganization(?Organization $organization): static
     {
         $this->organization = $organization;
+
+        return $this;
+    }
+
+    public function getReservedBy(): ?User
+    {
+        return $this->reservedBy;
+    }
+
+    public function setReservedBy(?User $reservedBy): static
+    {
+        $this->reservedBy = $reservedBy;
 
         return $this;
     }

@@ -7,8 +7,8 @@ namespace App\Tests\Unit\Service\Entity;
 use App\DTO\EmailConfirmation\ValidateEmailConfirmationDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Exceptions\VerifyEmailConfirmationException;
-use App\Message\EmailVerification;
 use App\Repository\EmailConfirmationRepository;
 use App\Service\Entity\EmailConfirmationService;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
@@ -16,7 +16,6 @@ use DateTime;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Envelope;
 
 class EmailConfirmationServiceTest extends TestCase
 {
@@ -38,34 +37,29 @@ class EmailConfirmationServiceTest extends TestCase
         );
     }
 
-    public function testSetupEmailConfirmationDispatchesMessageAndSavesEntity(): void
+    public function testCreateEmailConfirmationReturnsNewEmailConfirmation(): void
     {
         $userMock = $this->createMock(User::class);
         $email = 'test@example.com';
         $verificationHandler = 'handler';
         $type = 'signup';
-        $emailConfirmationIdMock = 1;
+        $expiryDate = new DateTime();
+        $params = ['test'];
 
         $this->emailConfirmationRepositoryMock
             ->expects($this->once())
             ->method('save')
-            ->with($this->isInstanceOf(EmailConfirmation::class), true)
-            ->willReturnCallback(function(EmailConfirmation $emailConfirmation) use ($emailConfirmationIdMock) {
-                $ref = new \ReflectionClass($emailConfirmation);
-                $prop = $ref->getProperty('id');
-                $prop->setAccessible(true);
-                $prop->setValue($emailConfirmation, $emailConfirmationIdMock);
-            });
+            ->with($this->isInstanceOf(EmailConfirmation::class), true);
 
-        $this->messageBusMock
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->callback(function ($message) {
-                return $message instanceof EmailVerification;
-            }))
-            ->willReturn(new Envelope(new EmailVerification($emailConfirmationIdMock, false)));
+        $result = $this->emailConfirmationService->createEmailConfirmation($email, $verificationHandler, $type, $userMock, $expiryDate, $params);
 
-        $this->emailConfirmationService->setupEmailConfirmation($userMock, $email, $verificationHandler, $type);
+        $this->assertInstanceOf(EmailConfirmation::class, $result);
+        $this->assertEquals($userMock, $result->getCreator());
+        $this->assertEquals($email, $result->getEmail());
+        $this->assertEquals($verificationHandler, $result->getVerificationHandler());
+        $this->assertEquals($type, $result->getType());
+        $this->assertEquals($expiryDate, $result->getExpiryDate());
+        $this->assertEquals($params, $result->getParams());
     }
 
     public function testValidateEmailConfirmationReturnsTrueWhenValid(): void
@@ -74,7 +68,10 @@ class EmailConfirmationServiceTest extends TestCase
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
 
-        $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
+        $this->emailConfirmationRepositoryMock
+            ->method('findOneBy')
+            ->with(['id' => $dto->id, 'status' => EmailConfirmationStatus::PENDING->value])
+            ->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
             ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
@@ -90,7 +87,10 @@ class EmailConfirmationServiceTest extends TestCase
         $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
-        $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
+        $this->emailConfirmationRepositoryMock
+            ->method('findOneBy')
+            ->with(['id' => $dto->id, 'status' => EmailConfirmationStatus::PENDING->value])
+            ->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
             ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)
@@ -104,7 +104,10 @@ class EmailConfirmationServiceTest extends TestCase
     public function testResolveEmailConfirmationThrowsExceptionWhenNotFound(): void
     {
         $dto = new ValidateEmailConfirmationDTO(1, (new DateTime('+1 day'))->getTimestamp(), 'type', 'token', 'signature');
-        $this->emailConfirmationRepositoryMock->method('find')->willReturn(null);
+        $this->emailConfirmationRepositoryMock
+            ->method('findOneBy')
+            ->with(['id' => $dto->id, 'status' => EmailConfirmationStatus::PENDING->value])
+            ->willReturn(null);
 
         $this->expectException(VerifyEmailConfirmationException::class);
         $this->emailConfirmationService->resolveEmailConfirmation(
@@ -122,7 +125,10 @@ class EmailConfirmationServiceTest extends TestCase
 
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
 
-        $this->emailConfirmationRepositoryMock->method('find')->willReturn($emailConfirmationMock);
+        $this->emailConfirmationRepositoryMock
+            ->method('findOneBy')
+            ->with(['id' => $dto->id, 'status' => EmailConfirmationStatus::PENDING->value])
+            ->willReturn($emailConfirmationMock);
         $this->emailConfirmationHandlerMock->expects($this->once())
             ->method('validateEmailConfirmation')
             ->with($emailConfirmationMock, $dto->token, $dto->_hash, $dto->expires, $dto->type)

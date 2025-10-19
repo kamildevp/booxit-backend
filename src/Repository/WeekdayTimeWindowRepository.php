@@ -9,7 +9,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<WeekdayTimeWindow>
  */
-class WeekdayTimeWindowRepository extends ServiceEntityRepository
+class WeekdayTimeWindowRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

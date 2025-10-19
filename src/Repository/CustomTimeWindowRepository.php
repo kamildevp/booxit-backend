@@ -12,7 +12,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<CustomTimeWindow>
  */
-class CustomTimeWindowRepository extends ServiceEntityRepository
+class CustomTimeWindowRepository extends BaseRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

@@ -24,6 +24,7 @@ final class Version20251018193341 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $this->addSql('ALTER TABLE email_confirmation DROP status');
+        $this->addSql('ALTER TABLE email_confirmation DROP params');
         $this->addSql('ALTER TABLE email_confirmation ADD params TEXT DEFAULT NULL');
         $this->addSql('COMMENT ON COLUMN email_confirmation.params IS \'(DC2Type:array)\'');
     }

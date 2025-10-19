@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\EmailConfirmation\DataProvider;
 
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class EmailConfirmationValidateDataProvider extends BaseDataProvider 
@@ -12,7 +12,7 @@ class EmailConfirmationValidateDataProvider extends BaseDataProvider
     public static function validDataCases()
     {
         return [
-            [EmailConfirmationType::USER_VERIFICATION],
+            [EmailConfirmationType::ACCOUNT_ACTIVATION],
             [EmailConfirmationType::EMAIL_VERIFICATION],
             [EmailConfirmationType::PASSWORD_RESET],
         ];
@@ -52,7 +52,7 @@ class EmailConfirmationValidateDataProvider extends BaseDataProvider
         return array_merge($cases, [
             [
                 [
-                    'type' => EmailConfirmationType::USER_VERIFICATION->value,
+                    'type' => EmailConfirmationType::ACCOUNT_ACTIVATION->value,
                 ],
                 EmailConfirmationType::EMAIL_VERIFICATION
             ],

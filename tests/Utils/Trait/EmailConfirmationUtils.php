@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Utils\Trait;
 
 use App\Entity\EmailConfirmation;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\UriSigner;
 

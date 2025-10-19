@@ -15,7 +15,7 @@ class UserPatchDataProvider extends BaseDataProvider
             [
                 [
                     'name' => 'New Test User',
-                    'email' => 'verifieduser@example.com',
+                    'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
                     'verification_handler' => self::VERIFICATION_HANDLER
                 ],
                 [
@@ -30,7 +30,7 @@ class UserPatchDataProvider extends BaseDataProvider
                     'verification_handler' => self::VERIFICATION_HANDLER
                 ],
                 [
-                    'email' => 'newuser@example.com',
+                    'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
                 ],
                 true
             ],

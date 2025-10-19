@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User\DataProvider;
 
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class UserVerifyDataProvider extends BaseDataProvider 
@@ -12,7 +12,7 @@ class UserVerifyDataProvider extends BaseDataProvider
     public static function validDataCases()
     {
         return [
-            [EmailConfirmationType::USER_VERIFICATION],
+            [EmailConfirmationType::ACCOUNT_ACTIVATION],
             [EmailConfirmationType::EMAIL_VERIFICATION],
         ];
     }
@@ -42,7 +42,7 @@ class UserVerifyDataProvider extends BaseDataProvider
             ],
         ];
 
-        $allowedTypes = [EmailConfirmationType::USER_VERIFICATION, EmailConfirmationType::EMAIL_VERIFICATION];
+        $allowedTypes = [EmailConfirmationType::ACCOUNT_ACTIVATION, EmailConfirmationType::EMAIL_VERIFICATION];
         $cases = [];
         foreach($allowedTypes as $type){
             $typeCases = array_map(fn($case) => [...$case, $type], $paramsCases);
@@ -54,7 +54,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                 [
                     'type' => EmailConfirmationType::EMAIL_VERIFICATION->value,
                 ],
-                EmailConfirmationType::USER_VERIFICATION
+                EmailConfirmationType::ACCOUNT_ACTIVATION
             ],
         ]);
     }
@@ -93,7 +93,7 @@ class UserVerifyDataProvider extends BaseDataProvider
                 [
                     'type' => [
                         'Parameter must be one of valid types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', [
-                            EmailConfirmationType::USER_VERIFICATION->value,
+                            EmailConfirmationType::ACCOUNT_ACTIVATION->value,
                             EmailConfirmationType::EMAIL_VERIFICATION->value
                         ]))
                     ],

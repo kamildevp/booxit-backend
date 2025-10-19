@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User\DataProvider;
 
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class UserResetPasswordDataProvider extends BaseDataProvider 

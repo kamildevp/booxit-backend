@@ -6,7 +6,8 @@ namespace App\DataFixtures\Test\User;
 
 use App\Entity\EmailConfirmation;
 use App\Entity\User;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -33,7 +34,8 @@ class VerifyUserFixtures extends Fixture
         $emailConfirmation->setEmail('user@example.com');
         $emailConfirmation->setExpiryDate(new DateTime('+1 day'));
         $emailConfirmation->setVerificationHandler('test');
-        $emailConfirmation->setType(EmailConfirmationType::USER_VERIFICATION->value);
+        $emailConfirmation->setType(EmailConfirmationType::ACCOUNT_ACTIVATION->value);
+        $emailConfirmation->setStatus(EmailConfirmationStatus::PENDING->value);
         $manager->persist($emailConfirmation);
 
         $manager->flush();

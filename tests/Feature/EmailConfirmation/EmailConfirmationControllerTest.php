@@ -7,7 +7,7 @@ namespace App\Tests\Feature\EmailConfirmation;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\VerifyUserEmailFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Tests\Feature\EmailConfirmation\DataProvider\EmailConfirmationValidateDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use App\Tests\Utils\BaseWebTestCase;
@@ -30,7 +30,7 @@ class EmailConfirmationControllerTest extends BaseWebTestCase
         $params = $this->prepareEmailConfirmationVerifyParams($type);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', '/api/email-confirmations/validate', $params);
 
-        $this->assertEquals(['valid' => true], $responseData);
+        $this->assertEquals($params, $responseData);
     }
 
     #[Fixtures([VerifyUserFixtures::class, VerifyUserEmailFixtures::class, PasswordResetFixtures::class])]

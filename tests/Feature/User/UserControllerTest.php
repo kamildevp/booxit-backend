@@ -13,7 +13,7 @@ use App\DataFixtures\Test\User\UserFixtures;
 use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\DataFixtures\Test\User\VerifyUserEmailFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
 use App\Enum\User\UserNormalizerGroup;
 use App\Repository\OrganizationMemberRepository;

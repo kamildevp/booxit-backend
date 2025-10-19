@@ -12,20 +12,28 @@ use App\DTO\User\UserVerifyEmailDTO;
 use App\Entity\EmailConfirmation;
 use App\Entity\RefreshToken;
 use App\Entity\User;
-use App\Enum\EmailConfirmationType;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
+use App\Enum\EmailType;
 use App\Exceptions\ConflictException;
 use App\Exceptions\InvalidActionException;
 use App\Exceptions\VerifyEmailConfirmationException;
+use App\Message\AccountActivationMessage;
+use App\Message\EmailConfirmationMessage;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\OrganizationMemberRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
+use App\Service\EmailConfirmation\EmailConfirmationHandler;
 use App\Service\Entity\EmailConfirmationService;
 use App\Service\Entity\UserService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use DateTime;
+use DateTimeInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserServiceTest extends TestCase
@@ -38,6 +46,8 @@ class UserServiceTest extends TestCase
     private MockObject&EmailConfirmationRepository $emailConfirmationRepositoryMock;
     private MockObject&RefreshTokenRepository $refreshTokenRepositoryMock;
     private MockObject&OrganizationMemberRepository $organizationMemberRepositoryMock;
+    private MockObject&EmailConfirmationHandler $emailConfirmationHandlerMock;
+    private MockObject&MessageBusInterface $messageBusMock;
 
     private UserService $userService;
 
@@ -51,7 +61,8 @@ class UserServiceTest extends TestCase
         $this->emailConfirmationRepositoryMock = $this->createMock(EmailConfirmationRepository::class);
         $this->refreshTokenRepositoryMock = $this->createMock(RefreshTokenRepository::class);
         $this->organizationMemberRepositoryMock = $this->createMock(OrganizationMemberRepository::class);
-
+        $this->emailConfirmationHandlerMock = $this->createMock(EmailConfirmationHandler::class);
+        $this->messageBusMock = $this->createMock(MessageBusInterface::class);
 
         $this->userService = new UserService(
             $this->serializerMock,
@@ -61,14 +72,24 @@ class UserServiceTest extends TestCase
             $this->emailConfirmationRepositoryMock,
             $this->refreshTokenRepositoryMock,
             $this->organizationMemberRepositoryMock,
+            $this->messageBusMock,
+            $this->emailConfirmationHandlerMock,
         );
     }
 
     public function testCreateUser(): void
     {
         $dto = new UserCreateDTO('test', 'test@example.com', 'handler', 'pass');
+        $userId = 1;
         $userMock = $this->createMock(User::class);
+        $userMock->method('getId')->willReturn($userId);
         $hashedPasswordMock = 'hashed-pass';
+        $signedUrl = 'url';
+        $emailConfirmationId = 1;
+        $expiryDate = new DateTime();
+        $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
+        $emailConfirmationMock->method('getId')->willReturn($emailConfirmationId);
+        $emailConfirmationMock->method('getExpiryDate')->willReturn($expiryDate);
 
         $this->serializerMock
             ->method('parseToEntity')
@@ -86,8 +107,29 @@ class UserServiceTest extends TestCase
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
 
         $this->emailConfirmationServiceMock->expects($this->once())
-            ->method('setupEmailConfirmation')
-            ->with($userMock, $dto->email, $dto->verificationHandler, EmailConfirmationType::USER_VERIFICATION->value, true);
+            ->method('createEmailConfirmation')
+            ->with(
+                $dto->email, 
+                $dto->verificationHandler, 
+                EmailConfirmationType::ACCOUNT_ACTIVATION->value, 
+                $userMock, 
+                $this->isInstanceOf(DateTimeInterface::class)
+            )
+            ->willReturn($emailConfirmationMock);
+
+        $this->emailConfirmationHandlerMock->method('generateSignedUrl')->willReturn($signedUrl);
+
+        $this->messageBusMock->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function($arg) use ($emailConfirmationId, $userId, $dto, $signedUrl, $expiryDate){
+                return $arg instanceof AccountActivationMessage &&
+                    $arg->getEmailConfirmationId() == $emailConfirmationId &&
+                    $arg->getUserId() == $userId &&
+                    $arg->getEmailType() == EmailType::ACCOUNT_ACTIVATION->value &&
+                    $arg->getEmail() == $dto->email &&
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+            }))
+            ->willReturn(new Envelope($this->createMock(AccountActivationMessage::class)));
 
         $result = $this->userService->createUser($dto);
 
@@ -103,14 +145,18 @@ class UserServiceTest extends TestCase
 
         $this->serializerMock
             ->method('parseToEntity')
-            ->with($dto, $userMock)
+            ->with($dto->toArray(['email']), $userMock)
             ->willReturn($userMock);
 
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
 
         $this->emailConfirmationServiceMock
             ->expects($this->never())
-            ->method('setupEmailConfirmation');
+            ->method('createEmailConfirmation');
+
+        $this->messageBusMock
+            ->expects($this->never())
+            ->method('dispatch');
 
         $this->userService->patchUser($userMock, $dto);
     }
@@ -119,20 +165,43 @@ class UserServiceTest extends TestCase
     {
         $dto = new UserPatchDTO('test', 'new@example.com', 'handler');
         $userMock = $this->createMock(User::class);
-
         $userMock->method('getEmail')->willReturn('old@example.com');
+        $signedUrl = 'url';
+        $emailConfirmationId = 1;
+        $expiryDate = new DateTime();
+        $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
+        $emailConfirmationMock->method('getId')->willReturn($emailConfirmationId);
+        $emailConfirmationMock->method('getExpiryDate')->willReturn($expiryDate);
 
         $this->serializerMock
             ->method('parseToEntity')
-            ->with($dto, $userMock)
+            ->with($dto->toArray(['email']), $userMock)
             ->willReturn($userMock);
 
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
 
-        $this->emailConfirmationServiceMock
-            ->expects($this->once())
-            ->method('setupEmailConfirmation')
-            ->with($userMock, $dto->email, $dto->verificationHandler, EmailConfirmationType::EMAIL_VERIFICATION->value);
+        $this->emailConfirmationServiceMock->expects($this->once())
+            ->method('createEmailConfirmation')
+            ->with(
+                $dto->email, 
+                $dto->verificationHandler, 
+                EmailConfirmationType::EMAIL_VERIFICATION->value, 
+                $userMock, 
+            )
+            ->willReturn($emailConfirmationMock);
+
+        $this->emailConfirmationHandlerMock->method('generateSignedUrl')->willReturn($signedUrl);
+
+        $this->messageBusMock->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function($arg) use ($emailConfirmationId, $dto, $signedUrl, $expiryDate){
+                return $arg instanceof EmailConfirmationMessage &&
+                    $arg->getEmailConfirmationId() == $emailConfirmationId &&
+                    $arg->getEmailType() == EmailType::EMAIL_VERIFICATION->value &&
+                    $arg->getEmail() == $dto->email &&
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+            }))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
         $this->userService->patchUser($userMock, $dto);
     }
@@ -218,7 +287,8 @@ class UserServiceTest extends TestCase
         $userMock->expects($this->once())->method('setVerified')->with(true);
         $userMock->expects($this->once())->method('setExpiryDate')->with(null);
 
-        $this->emailConfirmationRepositoryMock->expects($this->once())->method('remove')->with($emailConfirmationMock, true);
+        $emailConfirmationMock->expects($this->once())->method('setStatus')->with(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepositoryMock->expects($this->once())->method('save')->with($emailConfirmationMock, true);
 
         $result = $this->userService->verifyUserEmail($dto);
 
@@ -230,6 +300,12 @@ class UserServiceTest extends TestCase
         $dto = new UserResetPasswordRequestDTO('reset@example.com', 'handler');
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn($dto->email);
+        $signedUrl = 'url';
+        $emailConfirmationId = 1;
+        $expiryDate = new DateTime();
+        $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
+        $emailConfirmationMock->method('getId')->willReturn($emailConfirmationId);
+        $emailConfirmationMock->method('getExpiryDate')->willReturn($expiryDate);
 
         $this->userRepositoryMock->method('findOneBy')->with(['email' => $dto->email])->willReturn($userMock);
         $this->emailConfirmationRepositoryMock
@@ -237,10 +313,28 @@ class UserServiceTest extends TestCase
             ->with($userMock, EmailConfirmationType::PASSWORD_RESET->value)
             ->willReturn(null);
 
-        $this->emailConfirmationServiceMock
-            ->expects($this->once())
-            ->method('setupEmailConfirmation')
-            ->with($userMock, $dto->email, $dto->verificationHandler, EmailConfirmationType::PASSWORD_RESET->value);
+        $this->emailConfirmationServiceMock->expects($this->once())
+            ->method('createEmailConfirmation')
+            ->with(
+                $dto->email, 
+                $dto->verificationHandler, 
+                EmailConfirmationType::PASSWORD_RESET->value, 
+                $userMock, 
+            )
+            ->willReturn($emailConfirmationMock);
+
+        $this->emailConfirmationHandlerMock->method('generateSignedUrl')->willReturn($signedUrl);
+
+        $this->messageBusMock->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function($arg) use ($emailConfirmationId, $dto, $signedUrl, $expiryDate){
+                return $arg instanceof EmailConfirmationMessage &&
+                    $arg->getEmailConfirmationId() == $emailConfirmationId &&
+                    $arg->getEmailType() == EmailType::PASSWORD_RESET->value &&
+                    $arg->getEmail() == $dto->email &&
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+            }))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
         $this->userService->handleResetUserPasswordRequest($dto);
     }
@@ -260,7 +354,11 @@ class UserServiceTest extends TestCase
 
         $this->emailConfirmationServiceMock
             ->expects($this->never())
-            ->method('setupEmailConfirmation');
+            ->method('createEmailConfirmation');
+
+        $this->messageBusMock
+            ->expects($this->never())
+            ->method('dispatch');
 
         $this->userService->handleResetUserPasswordRequest($dto);
     }
@@ -295,7 +393,9 @@ class UserServiceTest extends TestCase
         $userMock->expects($this->once())->method('setPassword')->with($hashedPassword);
         $this->userRepositoryMock->expects($this->once())->method('save')->with($userMock, true);
         $this->refreshTokenRepositoryMock->expects($this->once())->method('removeAllUserRefreshTokens')->with($userMock);
-        $this->emailConfirmationRepositoryMock->expects($this->once())->method('remove')->with($emailConfirmationMock, true);
+
+        $emailConfirmationMock->expects($this->once())->method('setStatus')->with(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepositoryMock->expects($this->once())->method('save')->with($emailConfirmationMock, true);
 
         $result = $this->userService->resetUserPassword($dto);
         $this->assertTrue($result);

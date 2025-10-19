@@ -12,7 +12,7 @@
         <h2>Reservation Info</h2>
         <p>Organization Name: {{ organization_name }}</p>
         <p>Service Name: {{ service_name }}</p>
-        <p>Date and Time: {{ start_date_time }}</p>
+        <p>Date and Time: {{ start_date_time|date('F j, Y \\a\\t H:i') }}</p>
         <p>Estimated price: {{ estimated_price }}</p>
         <p>Duration: {{ duration }}</p>
     </body>

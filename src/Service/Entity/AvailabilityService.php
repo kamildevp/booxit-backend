@@ -39,12 +39,12 @@ class AvailabilityService
     public function getScheduleAvailability(
         Schedule $schedule, 
         Service $service, 
-        DateTimeImmutable $startDate, 
-        DateTimeImmutable $endDate
+        DateTimeInterface $startDate, 
+        DateTimeInterface $endDate
     ): array
     {
-        $startDate = $startDate->setTime(0,0);
-        $endDate = $endDate->setTime(23,59);
+        $startDate = DateTimeImmutable::createFromInterface($startDate)->setTime(0,0);
+        $endDate = DateTimeImmutable::createFromInterface($endDate)->setTime(23,59);
         $searchStartDate = $startDate < $this->availabilityOffsetDate ? $this->availabilityOffsetDate : $startDate;
         $weeklyWorkingHours = $this->workingHoursService->getScheduleWeeklyWorkingHours($schedule);
         $customWorkingHours = $this->workingHoursService->getScheduleCustomWorkingHours($schedule, $searchStartDate, $endDate);

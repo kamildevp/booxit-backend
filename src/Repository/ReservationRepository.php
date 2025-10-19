@@ -84,4 +84,16 @@ class ReservationRepository extends BaseRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function hardDelete(Reservation $reservation): void
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $this->createQueryBuilder('r')
+            ->delete()
+            ->where('r.id = :id')
+            ->setParameter('id', $reservation->getId())
+            ->getQuery()
+            ->execute();
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+    }
 }

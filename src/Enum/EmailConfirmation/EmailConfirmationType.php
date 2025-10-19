@@ -14,4 +14,5 @@ enum EmailConfirmationType: string
     case EMAIL_VERIFICATION = 'email_verification';
     case PASSWORD_RESET = 'password_reset';
     case RESERVATION_VERIFICATION = 'reservation_verification';
+    case RESERVATION_CANCELLATION = 'reservation_cancellation';
 }

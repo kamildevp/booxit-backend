@@ -57,12 +57,12 @@ class Reservation
     private ?string $estimatedPrice = null;
 
     #[Groups([ReservationNormalizerGroup::DETAILS->value])]
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $startDateTime = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $startDateTime = null;
 
     #[Groups([ReservationNormalizerGroup::DETAILS->value])]
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $endDateTime = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $endDateTime = null;
 
     #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
     #[ORM\Column(length: 255)]
@@ -182,24 +182,24 @@ class Reservation
         return $this;
     }
 
-    public function getStartDateTime(): ?\DateTimeInterface
+    public function getStartDateTime(): ?\DateTimeImmutable
     {
         return $this->startDateTime;
     }
 
-    public function setStartDateTime(\DateTimeInterface $startDateTime): static
+    public function setStartDateTime(\DateTimeImmutable $startDateTime): static
     {
         $this->startDateTime = $startDateTime;
 
         return $this;
     }
 
-    public function getEndDateTime(): ?\DateTimeInterface
+    public function getEndDateTime(): ?\DateTimeImmutable
     {
         return $this->endDateTime;
     }
 
-    public function setEndDateTime(\DateTimeInterface $endDateTime): static
+    public function setEndDateTime(\DateTimeImmutable $endDateTime): static
     {
         $this->endDateTime = $endDateTime;
 

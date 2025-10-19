@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\EmailConfirmation;
 
+use App\DataFixtures\Test\EmailConfirmation\ValidateEmailConfirmationFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
 use App\DataFixtures\Test\User\VerifyUserEmailFixtures;
 use App\DataFixtures\Test\User\VerifyUserFixtures;
@@ -33,7 +34,7 @@ class EmailConfirmationControllerTest extends BaseWebTestCase
         $this->assertEquals($params, $responseData);
     }
 
-    #[Fixtures([VerifyUserFixtures::class, VerifyUserEmailFixtures::class, PasswordResetFixtures::class])]
+    #[Fixtures([ValidateEmailConfirmationFixtures::class])]
     #[DataProviderExternal(EmailConfirmationValidateDataProvider::class, 'failureDataCases')]
     public function testValidateFailure(array $verifyParams, EmailConfirmationType $type): void
     {

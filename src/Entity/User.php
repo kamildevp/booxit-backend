@@ -70,11 +70,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'])]
     private Collection $refreshTokens;
 
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class)]
+    private Collection $reservations;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
         $this->organizationAssignments = new ArrayCollection();
         $this->refreshTokens = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -310,6 +317,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'name' => new BaseFieldOrder('name'),
             'email' => new BaseFieldOrder('email'),
         ]);
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setReservedBy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getReservedBy() === $this) {
+                $reservation->setReservedBy(null);
+            }
+        }
+
+        return $this;
     }
 
 }

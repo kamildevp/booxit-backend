@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -14,9 +16,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CustomTimeWindowRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, CustomTimeWindow::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, CustomTimeWindow::class);
     }
 
     //    /**

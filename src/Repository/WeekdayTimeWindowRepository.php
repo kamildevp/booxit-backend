@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\WeekdayTimeWindow;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -11,9 +13,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class WeekdayTimeWindowRepository extends BaseRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, WeekdayTimeWindow::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, WeekdayTimeWindow::class);
     }
 
 //    /**

@@ -13,6 +13,16 @@ class ReservationAuthDataProvider extends BaseDataProvider
     {
         return [
             ['/api/reservations/me', 'POST'],
+            ['/api/reservations/{reservation}/confirm', 'POST'],
+        ];
+    }
+
+    public static function privilegesOnlyPaths()
+    {
+        return [
+            ['/api/reservations/{reservation}/confirm', 'POST', 'user1@example.com'],
+            ['/api/reservations/{reservation}/confirm', 'POST', 'om-user1@example.com'],
+            ['/api/reservations/{reservation}/confirm', 'POST', 'sa-user2@example.com'],
         ];
     }
 }

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Your reservation has been confirmed</title>
+    </head>
+    <body>
+        <h2>Reservation Info</h2>
+        <p>Reservation reference: {{ reference }}</p>
+        <p>Organization Name: {{ organization_name }}</p>
+        <p>Service Name: {{ service_name }}</p>
+        <p>Date and Time: {{ start_date_time|date('d-m-Y H:i') }}</p>
+        <p>Estimated price: {{ estimated_price }} PLN</p>
+        <p>Duration: {{ duration }}</p>
+        <br>
+        <h1>Reservation Cancellation</h1>
+        <p>
+            <a href="{{ cancellation_url }}">Click here to cancel your reservation</a>
+            (this link is valid until {{ cancellation_expiration_date|date('F jS H:i') }})
+        </p>
+    </body>
+</html>

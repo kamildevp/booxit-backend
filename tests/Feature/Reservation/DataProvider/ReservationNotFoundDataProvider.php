@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Feature\Reservation\DataProvider;
+
+use App\Tests\Utils\DataProvider\BaseDataProvider;
+
+class ReservationNotFoundDataProvider extends BaseDataProvider 
+{
+    public static function dataCases()
+    {
+        return [
+            ['/api/reservations/1000/confirm', 'POST'],
+        ];
+    }
+}

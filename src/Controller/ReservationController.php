@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Documentation\Response\ConflictResponseDoc;
+use App\Documentation\Response\ForbiddenResponseDoc;
+use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
+use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
@@ -16,6 +19,7 @@ use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Response\ValidationFailedResponse;
+use App\Service\Auth\AccessRule\ReservationWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\ReservationService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
@@ -102,5 +106,31 @@ class ReservationController extends AbstractController
         return $verified ? 
             new SuccessResponse(['message' => 'Verification Successful']) : 
             new ValidationFailedResponse('Verification Failed');
+    }
+
+    #[OA\Post(
+        summary: 'Confirm reservation',
+        description: 'Confirms specified reservation and sends reservation confirmation email with cancellation link. 
+        The link is generated using the specified **verification_handler**, which must match one of the predefined handlers to ensure it points to a trusted domain. 
+        <br><br>**Note:** The *"internal"* verification handler is a dummy handler used to generate a safe verification URL when no external handler is provided. 
+        To complete the cancellation process, the appropriate cancellation endpoint must be called with the parameters extracted from the decoded cancellation link.
+        </br><br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been confirmed'])]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
+    #[Route('reservations/{reservation}/confirm', name: 'reservation_confirm', methods: ['POST'])]
+    public function confirm(
+        Reservation $reservation,
+        ReservationService $reservationService, 
+        #[MapRequestPayload] ReservationConfirmDTO $dto,
+    ): ResourceCreatedResponse
+    {
+        $reservationService->confirmReservation($reservation, $dto);
+
+        return new ResourceCreatedResponse(['message' => 'Reservation has been confirmed']);
     }
 }

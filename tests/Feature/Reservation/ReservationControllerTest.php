@@ -5,15 +5,23 @@ declare(strict_types=1);
 namespace App\Tests\Feature\Reservation;
 
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
+use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
+use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
+use App\DataFixtures\Test\User\UserFixtures;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
+use App\Repository\ReservationRepository;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
+use App\Repository\UserRepository;
+use App\Response\ForbiddenResponse;
 use App\Tests\Feature\Reservation\DataProvider\ReservationAuthDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationConfirmDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationVerifyDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\UserReservationCreateDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -29,6 +37,8 @@ class ReservationControllerTest extends BaseWebTestCase
     protected InMemoryTransport $mailerTransport;
     protected ServiceRepository $serviceRepository;
     protected ScheduleRepository $scheduleRepository;
+    protected ReservationRepository $reservationRepository;
+    protected UserRepository $userRepository;
 
     protected function setUp(): void
     {
@@ -36,6 +46,8 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->mailerTransport = $this->container->get('messenger.transport.async_mailer');
         $this->serviceRepository = $this->container->get(ServiceRepository::class);
         $this->scheduleRepository = $this->container->get(ScheduleRepository::class);
+        $this->reservationRepository = $this->container->get(ReservationRepository::class);
+        $this->userRepository = $this->container->get(UserRepository::class);
     }
 
     #[Fixtures([AvailabilityFixtures::class])]
@@ -118,9 +130,55 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', '/api/reservations/verify', $params, $expectedErrors);
     }
 
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationConfirmDataProvider::class, 'validDataCases')]
+    public function testConfirm(array $params): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', "/api/reservations/$reservationId/confirm", $params);
+        $this->assertEquals(['message' => 'Reservation has been confirmed'], $responseData);
+        $this->assertCount(1, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationConfirmDataProvider::class, 'validationDataCases')]
+    public function testConfirmValidation(array $params, array $expectedErrors): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $this->client->loginUser($this->user, 'api');
+        $this->assertPathValidation($this->client, 'POST', "/api/reservations/$reservationId/confirm", $params, $expectedErrors);
+        $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[DataProviderExternal(ReservationNotFoundDataProvider::class, 'dataCases')]
+    public function testNotFoundResponses(string $path, string $method): void
+    {
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
+        $this->assertEquals('Reservation not found', $responseData['message']);
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
     #[DataProviderExternal(ReservationAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $path = str_replace('{reservation}', (string)$reservationId, $path);
         $this->assertPathIsProtected($path, $method);
+    }
+
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationAuthDataProvider::class, 'privilegesOnlyPaths')]
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $path = str_replace('{reservation}', (string)$reservationId, $path);
+        $user = $this->userRepository->findOneBy(['email' => $userEmail]);
+
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
+        $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
     }
 }

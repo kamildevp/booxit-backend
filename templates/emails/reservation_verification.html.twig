@@ -10,6 +10,7 @@
             (this link is valid until {{ verification_expiration_date|date('F jS H:i') }})
         </p>
         <h2>Reservation Info</h2>
+        <p>Reservation reference: {{ reference }}</p>
         <p>Organization Name: {{ organization_name }}</p>
         <p>Service Name: {{ service_name }}</p>
         <p>Date and Time: {{ start_date_time|date('d-m-Y H:i') }}</p>

@@ -94,6 +94,7 @@ class ReservationService
             EmailType::RESERVATION_VERIFICATION->value,
             $reservation->getEmail(),
             [
+                'reference' => $reservation->getReference(),
                 'verification_url' => $this->emailConfirmationHandler->generateSignedUrl($verificationEmailConfirmation),
                 'verification_expiration_date' => $verificationEmailConfirmation->getExpiryDate(),
                 'cancellation_url' => $this->emailConfirmationHandler->generateSignedUrl($cancellationEmailConfirmation),

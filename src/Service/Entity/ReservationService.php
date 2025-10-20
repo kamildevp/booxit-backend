@@ -101,7 +101,7 @@ class ReservationService
                 'organization_name' => $reservation->getOrganization()->getName(),
                 'service_name' => $reservation->getService()->getName(),
                 'start_date_time' => $reservation->getStartDateTime(),
-                'estimated_price' => $reservation->getEstimatedPrice().' PLN',
+                'estimated_price' => $reservation->getEstimatedPrice(),
                 'duration' => $reservation->getService()->getDuration()->format('%h:%ih'),
             ]
         ));

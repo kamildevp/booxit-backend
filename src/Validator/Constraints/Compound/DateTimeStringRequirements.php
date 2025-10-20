@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints\Compound;
 #[Attribute]
 class DateTimeStringRequirements extends Compound
 {
-    const FORMAT = 'Y-m-d\TH:i:sP';
+    const FORMAT = 'Y-m-d\TH:iP';
 
     public function __construct(protected bool $allowNull = false, mixed $options = null)
     {

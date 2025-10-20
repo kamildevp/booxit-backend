@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Serializer;
 
+use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer as SymfonyDateTimeNormalizer;
 
 class DateTimeNormalizer implements NormalizerInterface, DenormalizerInterface
 {
@@ -41,6 +43,7 @@ class DateTimeNormalizer implements NormalizerInterface, DenormalizerInterface
 
     public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
+        $context = array_merge([SymfonyDateTimeNormalizer::FORMAT_KEY => DateTimeStringRequirements::FORMAT], $context);
         return $this->defaultNormalizer->normalize($object, $format, $context);
     }
 

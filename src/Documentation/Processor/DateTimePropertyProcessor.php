@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Documentation\Processor;
 
+use App\Validator\Constraints\Compound\DateTimeStringRequirements;
+use DateTime;
 use OpenApi\Analysis;
 use OpenApi\Generator;
 
@@ -24,7 +26,7 @@ final class DateTimePropertyProcessor
 
             foreach ($schema->properties as $property) {
                 if ($property->format == 'date-time' && (Generator::isDefault($property->nullable) || !$property->nullable)) {
-                    $property->example = '2025-06-13T12:20:00+00:00';
+                    $property->example = (new DateTime())->format(DateTimeStringRequirements::FORMAT);
                 }
                 
             }

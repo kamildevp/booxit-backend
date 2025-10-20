@@ -64,16 +64,16 @@ class ListDataProvider extends BaseDataProvider
                 [
                     'filters' => [
                         'created_from' => [
-                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                            'Parameter must be datetime string in format Y-m-d\\TH:iP',
                         ],
                         'created_to' => [
-                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                            'Parameter must be datetime string in format Y-m-d\\TH:iP',
                         ],
                         'updated_from' => [
-                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                            'Parameter must be datetime string in format Y-m-d\\TH:iP',
                         ],
                         'updated_to' => [
-                            'Parameter must be datetime string in format Y-m-d\\TH:i:sP',
+                            'Parameter must be datetime string in format Y-m-d\\TH:iP',
                         ],
                     ]
                 ]
@@ -87,34 +87,34 @@ class ListDataProvider extends BaseDataProvider
         return [
             [
                 [
-                    'created_from' => '2025-06-13T13:00:00+01:00'
+                    'created_from' => '2025-06-13T13:00+01:00'
                 ],
                 [
-                    'created_at' => '2025-06-13T12:20:00+00:00'
-                ],
-            ],
-            [
-                [
-                    'created_to' => '2025-05-13T12:25:00+00:00'
-                ],
-                [
-                    'created_at' => '2025-05-13T12:20:00+00:00'
+                    'created_at' => '2025-06-13T12:20+00:00'
                 ],
             ],
             [
                 [
-                    'updated_from' => '2025-06-13T12:00:00+00:00'
+                    'created_to' => '2025-05-13T12:25+00:00'
                 ],
                 [
-                    'updated_at' => '2025-06-13T12:20:00+00:00'
+                    'created_at' => '2025-05-13T12:20+00:00'
                 ],
             ],
             [
                 [
-                    'updated_to' => '2025-05-13T12:25:00+00:00'
+                    'updated_from' => '2025-06-13T12:00+00:00'
                 ],
                 [
-                    'updated_at' => '2025-05-13T12:20:00+00:00'
+                    'updated_at' => '2025-06-13T12:20+00:00'
+                ],
+            ],
+            [
+                [
+                    'updated_to' => '2025-05-13T12:25+00:00'
+                ],
+                [
+                    'updated_at' => '2025-05-13T12:20+00:00'
                 ],
             ],
         ];
@@ -161,9 +161,9 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => true],
             ],
             'datetime' => [
-                [$columnName => '2025-05-13T12:20:00+00:00'],
-                [$columnName => '2025-05-13T12:30:00+00:00'],
-                [$columnName => '2025-06-13T12:20:00+00:00'],
+                [$columnName => '2025-05-13T12:20+00:00'],
+                [$columnName => '2025-05-13T12:30+00:00'],
+                [$columnName => '2025-06-13T12:20+00:00'],
             ],
             'dateinterval' => [
                 [$columnName => 'P0Y0M0DT12H20M'],

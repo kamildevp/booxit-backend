@@ -29,8 +29,10 @@ class ReservationCreateDTO extends AbstractDTO
         #[OA\Property(format: 'email')]
         #[Assert\Email(message: 'Parameter is not a valid email')]
         public readonly string $email,
+        #[OA\Property(example:'+48213721372')]
         #[PhoneNumber]
         public readonly string $phoneNumber,
+        #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]
         public readonly string $startDateTime,
         string $verificationHandler

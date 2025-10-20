@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace App\Service\Entity;
 
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\EmailConfirmation;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\EmailType;
 use App\Enum\Reservation\ReservationStatus;
 use App\Enum\Reservation\ReservationType;
 use App\Exceptions\ConflictException;
+use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailConfirmationMessage;
 use App\Message\ReservationVerificationMessage;
+use App\Repository\EmailConfirmationRepository;
 use App\Repository\ReservationRepository;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
@@ -32,6 +36,7 @@ class ReservationService
         private AvailabilityService $availabilityService,
         private EmailConfirmationService $emailConfirmationService,
         private ReservationRepository $reservationRepository,
+        private EmailConfirmationRepository $emailConfirmationRepository,
         private EmailConfirmationHandlerInterface $emailConfirmationHandler,
         private MessageBusInterface $messageBus,
     )
@@ -71,6 +76,39 @@ class ReservationService
         $this->sendReservationSummary($reservation, $dto->verificationHandler);
 
         return $reservation;
+    }
+
+    public function verifyReservation(ReservationVerifyDTO $dto): bool
+    {
+        try{
+            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
+        }
+        catch(VerifyEmailConfirmationException)
+        {
+            return false;
+        }
+
+        $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepository->save($emailConfirmation);
+
+        $params = $emailConfirmation->getParams();
+        $reservation = isset($params['reservation_id']) ? $this->reservationRepository->find($params['reservation_id']) : null;
+        if(!$reservation){
+            $this->emailConfirmationRepository->flush();
+            throw new ConflictException('Corresponding reservation does not exist.');
+        }
+
+        $reservation->setVerified(true);
+        $reservation->setExpiryDate(null);
+        $this->reservationRepository->save($reservation, true);
+
+        return true;
     }
 
     private function makeReservation(ReservationCreateDTO $dto): Reservation

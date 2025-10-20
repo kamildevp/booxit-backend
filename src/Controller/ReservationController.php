@@ -8,10 +8,14 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
 use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
+use App\Response\SuccessResponse;
+use App\Response\ValidationFailedResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\ReservationService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
@@ -81,5 +85,22 @@ class ReservationController extends AbstractController
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);
+    }
+
+    #[OA\Post(
+        summary: 'Verify reservation',
+        description: 'Verifies reservation using the verification parameters provided in the link sent to reservation email address. 
+        This endpoint should be called by the verification handler specified during reservation creation.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
+    #[ValidationErrorResponseDoc]
+    #[Route('reservations/verify', name: 'reservation_verify', methods: ['POST'])]
+    public function verify(ReservationService $reservationService, #[MapRequestPayload] ReservationVerifyDTO $dto): ApiResponse
+    {
+        $verified = $reservationService->verifyReservation($dto);
+
+        return $verified ? 
+            new SuccessResponse(['message' => 'Verification Successful']) : 
+            new ValidationFailedResponse('Verification Failed');
     }
 }

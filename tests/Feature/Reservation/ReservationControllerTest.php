@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Feature\Reservation;
 
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
+use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
+use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
@@ -12,6 +14,7 @@ use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 use App\Tests\Feature\Reservation\DataProvider\ReservationAuthDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationVerifyDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\UserReservationCreateDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -87,6 +90,32 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'POST', '/api/reservations/me', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([VerifyReservationFixtures::class])]
+    public function testVerifySuccess(): void
+    {
+        $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_VERIFICATION);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/reservations/verify', $params);
+
+        $this->assertEquals('Verification Successful', $responseData['message']);
+    }
+
+    #[Fixtures([VerifyReservationFixtures::class])]
+    #[DataProviderExternal(ReservationVerifyDataProvider::class, 'failureDataCases')]
+    public function testVerifyFailure(array $verifyParams): void
+    {
+        $validParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_VERIFICATION);
+        $params = array_merge($validParams, $verifyParams);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/reservations/verify', $params);
+
+        $this->assertEquals('Verification Failed', $responseData['message']);
+    }
+
+    #[DataProviderExternal(ReservationVerifyDataProvider::class, 'validationDataCases')]
+    public function testVerifyValidation(array $params, array $expectedErrors): void
+    {
+        $this->assertPathValidation($this->client, 'POST', '/api/reservations/verify', $params, $expectedErrors);
     }
 
     #[DataProviderExternal(ReservationAuthDataProvider::class, 'protectedPaths')]

@@ -37,7 +37,7 @@ class ReservationController extends AbstractController
     )]
     #[ConflictResponseDoc('Reservation time slot in not available.')]
     #[ValidationErrorResponseDoc]
-    #[Route('reservation', name: 'reservation_new', methods: ['POST'])]
+    #[Route('reservations', name: 'reservation_new', methods: ['POST'])]
     public function create(
         ReservationService $reservationService, 
         #[MapRequestPayload] ReservationCreateDTO $dto,

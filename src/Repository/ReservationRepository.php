@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\EmailConfirmation;
 use App\Entity\Reservation;
 use App\Entity\Schedule;
 use App\Enum\Reservation\ReservationStatus;
@@ -96,4 +97,15 @@ class ReservationRepository extends BaseRepository
             ->execute();
         $this->getEntityManager()->getFilters()->enable('softdeleteable');
     }
+
+    public function findEmailConfirmationReservation(EmailConfirmation $emailConfirmation): ?Reservation
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->innerJoin("e.emailConfirmations", 'ec')
+            ->andWhere("ec = :ec")
+            ->setParameter('ec', $emailConfirmation);
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
 }

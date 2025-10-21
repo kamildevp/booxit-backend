@@ -21,7 +21,7 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class VerifyReservationFixtures extends Fixture implements DependentFixtureInterface
+class VerifyReservationConflictFixtures extends Fixture implements DependentFixtureInterface
 {
     public function __construct(private UserPasswordHasherInterface $hasher)
     {
@@ -44,7 +44,7 @@ class VerifyReservationFixtures extends Fixture implements DependentFixtureInter
         $reservation->setEstimatedPrice($service->getEstimatedPrice());
         $reservation->setStartDateTime((new DateTimeImmutable('wednesday next week'))->setTime(12,0));
         $reservation->setEndDateTime((new DateTimeImmutable('wednesday next week'))->setTime(13,30));
-        $reservation->setStatus(ReservationStatus::PENDING->value);
+        $reservation->setStatus(ReservationStatus::ORGANIZATION_CANCELLED->value);
         $reservation->setType(ReservationType::REGULAR->value);
         $manager->persist($reservation);
         $manager->flush();

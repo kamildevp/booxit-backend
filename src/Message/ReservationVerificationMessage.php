@@ -7,7 +7,8 @@ namespace App\Message;
 class ReservationVerificationMessage extends EmailMessage
 {
     public function __construct(
-        private int $emailConfirmationId,
+        private int $verificationEmailConfirmationId,
+        private int $cancellationEmailConfirmationId,
         private int $reservationId,
         string $emailType,
         string $email,
@@ -17,9 +18,14 @@ class ReservationVerificationMessage extends EmailMessage
         parent::__construct($emailType, $email, $templateParams);
     }
 
-    public function getEmailConfirmationId(): int
+    public function getVerificationEmailConfirmationId(): int
     {
-        return $this->emailConfirmationId;
+        return $this->verificationEmailConfirmationId;
+    }
+
+    public function getCancellationEmailConfirmationId(): int
+    {
+        return $this->cancellationEmailConfirmationId;
     }
 
     public function getReservationId(): int

@@ -7,6 +7,7 @@ namespace App\Tests\Feature\Reservation;
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
+use App\DataFixtures\Test\Reservation\VerifyReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
@@ -113,6 +114,15 @@ class ReservationControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/reservations/verify', $params);
 
         $this->assertEquals('Verification Successful', $responseData['message']);
+    }
+
+    #[Fixtures([VerifyReservationConflictFixtures::class])]
+    public function testVerifyConflict(): void
+    {
+        $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_VERIFICATION);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/reservations/verify', $params, expectedCode: 409);
+
+        $this->assertEquals('Corresponding reservation does not exist, have been cancelled or is already verified.', $responseData['message']);
     }
 
     #[Fixtures([VerifyReservationFixtures::class])]

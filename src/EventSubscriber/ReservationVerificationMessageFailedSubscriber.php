@@ -30,15 +30,19 @@ class ReservationVerificationMessageFailedSubscriber implements EventSubscriberI
             return;
         }
 
-        $emailConfirmation = $this->emailConfirmationRepository->find($message->getEmailConfirmationId());
-        $emailConfirmation?->setStatus(EmailConfirmationStatus::FAILED->value);
-        $emailConfirmation?->setCreator(null);
-        $this->emailConfirmationRepository->flush();
+        $emailConfirmations = $this->emailConfirmationRepository->findBy([
+            'id' => [$message->getVerificationEmailConfirmationId(), $message->getCancellationEmailConfirmationId()]
+        ]);
 
+        foreach($emailConfirmations as $emailConfirmation){
+            $emailConfirmation?->setStatus(EmailConfirmationStatus::FAILED->value);
+        }
+        
         $reservation = $this->reservationRepository->find($message->getReservationId());
         if($reservation && !$reservation->isVerified()){
-            $this->reservationRepository->hardDelete($reservation);
+            $this->reservationRepository->remove($reservation);
         }
+        $this->emailConfirmationRepository->flush();
     }
 
     public static function getSubscribedEvents(): array

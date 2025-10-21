@@ -6,6 +6,8 @@ use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Repository\ReservationRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
@@ -80,6 +82,17 @@ class Reservation
     #[Groups([ReservationNormalizerGroup::USER->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     private ?User $reservedBy = null;
+
+    #[ORM\JoinTable(name: 'reservation_email_confirmation')]
+    #[ORM\JoinColumn(name: 'reservation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'email_confirmation_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class, inversedBy: 'reservations')]
+    private Collection $emailConfirmations;
+
+    public function __construct()
+    {
+        $this->emailConfirmations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -250,6 +263,30 @@ class Reservation
     public function setReservedBy(?User $reservedBy): static
     {
         $this->reservedBy = $reservedBy;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EmailConfirmation>
+     */
+    public function getEmailConfirmations(): Collection
+    {
+        return $this->emailConfirmations;
+    }
+
+    public function addEmailConfirmation(EmailConfirmation $emailConfirmation): static
+    {
+        if (!$this->emailConfirmations->contains($emailConfirmation)) {
+            $this->emailConfirmations->add($emailConfirmation);
+        }
+
+        return $this;
+    }
+
+    public function removeEmailConfirmation(EmailConfirmation $emailConfirmation): static
+    {
+        $this->emailConfirmations->removeElement($emailConfirmation);
 
         return $this;
     }

@@ -99,11 +99,10 @@ class ReservationService
         $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
         $this->emailConfirmationRepository->save($emailConfirmation);
 
-        $params = $emailConfirmation->getParams();
-        $reservation = isset($params['reservation_id']) ? $this->reservationRepository->find($params['reservation_id']) : null;
-        if(!$reservation){
+        $reservation = $this->reservationRepository->findEmailConfirmationReservation($emailConfirmation);
+        if(!$reservation || $reservation->getStatus() != ReservationStatus::PENDING->value){
             $this->emailConfirmationRepository->flush();
-            throw new ConflictException('Corresponding reservation does not exist.');
+            throw new ConflictException('Corresponding reservation does not exist, have been cancelled or is already verified.');
         }
 
         $reservation->setVerified(true);
@@ -171,9 +170,11 @@ class ReservationService
     {
         $verificationEmailConfirmation = $this->createReservationVerification($reservation, $verificationHandler);
         $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
+        $this->reservationRepository->flush();
 
         $this->messageBus->dispatch(new ReservationVerificationMessage(
             $verificationEmailConfirmation->getId(),
+            $cancellationEmailConfirmation->getId(),
             $reservation->getId(),
             EmailType::RESERVATION_VERIFICATION->value,
             $reservation->getEmail(),
@@ -195,6 +196,7 @@ class ReservationService
     private function sendReservationNotification(Reservation $reservation, string $verificationHandler, EmailType $type): void
     {
         $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
+        $this->reservationRepository->flush();
 
         $this->messageBus->dispatch(new EmailConfirmationMessage(
             $cancellationEmailConfirmation->getId(),
@@ -215,26 +217,30 @@ class ReservationService
 
     private function createReservationVerification(Reservation $reservation, string $verificationHandler): EmailConfirmation
     {
-        return $this->emailConfirmationService->createEmailConfirmation(
+        $emailConfirmation = $this->emailConfirmationService->createEmailConfirmation(
             $reservation->getEmail(),
             $verificationHandler,
             EmailConfirmationType::RESERVATION_VERIFICATION->value,
             null,
             $reservation->getExpiryDate(),
-            ['reservation_id' => $reservation->getId()]
         );
+    
+        $reservation->addEmailConfirmation($emailConfirmation);
+        return $emailConfirmation;
     }
 
     private function createReservationCancellation(Reservation $reservation, string $verificationHandler): EmailConfirmation
     {
-        return $this->emailConfirmationService->createEmailConfirmation(
+        $emailConfirmation = $this->emailConfirmationService->createEmailConfirmation(
             $reservation->getEmail(),
             $verificationHandler,
             EmailConfirmationType::RESERVATION_CANCELLATION->value,
             null,
             $reservation->getStartDateTime(),
-            ['reservation_id' => $reservation->getId()]
         );
+
+        $reservation->addEmailConfirmation($emailConfirmation);
+        return $emailConfirmation;
     }
 
     private function generateReservationReference(Reservation $reservation): string

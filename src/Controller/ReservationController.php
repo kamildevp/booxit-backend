@@ -99,6 +99,7 @@ class ReservationController extends AbstractController
         This endpoint should be called by the verification handler specified during reservation creation.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
+    #[ConflictResponseDoc('Corresponding reservation does not exist, have been cancelled or is already verified.')]
     #[ValidationErrorResponseDoc]
     #[Route('reservations/verify', name: 'reservation_verify', methods: ['POST'])]
     public function verify(ReservationService $reservationService, #[MapRequestPayload] ReservationVerifyDTO $dto): ApiResponse

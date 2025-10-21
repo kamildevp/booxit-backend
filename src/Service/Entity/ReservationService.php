@@ -7,6 +7,7 @@ namespace App\Service\Entity;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
+use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\EmailConfirmation;
@@ -21,6 +22,7 @@ use App\Enum\Reservation\ReservationType;
 use App\Exceptions\ConflictException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailConfirmationMessage;
+use App\Message\EmailMessage;
 use App\Message\ReservationVerificationMessage;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\ReservationRepository;
@@ -82,17 +84,8 @@ class ReservationService
 
     public function verifyReservation(ReservationVerifyDTO $dto): bool
     {
-        try{
-            $emailConfirmation = $this->emailConfirmationService->resolveEmailConfirmation(
-                $dto->id,
-                $dto->token,
-                $dto->_hash,
-                $dto->expires,
-                $dto->type
-            );
-        }
-        catch(VerifyEmailConfirmationException)
-        {
+        $emailConfirmation = $this->resolveReservationEmailConfirmation($dto);
+        if(!$emailConfirmation){
             return false;
         }
 
@@ -102,12 +95,35 @@ class ReservationService
         $reservation = $this->reservationRepository->findEmailConfirmationReservation($emailConfirmation);
         if(!$reservation || $reservation->getStatus() != ReservationStatus::PENDING->value){
             $this->emailConfirmationRepository->flush();
-            throw new ConflictException('Corresponding reservation does not exist, have been cancelled or is already verified.');
+            throw new ConflictException('Corresponding reservation does not exist, has been cancelled or is already verified.');
         }
 
         $reservation->setVerified(true);
         $reservation->setExpiryDate(null);
         $this->reservationRepository->save($reservation, true);
+
+        return true;
+    }
+
+    public function cancelReservationByUrl(ReservationUrlCancelDTO $dto): bool
+    {
+        $emailConfirmation = $this->resolveReservationEmailConfirmation($dto);
+        if(!$emailConfirmation){
+            return false;
+        }
+
+        $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepository->save($emailConfirmation);
+
+        $reservation = $this->reservationRepository->findEmailConfirmationReservation($emailConfirmation);
+        if(!$reservation || in_array($reservation->getStatus(), ReservationStatus::getCancelledStatuses())){
+            $this->emailConfirmationRepository->flush();
+            throw new ConflictException('Corresponding reservation does not exist or already has been cancelled.');
+        }
+
+        $reservation->setStatus(ReservationStatus::CUSTOMER_CANCELLED->value);
+        $this->reservationRepository->save($reservation, true);
+        $this->sendReservationCancelledNotification($reservation);
 
         return true;
     }
@@ -130,6 +146,23 @@ class ReservationService
         }
         
         return $reservation;
+    }
+
+    private function resolveReservationEmailConfirmation(ReservationVerifyDTO|ReservationUrlCancelDTO $dto): ?EmailConfirmation
+    {
+        try{
+            return $this->emailConfirmationService->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
+        }
+        catch(VerifyEmailConfirmationException)
+        {
+            return null;
+        }
     }
 
     private function makeReservation(ReservationCreateDTO $dto): Reservation
@@ -206,6 +239,22 @@ class ReservationService
                 'reference' => $reservation->getReference(),
                 'cancellation_url' => $this->emailConfirmationHandler->generateSignedUrl($cancellationEmailConfirmation),
                 'cancellation_expiration_date' => $cancellationEmailConfirmation->getExpiryDate(),
+                'organization_name' => $reservation->getOrganization()->getName(),
+                'service_name' => $reservation->getService()->getName(),
+                'start_date_time' => $reservation->getStartDateTime(),
+                'estimated_price' => $reservation->getEstimatedPrice(),
+                'duration' => $reservation->getService()->getDuration()->format('%h:%ih'),
+            ]
+        ));
+    }
+
+    private function sendReservationCancelledNotification(Reservation $reservation): void
+    {
+        $this->messageBus->dispatch(new EmailMessage(
+            EmailType::RESERVATION_CANCELLED_NOTIFICATION->value,
+            $reservation->getEmail(),
+            [
+                'reference' => $reservation->getReference(),
                 'organization_name' => $reservation->getOrganization()->getName(),
                 'service_name' => $reservation->getService()->getName(),
                 'start_date_time' => $reservation->getStartDateTime(),

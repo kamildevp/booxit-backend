@@ -14,4 +14,12 @@ enum ReservationStatus: string
     case CONFIRMED = 'confirmed';
     case ORGANIZATION_CANCELLED = 'organization_cancelled';
     case CUSTOMER_CANCELLED = 'customer_cancelled';
+
+    public static function getCancelledStatuses(): array
+    {
+        return [
+            self::ORGANIZATION_CANCELLED->value, 
+            self::CUSTOMER_CANCELLED->value
+        ];
+    }
 }

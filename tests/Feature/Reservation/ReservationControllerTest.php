@@ -6,6 +6,8 @@ namespace App\Tests\Feature\Reservation;
 
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
+use App\DataFixtures\Test\Reservation\CancelReservationByUrlConflictFixtures;
+use App\DataFixtures\Test\Reservation\CancelReservationByUrlFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
@@ -21,6 +23,7 @@ use App\Repository\ServiceRepository;
 use App\Repository\UserRepository;
 use App\Response\ForbiddenResponse;
 use App\Tests\Feature\Reservation\DataProvider\ReservationAuthDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationCancelByUrlDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationConfirmDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
@@ -122,7 +125,7 @@ class ReservationControllerTest extends BaseWebTestCase
         $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_VERIFICATION);
         $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/reservations/verify', $params, expectedCode: 409);
 
-        $this->assertEquals('Corresponding reservation does not exist, have been cancelled or is already verified.', $responseData['message']);
+        $this->assertEquals('Corresponding reservation does not exist, has been cancelled or is already verified.', $responseData['message']);
     }
 
     #[Fixtures([VerifyReservationFixtures::class])]
@@ -140,6 +143,41 @@ class ReservationControllerTest extends BaseWebTestCase
     public function testVerifyValidation(array $params, array $expectedErrors): void
     {
         $this->assertPathValidation($this->client, 'POST', '/api/reservations/verify', $params, $expectedErrors);
+    }
+
+    #[Fixtures([CancelReservationByUrlFixtures::class])]
+    public function testCancelByUrlSuccess(): void
+    {
+        $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_CANCELLATION);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/reservations/url-cancel', $params);
+
+        $this->assertEquals('Reservation has been cancelled', $responseData['message']);
+    }
+
+    #[Fixtures([CancelReservationByUrlConflictFixtures::class])]
+    public function testCancelByUrlConflict(): void
+    {
+        $params = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_CANCELLATION);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/reservations/url-cancel', $params, expectedCode: 409);
+
+        $this->assertEquals('Corresponding reservation does not exist or already has been cancelled.', $responseData['message']);
+    }
+
+    #[Fixtures([CancelReservationByUrlFixtures::class])]
+    #[DataProviderExternal(ReservationCancelByUrlDataProvider::class, 'failureDataCases')]
+    public function testCancelByUrlFailure(array $verifyParams): void
+    {
+        $validParams = $this->prepareEmailConfirmationVerifyParams(EmailConfirmationType::RESERVATION_CANCELLATION);
+        $params = array_merge($validParams, $verifyParams);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/reservations/url-cancel', $params);
+
+        $this->assertEquals('Verification Failed', $responseData['message']);
+    }
+
+    #[DataProviderExternal(ReservationCancelByUrlDataProvider::class, 'validationDataCases')]
+    public function testCancelByUrlValidation(array $params, array $expectedErrors): void
+    {
+        $this->assertPathValidation($this->client, 'POST', '/api/reservations/url-cancel', $params, $expectedErrors);
     }
 
     #[Fixtures([ReservationFixtures::class])]

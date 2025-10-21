@@ -12,6 +12,7 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
+use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
@@ -108,6 +109,24 @@ class ReservationController extends AbstractController
 
         return $verified ? 
             new SuccessResponse(['message' => 'Verification Successful']) : 
+            new ValidationFailedResponse('Verification Failed');
+    }
+
+    #[OA\Post(
+        summary: 'Cancel reservation using cancellation link parameters',
+        description: 'Cancels reservation based on valid cancellation link parameters. 
+        This endpoint should be called by the verification handler specified during reservation creation.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Verification Successful'])]
+    #[ConflictResponseDoc('Corresponding reservation does not exist or already has been cancelled.')]
+    #[ValidationErrorResponseDoc]
+    #[Route('reservations/url-cancel', name: 'reservation_url_cancel', methods: ['POST'])]
+    public function cancelByUrl(ReservationService $reservationService, #[MapRequestPayload] ReservationUrlCancelDTO $dto): ApiResponse
+    {
+        $verified = $reservationService->cancelReservationByUrl($dto);
+
+        return $verified ? 
+            new SuccessResponse(['message' => 'Reservation has been cancelled']) : 
             new ValidationFailedResponse('Verification Failed');
     }
 

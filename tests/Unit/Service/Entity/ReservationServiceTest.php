@@ -7,6 +7,7 @@ namespace App\Tests\Service\Entity;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
+use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
@@ -23,6 +24,7 @@ use App\Enum\Reservation\ReservationType;
 use App\Exceptions\ConflictException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailConfirmationMessage;
+use App\Message\EmailMessage;
 use App\Message\ReservationVerificationMessage;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\ReservationRepository;
@@ -445,6 +447,117 @@ class ReservationServiceTest extends TestCase
             ->willThrowException(new VerifyEmailConfirmationException());
 
         $this->assertFalse($this->service->verifyReservation($dto));
+    }
+
+    public function testCancelReservationByUrlSucceeds(): void
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $dto = new ReservationUrlCancelDTO(1, $startDateTime->getTimestamp(), 'type', 'token', 'signature');
+        $email = 'user@example.com';
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $reservationMock->method('getStatus')->willReturn(ReservationStatus::CONFIRMED->value);
+        $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
+
+        $templateData = [
+            'reference' => $reservationMock->getReference(),
+            'organization_name' => $organizationMock->getName(),
+            'service_name' => $serviceMock->getName(),
+            'start_date_time' => $startDateTime,
+            'estimated_price' => '25.50',
+            'duration' => $serviceMock->getDuration()->format('%h:%ih'),
+        ];
+
+        $this->emailConfirmationServiceMock->method('resolveEmailConfirmation')->with(
+            $dto->id,
+            $dto->token,
+            $dto->_hash,
+            $dto->expires,
+            $dto->type
+        )->willReturn($emailConfirmationMock);
+
+        $this->reservationRepositoryMock
+            ->method('findEmailConfirmationReservation')
+            ->with($emailConfirmationMock)
+            ->willReturn($reservationMock);
+
+        $reservationMock->expects($this->once())->method('setStatus')->with(ReservationStatus::CUSTOMER_CANCELLED->value);
+
+        $emailConfirmationMock->expects($this->once())->method('setStatus')->with(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepositoryMock->expects($this->once())->method('save')->with($emailConfirmationMock);
+        $this->reservationRepositoryMock->expects($this->once())->method('save')->with($reservationMock, true);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof EmailMessage &&
+                $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
+                $arg->getEmail() == $email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
+
+        $result = $this->service->cancelReservationByUrl($dto);
+
+        $this->assertTrue($result);
+    }
+
+    public function testCancelReservationByUrlThrowsConflictForCancelledReservation(): void
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $dto = new ReservationUrlCancelDTO(1, $startDateTime->getTimestamp(), 'type', 'token', 'signature');
+
+        $reservationMock = $this->createMock(Reservation::class);
+        $reservationMock->method('getStatus')->willReturn(ReservationStatus::CUSTOMER_CANCELLED->value);
+        $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
+
+        $this->emailConfirmationServiceMock->method('resolveEmailConfirmation')->with(
+            $dto->id,
+            $dto->token,
+            $dto->_hash,
+            $dto->expires,
+            $dto->type
+        )->willReturn($emailConfirmationMock);
+
+        $this->reservationRepositoryMock
+            ->method('findEmailConfirmationReservation')
+            ->with($emailConfirmationMock)
+            ->willReturn($reservationMock);
+
+        $emailConfirmationMock->expects($this->once())->method('setStatus')->with(EmailConfirmationStatus::COMPLETED->value);
+        $this->emailConfirmationRepositoryMock->expects($this->once())->method('save')->with($emailConfirmationMock);
+        $this->emailConfirmationRepositoryMock->expects($this->once())->method('flush');
+        $reservationMock->expects($this->never())->method('setStatus');
+        
+        $this->reservationRepositoryMock->expects($this->never())->method('save');
+        $this->expectException(ConflictException::class);
+
+        $result = $this->service->cancelReservationByUrl($dto);
+
+        $this->assertTrue($result);
+    }
+
+    public function testCancelReservationByUrlFails(): void
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $dto = new ReservationUrlCancelDTO(1, $startDateTime->getTimestamp(), 'type', 'token', 'signature');
+
+        $this->emailConfirmationServiceMock
+            ->method('resolveEmailConfirmation')
+            ->with(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            )
+            ->willThrowException(new VerifyEmailConfirmationException());
+
+        $this->assertFalse($this->service->cancelReservationByUrl($dto));
     }
 
     public function testVerifyReservationThrowsConflictWhenNotExistingReservation(): void

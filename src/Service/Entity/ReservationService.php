@@ -6,6 +6,7 @@ namespace App\Service\Entity;
 
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
@@ -126,6 +127,15 @@ class ReservationService
         $this->sendReservationCancelledNotification($reservation);
 
         return true;
+    }
+
+    public function cancelOrganizationReservation(Reservation $reservation, ReservationOrganizationCancelDTO $dto): void
+    {
+        $reservation->setStatus(ReservationStatus::ORGANIZATION_CANCELLED->value);
+        $this->reservationRepository->save($reservation, true);
+        if($dto->notifyCustomer){
+            $this->sendReservationCancelledNotification($reservation);
+        }
     }
 
     public function confirmReservation(Reservation $reservation, ReservationConfirmDTO $dto): void

@@ -11,6 +11,7 @@ use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
@@ -128,6 +129,29 @@ class ReservationController extends AbstractController
         return $verified ? 
             new SuccessResponse(['message' => 'Reservation has been cancelled']) : 
             new ValidationFailedResponse('Verification Failed');
+    }
+
+    #[OA\Post(
+        summary: 'Cancel organization reservation',
+        description: 'Cancels specified reservation and optionally sends reservation cancellation email to customer. 
+        </br><br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been confirmed'])]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
+    #[Route('reservations/{reservation}/organization-cancel', name: 'reservation_organization_cancel', methods: ['POST'], requirements: ['reservation' => '\d+'])]
+    public function organizationCancel(
+        Reservation $reservation,
+        ReservationService $reservationService, 
+        #[MapRequestPayload] ReservationOrganizationCancelDTO $dto,
+    ): ResourceCreatedResponse
+    {
+        $reservationService->cancelOrganizationReservation($reservation, $dto);
+
+        return new ResourceCreatedResponse(['message' => 'Reservation has been cancelled']);
     }
 
     #[OA\Post(

@@ -36,8 +36,6 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                 [
                     'name' => '',
                     'description' => '',
-                    'duration' => '',
-                    'estimated_price' => ''
                 ],
                 [
                     'name' => [

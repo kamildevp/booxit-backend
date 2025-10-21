@@ -6,15 +6,13 @@ namespace App\DTO\User;
 
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\VerificationHandlerFieldDTO;
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Constraints\Compound as Compound;
 
 class UserResetPasswordRequestDTO extends AbstractDTO 
 {
     use VerificationHandlerFieldDTO;
 
-    #[Assert\Email(
-        message: 'Parameter is not a valid email',
-    )]
+    #[Compound\EmailRequirements]
     public readonly string $email;
 
     public function __construct(string $email, string $verificationHandler)

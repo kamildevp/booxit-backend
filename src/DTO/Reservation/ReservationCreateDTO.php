@@ -11,9 +11,7 @@ use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
-use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber;
 use OpenApi\Attributes as OA;
-use Symfony\Component\Validator\Constraints as Assert;
 
 class ReservationCreateDTO extends AbstractDTO 
 {
@@ -27,10 +25,10 @@ class ReservationCreateDTO extends AbstractDTO
         #[EntityReference(Service::class, 'service')]
         public readonly int $serviceId,
         #[OA\Property(format: 'email')]
-        #[Assert\Email(message: 'Parameter is not a valid email')]
+        #[Compound\EmailRequirements]
         public readonly string $email,
         #[OA\Property(example:'+48213721372')]
-        #[PhoneNumber]
+        #[Compound\PhoneNumberRequirements]
         public readonly string $phoneNumber,
         #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]

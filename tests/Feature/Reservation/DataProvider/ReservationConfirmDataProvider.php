@@ -25,6 +25,16 @@ class ReservationConfirmDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'verification_handler' => '',
+                ],
+                [
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
                     'verification_handler' => 'a',
                 ],
                 [

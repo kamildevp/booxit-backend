@@ -54,13 +54,28 @@ class UserPatchDataProvider extends BaseDataProvider
             [
                 [
                     'name' => '',
-                    'email' => 'user',
-                    'verification_handler' => 'invalid',
+                    'email' => '',
+                    'verification_handler' => '',
                 ],
                 [
                     'name' => [
                         'Parameter must be at least 6 characters long',
                     ],
+                    'email' => [
+                        'This value should not be blank.',
+                    ],
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'name' => 'Test Name',
+                    'email' => 'user',
+                    'verification_handler' => 'invalid',
+                ],
+                [
                     'email' => [
                         'Parameter is not a valid email',
                     ],

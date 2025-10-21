@@ -35,6 +35,21 @@ class UserChangePasswordDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'password' => '',
+                    'old_password' => '',
+                    'logout_other_sessions' => false
+                ],
+                [
+                    'password' => [
+                        'This value should not be blank.',
+                    ],
+                    'old_password' => [
+                        'Invalid current password',
+                    ],
+                ]
+            ],
+            [
+                [
                     'password' => 'pass2',
                     'old_password' => 'pass',
                     'logout_other_sessions' => false

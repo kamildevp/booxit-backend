@@ -38,6 +38,20 @@ class ScheduleAssignmentCreateDataProvider extends BaseDataProvider
             [
                 [
                     'organization_member_id' => 0,
+                    'access_type' => '',
+                ],
+                [
+                    'organization_member_id' => [
+                        'OrganizationMember does not exist',
+                    ],
+                    'access_type' => [
+                        'Parameter must be one of valid access types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())),
+                    ],
+                ]
+            ],
+            [
+                [
+                    'organization_member_id' => 0,
                     'access_type' => 'a',
                 ],
                 [

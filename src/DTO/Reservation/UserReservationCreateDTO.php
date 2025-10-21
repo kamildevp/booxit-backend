@@ -11,7 +11,6 @@ use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
-use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber;
 use OpenApi\Attributes as OA;
 
 class UserReservationCreateDTO extends AbstractDTO 
@@ -26,7 +25,7 @@ class UserReservationCreateDTO extends AbstractDTO
         #[EntityReference(Service::class, 'service')]
         public readonly int $serviceId,
         #[OA\Property(example:'+48213721372')]
-        #[PhoneNumber]
+        #[Compound\PhoneNumberRequirements]
         public readonly string $phoneNumber,
         #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]

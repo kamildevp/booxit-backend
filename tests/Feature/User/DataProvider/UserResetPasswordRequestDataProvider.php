@@ -25,6 +25,20 @@ class UserResetPasswordRequestDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'email' => '',
+                    'verification_handler' => '',
+                ],
+                [
+                    'email' => [
+                        'This value should not be blank.',
+                    ],
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
                     'email' => 'user',
                     'verification_handler' => 'invalid',
                 ],

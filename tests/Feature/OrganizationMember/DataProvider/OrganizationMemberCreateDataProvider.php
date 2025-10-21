@@ -38,6 +38,20 @@ class OrganizationMemberCreateDataProvider extends BaseDataProvider
             [
                 [
                     'user_id' => 0,
+                    'role' => '',
+                ],
+                [
+                    'user_id' => [
+                        'User does not exist',
+                    ],
+                    'role' => [
+                        'Parameter must be one of valid roles: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())),
+                    ],
+                ]
+            ],
+            [
+                [
+                    'user_id' => 0,
                     'role' => 'a',
                 ],
                 [

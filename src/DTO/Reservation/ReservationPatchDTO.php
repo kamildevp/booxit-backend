@@ -14,7 +14,6 @@ use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
-use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -31,10 +30,10 @@ class ReservationPatchDTO extends AbstractDTO
         #[EntityReference(Service::class, 'service')]
         public readonly int $serviceId,
         #[OA\Property(format: 'email')]
-        #[Assert\Email(message: 'Parameter is not a valid email')]
+        #[Compound\EmailRequirements]
         public readonly string $email,
         #[OA\Property(example:'+48213721372')]
-        #[PhoneNumber]
+        #[Compound\PhoneNumberRequirements]
         public readonly string $phoneNumber,
         #[OA\Property(example: '25.50')]
         #[Compound\DecimalRequirements]

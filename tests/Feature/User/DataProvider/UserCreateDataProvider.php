@@ -36,14 +36,33 @@ class UserCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => '',
-                    'email' => 'user',
-                    'password' => 'pass',
-                    'verification_handler' => 'invalid',
+                    'email' => '',
+                    'password' => '',
+                    'verification_handler' => '',
                 ],
                 [
                     'name' => [
                         'Parameter must be at least 6 characters long',
                     ],
+                    'email' => [
+                        'This value should not be blank.',
+                    ],
+                    'password' => [
+                        'This value should not be blank.',
+                    ],
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'name' => 'Test Name',
+                    'email' => 'user',
+                    'password' => 'pass',
+                    'verification_handler' => 'invalid',
+                ],
+                [
                     'email' => [
                         'Parameter is not a valid email',
                     ],

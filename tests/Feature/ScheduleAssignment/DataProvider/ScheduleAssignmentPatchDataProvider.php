@@ -28,6 +28,16 @@ class ScheduleAssignmentPatchDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'access_type' => '',
+                ],
+                [
+                    'access_type' => [
+                        'Parameter must be one of valid access types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())),
+                    ],
+                ]
+            ],
+            [
+                [
                     'access_type' => 'a',
                 ],
                 [

@@ -5,25 +5,21 @@ declare(strict_types=1);
 namespace App\Validator\Constraints\Compound;
 
 use Attribute;
+use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Compound;
 
 #[Attribute]
-class DateStringRequirements extends Compound
+class PhoneNumberRequirements extends Compound
 {
-    public function __construct(protected bool $allowNull = false, mixed $options = null)
-    {
-        parent::__construct($options);
-    }
+    const FORMAT = 'Y-m-d\TH:iP';
 
     protected function getConstraints(array $options): array
     {
         return [
             new Assert\Sequentially([
-                new Assert\NotBlank(allowNull: $this->allowNull),
-                new Assert\Date(
-                    message: 'Parameter must be date in format Y-m-d'
-                )
+                new Assert\NotBlank(),
+                new PhoneNumber()
             ])
         ];
     }

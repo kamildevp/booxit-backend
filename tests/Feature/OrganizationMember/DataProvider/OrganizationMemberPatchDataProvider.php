@@ -28,6 +28,16 @@ class OrganizationMemberPatchDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'role' => '',
+                ],
+                [
+                    'role' => [
+                        'Parameter must be one of valid roles: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())),
+                    ],
+                ]
+            ],
+            [
+                [
                     'role' => 'a',
                 ],
                 [

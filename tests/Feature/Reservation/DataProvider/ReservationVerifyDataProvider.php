@@ -62,6 +62,26 @@ class ReservationVerifyDataProvider extends BaseDataProvider
                 [
                     'id' => 1,
                     'expires' => 1231,
+                    'type' => '',
+                    'token' => '',
+                    '_hash' => '',
+                ],
+                [
+                    'type' => [
+                        'Parameter must be one of valid types: "'.EmailConfirmationType::RESERVATION_VERIFICATION->value.'"'
+                    ],
+                    'token' => [
+                        'This value should not be blank.',
+                    ],
+                    '_hash' => [
+                        'This value should not be blank.',
+                    ],
+                ]
+            ],
+            [
+                [
+                    'id' => 1,
+                    'expires' => 1231,
                     'type' => 'invalid',
                     'token' => '',
                     '_hash' => '',

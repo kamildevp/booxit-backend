@@ -70,6 +70,49 @@ class ReservationPatchDataProvider extends BaseDataProvider
                 [
                     'schedule_id' => 0,
                     'service_id' => 0,
+                    'email' => '',
+                    'phone_number' => '',
+                    'estimated_price' => '',
+                    'start_date_time' => '',
+                    'end_date_time' => '',
+                    'status' => '',
+                    'notify_customer' => true,
+                    'verification_handler' => '',
+                ],
+                [
+                    'schedule_id' => [
+                        'Schedule does not exist',
+                    ],
+                    'service_id' => [
+                        'Service does not exist',
+                    ],
+                    'email' => [
+                        'This value should not be blank.',
+                    ],
+                    'phone_number' => [
+                        'This value should not be blank.',
+                    ],
+                    'estimated_price' => [
+                        'This value should not be blank.',
+                    ],
+                    'start_date_time' => [
+                        'This value should not be blank.'
+                    ],
+                    'end_date_time' => [
+                        'This value should not be blank.'
+                    ],
+                    'status' => [
+                        'Parameter must be one of valid statuses: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())),
+                    ],
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'schedule_id' => 0,
+                    'service_id' => 0,
                     'email' => 'a',
                     'phone_number' => 'a',
                     'estimated_price' => 'a',

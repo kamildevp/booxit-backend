@@ -19,11 +19,13 @@ class DateIntervalRequirements extends Compound
     protected function getConstraints(array $options): array
     {
         return [
-            new Assert\NotBlank(allowNull: $this->allowNull),
-            new Assert\Regex(
-                pattern: '/^P(?!$)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?)?$/',
-                message: 'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
-            )
+            new Assert\Sequentially([
+                new Assert\NotBlank(allowNull: $this->allowNull),
+                new Assert\Regex(
+                    pattern: '/^P(?!$)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?)?$/',
+                    message: 'Invalid duration format. Must be a valid ISO-8601 interval without seconds.'
+                )
+            ])
         ];
     }
 }

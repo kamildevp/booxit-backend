@@ -42,6 +42,32 @@ class UserReservationCreateDataProvider extends BaseDataProvider
                 [
                     'schedule_id' => 0,
                     'service_id' => 0,
+                    'phone_number' => '',
+                    'start_date_time' => '',
+                    'verification_handler' => '',
+                ],
+                [
+                    'schedule_id' => [
+                        'Schedule does not exist',
+                    ],
+                    'service_id' => [
+                        'Service does not exist',
+                    ],
+                    'phone_number' => [
+                        'This value should not be blank.',
+                    ],
+                    'start_date_time' => [
+                        'This value should not be blank.'
+                    ],
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'schedule_id' => 0,
+                    'service_id' => 0,
                     'phone_number' => 'a',
                     'start_date_time' => 'a',
                     'verification_handler' => 'a',

@@ -26,6 +26,12 @@ class AuthLoginDataProvider extends BaseDataProvider
         return [
             [
                 [
+                    'email' => '',
+                    'password' => '',
+                ],
+            ],
+            [
+                [
                     'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
                     'password' => 'invalid',
                 ],

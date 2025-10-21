@@ -21,11 +21,13 @@ class DateTimeStringRequirements extends Compound
     protected function getConstraints(array $options): array
     {
         return [
-            new Assert\NotBlank(allowNull: $this->allowNull),
-            new Assert\DateTime(
-                format: self::FORMAT, 
-                message: 'Parameter must be datetime string in format '. self::FORMAT
-            )
+            new Assert\Sequentially([
+                new Assert\NotBlank(allowNull: $this->allowNull),
+                new Assert\DateTime(
+                    format: self::FORMAT, 
+                    message: 'Parameter must be datetime string in format '. self::FORMAT
+                )
+            ])
         ];
     }
 }

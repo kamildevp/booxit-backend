@@ -6,6 +6,7 @@ namespace App\Service\Entity;
 
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\EmailConfirmation;
@@ -74,7 +75,7 @@ class ReservationService
         $reservation->setReservedBy($user);
         
         $this->reservationRepository->save($reservation, true);
-        $this->sendReservationSummary($reservation, $dto->verificationHandler);
+        $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_SUMMARY);
 
         return $reservation;
     }
@@ -117,7 +118,19 @@ class ReservationService
         $reservation->setStatus(ReservationStatus::CONFIRMED->value);
         
         $this->reservationRepository->save($reservation, true);
-        $this->sendReservationConfirmation($reservation, $dto->verificationHandler);
+        $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_CONFIRMATION);
+    }
+
+    public function patchReservation(Reservation $reservation, ReservationPatchDTO $dto): Reservation
+    {
+        $reservation = $this->entitySerializer->parseToEntity($dto, $reservation);
+
+        $this->reservationRepository->save($reservation, true);
+        if($dto->notifyCustomer){
+            $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_UPDATED_NOTIFICATION);
+        }
+        
+        return $reservation;
     }
 
     private function makeReservation(ReservationCreateDTO $dto): Reservation
@@ -179,34 +192,13 @@ class ReservationService
         ));
     }
 
-    private function sendReservationSummary(Reservation $reservation, string $verificationHandler): void
+    private function sendReservationNotification(Reservation $reservation, string $verificationHandler, EmailType $type): void
     {
         $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
 
         $this->messageBus->dispatch(new EmailConfirmationMessage(
             $cancellationEmailConfirmation->getId(),
-            EmailType::RESERVATION_SUMMARY->value,
-            $reservation->getEmail(),
-            [
-                'reference' => $reservation->getReference(),
-                'cancellation_url' => $this->emailConfirmationHandler->generateSignedUrl($cancellationEmailConfirmation),
-                'cancellation_expiration_date' => $cancellationEmailConfirmation->getExpiryDate(),
-                'organization_name' => $reservation->getOrganization()->getName(),
-                'service_name' => $reservation->getService()->getName(),
-                'start_date_time' => $reservation->getStartDateTime(),
-                'estimated_price' => $reservation->getEstimatedPrice(),
-                'duration' => $reservation->getService()->getDuration()->format('%h:%ih'),
-            ]
-        ));
-    }
-
-    private function sendReservationConfirmation(Reservation $reservation, string $verificationHandler): void
-    {
-        $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
-
-        $this->messageBus->dispatch(new EmailConfirmationMessage(
-            $cancellationEmailConfirmation->getId(),
-            EmailType::RESERVATION_CONFIRMATION->value,
+            $type->value,
             $reservation->getEmail(),
             [
                 'reference' => $reservation->getReference(),

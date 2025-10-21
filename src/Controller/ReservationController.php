@@ -11,6 +11,7 @@ use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
@@ -154,6 +155,34 @@ class ReservationController extends AbstractController
     {
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
 
+        return new SuccessResponse($responseData);
+    }
+
+    #[OA\Patch(
+        summary: 'Update reservation',
+        description: 'Updates reservation data.
+        </br><br>**Important:** This action can only be performed by organization admin or reservation schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(
+        description: 'Updated Reservation Data',
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS
+    )]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
+    #[Route('reservations/{reservation}', name: 'reservation_patch', methods: ['PATCH'], requirements: ['reservation' => '\d+'])]
+    public function patch(
+        Reservation $reservation,
+        ReservationService $reservationService,
+        EntitySerializerInterface $entitySerializer, 
+        #[MapRequestPayload] ReservationPatchDTO $dto,
+    ): SuccessResponse
+    {
+        $reservation = $reservationService->patchReservation($reservation, $dto);
+        $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
+        
         return new SuccessResponse($responseData);
     }
 }

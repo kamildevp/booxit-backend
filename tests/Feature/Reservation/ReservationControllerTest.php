@@ -23,6 +23,7 @@ use App\Tests\Feature\Reservation\DataProvider\ReservationAuthDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationConfirmDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationPatchDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationVerifyDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\UserReservationCreateDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -164,6 +165,44 @@ class ReservationControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/reservations/$reservationId");
 
         $this->assertEquals($expectedResponseData, $responseData);
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationPatchDataProvider::class, 'validDataCases')]
+    public function testPatch(array $params, array $expectedResponseData, bool $emailSent): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        $service = $this->serviceRepository->findOneBy([]);
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $params['service_id'] = $service->getId();
+        $params['schedule_id'] = $schedule->getId();
+        $expectedResponseData['schedule'] = $this->normalizer->normalize($schedule, context: ['groups' => ScheduleNormalizerGroup::BASE_INFO->normalizationGroups()]);
+        $expectedResponseData['service'] = $this->normalizer->normalize($service, context: ['groups' => ServiceNormalizerGroup::BASE_INFO->normalizationGroups()]);
+
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+        $this->client->loginUser($user, 'api');
+
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', "/api/reservations/$reservationId", $params);
+        $this->assertIsInt($responseData['id']);
+        $this->assertArrayHasKey('reference', $responseData);
+        $this->assertArrayHasKey('reserved_by', $responseData);
+        $this->assertArrayHasKey('created_by', $responseData);
+        $this->assertArrayHasKey('updated_by', $responseData);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
+        $this->assertCount($emailSent ? 1 : 0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationPatchDataProvider::class, 'validationDataCases')]
+    public function testPatchValidation(array $params, array $expectedErrors): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        
+        $this->client->loginUser($this->user, 'api');
+        $this->assertPathValidation($this->client, 'PATCH', "/api/reservations/$reservationId", $params, $expectedErrors);
+        $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
     #[DataProviderExternal(ReservationNotFoundDataProvider::class, 'dataCases')]

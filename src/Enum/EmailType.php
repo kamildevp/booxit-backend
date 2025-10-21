@@ -16,6 +16,7 @@ enum EmailType: string
     case RESERVATION_VERIFICATION = 'reservation_verification-email';
     case RESERVATION_SUMMARY = 'reservation_summary-email';
     case RESERVATION_CONFIRMATION = 'reservation_confirmation-email';
+    case RESERVATION_UPDATED_NOTIFICATION = 'reservation_updated_notification-email';
 
     public function getSubject(): string
     {
@@ -25,7 +26,8 @@ enum EmailType: string
             self::PASSWORD_RESET => 'Password Reset',
             self::RESERVATION_VERIFICATION => 'Reservation Verification',
             self::RESERVATION_SUMMARY => 'Reservation Summary',
-            self::RESERVATION_CONFIRMATION => 'Reservation Confirmation'
+            self::RESERVATION_CONFIRMATION => 'Reservation Confirmation',
+            self::RESERVATION_UPDATED_NOTIFICATION => 'Reservation Updated',
         };
     }
 
@@ -38,6 +40,7 @@ enum EmailType: string
             self::RESERVATION_VERIFICATION => 'emails/reservation_verification.html.twig',
             self::RESERVATION_SUMMARY => 'emails/reservation_summary.html.twig',
             self::RESERVATION_CONFIRMATION => 'emails/reservation_confirmation.html.twig',
+            self::RESERVATION_UPDATED_NOTIFICATION => 'emails/reservation_updated_notification.html.twig',
         };
     }
 }

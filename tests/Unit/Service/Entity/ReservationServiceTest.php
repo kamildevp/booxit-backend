@@ -6,6 +6,7 @@ namespace App\Tests\Service\Entity;
 
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
+use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
@@ -495,6 +496,94 @@ class ReservationServiceTest extends TestCase
             ->willReturn(new Envelope($this->createMock(ReservationVerificationMessage::class)));
 
         $this->service->confirmReservation($reservationMock, $dto);
+    }
+
+    public function testPatchReservationWithCustomerNotificationEnabled(): void
+    {
+        $dto = new ReservationPatchDTO(1, 2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value, true, 'test');
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $dto->email, $startDateTime, $endDateTime);
+        $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
+
+        $templateData = [
+            'reference' => $reservationMock->getReference(),
+            'cancellation_url' => 'api/reservation/cancel',
+            'cancellation_expiration_date' => $startDateTime,
+            'organization_name' => $organizationMock->getName(),
+            'service_name' => $serviceMock->getName(),
+            'start_date_time' => $startDateTime,
+            'estimated_price' => '25.50',
+            'duration' => $serviceMock->getDuration()->format('%h:%ih'),
+        ];
+
+        $this->entitySerializerMock
+            ->method('parseToEntity')
+            ->with($dto, $reservationMock)
+            ->willReturn($reservationMock);
+
+        $this->reservationRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($reservationMock, true);
+
+        $this->emailConfirmationServiceMock
+            ->method('createEmailConfirmation')
+            ->with(
+                $dto->email, 
+                $dto->verificationHandler, 
+                EmailConfirmationType::RESERVATION_CANCELLATION->value, 
+                null, 
+                $startDateTime,
+                ['reservation_id' => $reservationMock->getId()],
+            )
+            ->willReturn($cancellationEmailConfirmationMock);
+
+        $this->emailConfirmationHandlerMock
+            ->method('generateSignedUrl')
+            ->with($cancellationEmailConfirmationMock)
+            ->willReturn($templateData['cancellation_url']);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof EmailConfirmationMessage &&
+                $arg->getEmailConfirmationId() == $cancellationEmailConfirmationMock->getId() &&
+                $arg->getEmailType() == EmailType::RESERVATION_UPDATED_NOTIFICATION->value && 
+                $arg->getEmail() == $dto->email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
+
+        $result = $this->service->patchReservation($reservationMock, $dto);
+        $this->assertSame($reservationMock, $result);
+    }
+
+    public function testPatchReservationWithCustomerNotificationDisabled(): void
+    {
+        $dto = new ReservationPatchDTO(1, 2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value, false, 'test');
+        $reservationMock = $this->createMock(Reservation::class);
+
+        $this->entitySerializerMock
+            ->method('parseToEntity')
+            ->with($dto, $reservationMock)
+            ->willReturn($reservationMock);
+
+        $this->reservationRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($reservationMock, true);
+
+        $this->messageBusMock
+            ->expects($this->never())
+            ->method('dispatch');
+
+        $result = $this->service->patchReservation($reservationMock, $dto);
+        $this->assertSame($reservationMock, $result);
     }
 
     private function prepareReservationMock(

@@ -11,6 +11,7 @@ use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\ReservationRepository;
@@ -150,6 +151,19 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'POST', "/api/reservations/$reservationId/confirm", $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    public function testGet(): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        $expectedResponseData = $this->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user2@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/reservations/$reservationId");
+
+        $this->assertEquals($expectedResponseData, $responseData);
     }
 
     #[DataProviderExternal(ReservationNotFoundDataProvider::class, 'dataCases')]

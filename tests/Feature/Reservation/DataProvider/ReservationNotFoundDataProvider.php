@@ -12,6 +12,7 @@ class ReservationNotFoundDataProvider extends BaseDataProvider
     {
         return [
             ['/api/reservations/1000/confirm', 'POST'],
+            ['/api/reservations/1000', 'GET'],
         ];
     }
 }

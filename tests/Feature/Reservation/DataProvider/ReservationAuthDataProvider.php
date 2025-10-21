@@ -14,6 +14,7 @@ class ReservationAuthDataProvider extends BaseDataProvider
         return [
             ['/api/reservations/me', 'POST'],
             ['/api/reservations/{reservation}/confirm', 'POST'],
+            ['/api/reservations/{reservation}', 'GET'],
         ];
     }
 
@@ -23,6 +24,8 @@ class ReservationAuthDataProvider extends BaseDataProvider
             ['/api/reservations/{reservation}/confirm', 'POST', 'user1@example.com'],
             ['/api/reservations/{reservation}/confirm', 'POST', 'om-user1@example.com'],
             ['/api/reservations/{reservation}/confirm', 'POST', 'sa-user2@example.com'],
+            ['/api/reservations/{reservation}', 'GET', 'user1@example.com'],
+            ['/api/reservations/{reservation}', 'GET', 'om-user1@example.com'],
         ];
     }
 }

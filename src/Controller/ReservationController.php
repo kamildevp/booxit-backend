@@ -19,6 +19,7 @@ use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Response\ValidationFailedResponse;
+use App\Service\Auth\AccessRule\ReservationReadPrivilegesRule;
 use App\Service\Auth\AccessRule\ReservationWritePrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\ReservationService;
@@ -122,7 +123,7 @@ class ReservationController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
-    #[Route('reservations/{reservation}/confirm', name: 'reservation_confirm', methods: ['POST'])]
+    #[Route('reservations/{reservation}/confirm', name: 'reservation_confirm', methods: ['POST'], requirements: ['reservation' => '\d+'])]
     public function confirm(
         Reservation $reservation,
         ReservationService $reservationService, 
@@ -132,5 +133,27 @@ class ReservationController extends AbstractController
         $reservationService->confirmReservation($reservation, $dto);
 
         return new ResourceCreatedResponse(['message' => 'Reservation has been confirmed']);
+    }
+
+    #[OA\Get(
+        summary: 'Get reservation',
+        description: 'Returns organization-only data of the specified reservation.
+        </br><br>**Important:** This endpoint can only be accessed by organization admin or reservation schedule assignee.'
+    )]
+    #[SuccessResponseDoc(
+        description: 'Requested Reservation Data',
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS
+    )]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationReadPrivilegesRule::class)]
+    #[Route('reservations/{reservation}', name: 'reservation_get', methods: ['GET'], requirements: ['reservation' => '\d+'])]
+    public function get(EntitySerializerInterface $entitySerializer, Reservation $reservation): SuccessResponse
+    {
+        $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
+
+        return new SuccessResponse($responseData);
     }
 }

@@ -27,6 +27,7 @@ enum ReservationNormalizerGroup: string implements NormalizerGroupInterface
     case SERVICE = 'reservation-service';
     case USER = 'reservation-user';
     case ORGANIZATION_ONLY = 'reservation-organization_only';
+    case ORGANIZATION_RESERVATIONS = 'reservation-organization_reservations';
     case SCHEDULE_RESERVATIONS = 'reservation-schedule_reservations';
     case USER_RESERVATIONS = 'reservation-user_reservations';
     case TIMESTAMP = Reservation::class.NormalizerGroup::TIMESTAMP->value;
@@ -41,6 +42,11 @@ enum ReservationNormalizerGroup: string implements NormalizerGroupInterface
                 self::TIMESTAMP->value,
                 self::SENSITIVE->value, 
                 ...self::SERVICE->normalizationGroups(),
+            ],
+            self::ORGANIZATION_RESERVATIONS => [
+                ...self::DEFAULT->normalizationGroups(),
+                ...self::ORGANIZATION_ONLY->normalizationGroups(),
+                ...self::SCHEDULE->normalizationGroups(),
             ],
             self::SCHEDULE_RESERVATIONS => [
                 ...self::DEFAULT->normalizationGroups(),

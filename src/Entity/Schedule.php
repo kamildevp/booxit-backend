@@ -12,9 +12,11 @@ use App\Entity\Trait\Timestampable;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
 
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: ScheduleRepository::class)]
 class Schedule
 {

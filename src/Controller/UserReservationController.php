@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Documentation\Response\ConflictResponseDoc;
+use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
@@ -11,6 +12,7 @@ use App\DTO\UserReservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Response\ResourceCreatedResponse;
+use App\Response\SuccessResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Entity\ReservationService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
@@ -51,5 +53,25 @@ class UserReservationController extends AbstractController
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);
+    }
+
+    #[OA\Post(
+        summary: 'Cancel user reservation',
+        description: 'Cancels specified reservation linked to user account and sends reservation cancellation email.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been cancelled'])]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[ConflictResponseDoc('Reservation has already been cancelled.')]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess]
+    #[Route('users/me/reservations/{reservation}/cancel', name: 'user_reservation_cancel', methods: ['POST'], requirements: ['reservation' => '\d+'])]
+    public function cancel(
+        Reservation $reservation,
+        ReservationService $reservationService,
+    ): SuccessResponse
+    {
+        $reservationService->cancelUserReservation($reservation, $this->getUser());
+
+        return new SuccessResponse(['message' => 'Reservation has been cancelled']);
     }
 }

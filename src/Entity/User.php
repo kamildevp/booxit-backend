@@ -70,10 +70,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'])]
     private Collection $refreshTokens;
 
-    /**
-     * @var Collection<int, Reservation>
-     */
-    #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class)]
+    #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class, fetch: 'EXTRA_LAZY')]
     private Collection $reservations;
 
     public function __construct()
@@ -325,6 +322,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getReservations(): Collection
     {
         return $this->reservations;
+    }
+
+    public function hasReservation(Reservation $reservation): bool
+    {
+        return $this->reservations->contains($reservation);
     }
 
     public function addReservation(Reservation $reservation): static

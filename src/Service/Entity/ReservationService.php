@@ -21,6 +21,7 @@ use App\Enum\EmailType;
 use App\Enum\Reservation\ReservationStatus;
 use App\Enum\Reservation\ReservationType;
 use App\Exceptions\ConflictException;
+use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailConfirmationMessage;
 use App\Message\EmailMessage;
@@ -149,6 +150,21 @@ class ReservationService
         }
 
         $reservation->setStatus(ReservationStatus::ORGANIZATION_CANCELLED->value);
+        $this->reservationRepository->save($reservation, true);
+        $this->sendReservationCancelledNotification($reservation);
+    }
+
+    public function cancelUserReservation(Reservation $reservation, User $user): void
+    {
+        if(!$user->hasReservation($reservation)){
+            throw new EntityNotFoundException(Reservation::class);
+        }
+
+        if(in_array($reservation->getStatus(), ReservationStatus::getCancelledStatuses())){
+            throw new ConflictException('Reservation has already been cancelled.');
+        }
+
+        $reservation->setStatus(ReservationStatus::CUSTOMER_CANCELLED->value);
         $this->reservationRepository->save($reservation, true);
         $this->sendReservationCancelledNotification($reservation);
     }

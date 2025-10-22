@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Feature\UserReservation;
 
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
+use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
+use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
@@ -58,6 +60,40 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertArrayHasKey('reference', $responseData);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
         $this->assertCount(1, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    public function testCancel(): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        $user = $reservation->getReservedBy();
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', "/api/users/me/reservations/$reservationId/cancel");
+        $this->assertEquals('Reservation has been cancelled', $responseData['message']);
+        $this->assertCount(1, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([CancelReservationConflictFixtures::class])]
+    public function testCancelConflict(): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        $user = $reservation->getReservedBy();
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'POST', "/api/users/me/reservations/$reservationId/cancel", expectedCode: 409);
+        $this->assertEquals('Reservation has already been cancelled.', $responseData['message']);
+        $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    public function testCancelForReservationNotLinkedToUserAccount(): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy(['reference' => 'ref1'])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'user10@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'POST', "/api/users/me/reservations/$reservationId/cancel", expectedCode: 404);
+        $this->assertEquals('Reservation not found', $responseData['message']);
     }
 
     #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validationDataCases')]

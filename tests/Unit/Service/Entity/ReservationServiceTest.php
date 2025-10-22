@@ -606,6 +606,49 @@ class ReservationServiceTest extends TestCase
         $this->service->cancelReservation($reservationMock);
     }
 
+    public function testCancelUserReservation(): void
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $email = 'user@example.com';
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $userMock  = $this->createMock(User::class);
+        $userMock->method('hasReservation')->with($reservationMock)->willReturn(true);
+        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+
+        $reservationMock->expects($this->once())->method('setStatus')->with(ReservationStatus::CUSTOMER_CANCELLED->value);
+        $this->reservationRepositoryMock->expects($this->once())->method('save')->with($reservationMock, true);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof EmailMessage &&
+                $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
+                $arg->getEmail() == $email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
+
+        $this->service->cancelUserReservation($reservationMock, $userMock);
+    }
+
+    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelUserReservationExceptionDataCases')]
+    public function testCancelReservationThrowsException(ReservationStatus $reservationStatus, bool $hasReservation, string $expectedException): void
+    {
+        $reservationMock = $this->createMock(Reservation::class);
+        $reservationMock->method('getStatus')->willReturn($reservationStatus->value);
+        $userMock = $this->createMock(User::class);
+        $userMock->method('hasReservation')->with($reservationMock)->willReturn($hasReservation);
+
+        $this->expectException($expectedException);
+
+        $this->service->cancelUserReservation($reservationMock, $userMock);
+    }
+
     public function testConfirmReservation(): void
     {
         $dto = new ReservationConfirmDTO('test');

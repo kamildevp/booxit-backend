@@ -135,10 +135,9 @@ class ReservationController extends AbstractController
         description: 'Cancels specified reservation and sends reservation cancellation email to customer. 
         </br><br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
-    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been confirmed'])]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been cancelled'])]
     #[NotFoundResponseDoc('Reservation not found')]
     #[ConflictResponseDoc('Reservation has already been cancelled.')]
-    #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ReservationWritePrivilegesRule::class)]

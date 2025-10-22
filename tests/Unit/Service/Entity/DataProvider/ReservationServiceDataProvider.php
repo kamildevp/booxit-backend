@@ -9,14 +9,6 @@ use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class ReservationServiceDataProvider extends BaseDataProvider
 {
-    public static function cancelOrganizationReservationDataCases()
-    {
-        return [
-            [true],
-            [false],
-        ];
-    }
-
     public static function patchReservationDataCases()
     {
         return [

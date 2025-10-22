@@ -28,7 +28,6 @@ use App\Tests\Feature\Reservation\DataProvider\ReservationConfirmDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateCustomDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
-use App\Tests\Feature\Reservation\DataProvider\ReservationOrganizationCancelDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationPatchDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationVerifyDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -187,15 +186,14 @@ class ReservationControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ReservationFixtures::class])]
-    #[DataProviderExternal(ReservationOrganizationCancelDataProvider::class, 'dataCases')]
-    public function testOrganizationCancel(array $params, bool $emailSent): void
+    public function testCancel(): void
     {
         $reservationId = $this->reservationRepository->findOneBy([])->getId();
         $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
         $this->client->loginUser($user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', "/api/reservations/$reservationId/organization-cancel", $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', "/api/reservations/$reservationId/cancel");
         $this->assertEquals('Reservation has been cancelled', $responseData['message']);
-        $this->assertCount($emailSent ? 1 : 0, $this->mailerTransport->getSent());
+        $this->assertCount(1, $this->mailerTransport->getSent());
     }
 
     #[Fixtures([ReservationFixtures::class])]

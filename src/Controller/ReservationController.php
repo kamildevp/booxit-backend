@@ -12,7 +12,6 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
-use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
@@ -132,8 +131,8 @@ class ReservationController extends AbstractController
     }
 
     #[OA\Post(
-        summary: 'Cancel organization reservation',
-        description: 'Cancels specified reservation and optionally sends reservation cancellation email to customer. 
+        summary: 'Cancel reservation',
+        description: 'Cancels specified reservation and sends reservation cancellation email to customer. 
         </br><br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been confirmed'])]
@@ -142,14 +141,13 @@ class ReservationController extends AbstractController
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
-    #[Route('reservations/{reservation}/organization-cancel', name: 'reservation_organization_cancel', methods: ['POST'], requirements: ['reservation' => '\d+'])]
-    public function organizationCancel(
+    #[Route('reservations/{reservation}/cancel', name: 'reservation_cancel', methods: ['POST'], requirements: ['reservation' => '\d+'])]
+    public function cancel(
         Reservation $reservation,
-        ReservationService $reservationService, 
-        #[MapRequestPayload] ReservationOrganizationCancelDTO $dto,
+        ReservationService $reservationService,
     ): SuccessResponse
     {
-        $reservationService->cancelOrganizationReservation($reservation, $dto);
+        $reservationService->cancelReservation($reservation);
 
         return new SuccessResponse(['message' => 'Reservation has been cancelled']);
     }

@@ -7,7 +7,6 @@ namespace App\Tests\Service\Entity;
 use App\DTO\Reservation\ReservationConfirmDTO;
 use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
-use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
@@ -568,12 +567,10 @@ class ReservationServiceTest extends TestCase
         $this->assertFalse($this->service->cancelReservationByUrl($dto));
     }
 
-    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelOrganizationReservationDataCases')]
-    public function testCancelOrganizationReservation(bool $notifyCustomer): void
+    public function testCancelReservation(): void
     {
         $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
         $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
-        $dto = new ReservationOrganizationCancelDTO($notifyCustomer);
         $email = 'user@example.com';
         $organizationMock = $this->prepareOrganizationMock();
         $serviceMock = $this->prepareServiceMock();
@@ -585,7 +582,7 @@ class ReservationServiceTest extends TestCase
         $this->reservationRepositoryMock->expects($this->once())->method('save')->with($reservationMock, true);
 
         $this->messageBusMock
-            ->expects($notifyCustomer ? $this->once() : $this->never())
+            ->expects($this->once())
             ->method('dispatch')
             ->with($this->callback(fn($arg) => 
                 $arg instanceof EmailMessage &&
@@ -595,7 +592,7 @@ class ReservationServiceTest extends TestCase
             ))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
-        $this->service->cancelOrganizationReservation($reservationMock, $dto);
+        $this->service->cancelReservation($reservationMock);
     }
 
     public function testConfirmReservation(): void
@@ -651,7 +648,7 @@ class ReservationServiceTest extends TestCase
         $this->service->confirmReservation($reservationMock, $dto);
     }
 
-    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelOrganizationReservationDataCases')]
+    #[DataProviderExternal(ReservationServiceDataProvider::class, 'patchReservationDataCases')]
     public function testPatchReservation(bool $notifyCustomer): void
     {
         $dto = new ReservationPatchDTO(1, 2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value, $notifyCustomer, 'test');

@@ -8,6 +8,7 @@ use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\ReservationRepository;
@@ -93,6 +94,29 @@ class UserReservationControllerTest extends BaseWebTestCase
         $user = $this->userRepository->findOneBy(['email' => 'user10@example.com']);
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, 'POST', "/api/users/me/reservations/$reservationId/cancel", expectedCode: 404);
+        $this->assertEquals('Reservation not found', $responseData['message']);
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    public function testGet(): void
+    {
+        $reservation = $this->reservationRepository->findOneBy([]);
+        $reservationId = $reservation->getId();
+        $expectedResponseData = $this->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
+        $user = $reservation->getReservedBy();
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/users/me/reservations/$reservationId");
+
+        $this->assertEquals($expectedResponseData, $responseData);
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    public function testGetForReservationNotLinkedToUserAccount(): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy(['reference' => 'ref1'])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'user10@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'GET', "/api/users/me/reservations/$reservationId", expectedCode: 404);
         $this->assertEquals('Reservation not found', $responseData['message']);
     }
 

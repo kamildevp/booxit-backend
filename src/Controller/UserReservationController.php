@@ -11,9 +11,11 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\UserReservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
 use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Exceptions\EntityNotFoundException;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
+use App\Service\Auth\RouteGuardInterface;
 use App\Service\Entity\ReservationService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -44,12 +46,13 @@ class UserReservationController extends AbstractController
     #[RestrictedAccess]
     #[Route('user/me/reservations', name: 'user_reservation_new', methods: ['POST'])]
     public function create(
+        RouteGuardInterface $routeGuard,
         ReservationService $reservationService, 
         #[MapRequestPayload] UserReservationCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,   
     ): ResourceCreatedResponse
     {
-        $reservation = $reservationService->createUserReservation($dto, $this->getUser());
+        $reservation = $reservationService->createUserReservation($dto, $routeGuard->getAuthorizedUserOrFail());
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);
@@ -66,12 +69,40 @@ class UserReservationController extends AbstractController
     #[RestrictedAccess]
     #[Route('users/me/reservations/{reservation}/cancel', name: 'user_reservation_cancel', methods: ['POST'], requirements: ['reservation' => '\d+'])]
     public function cancel(
+        RouteGuardInterface $routeGuard,
         Reservation $reservation,
         ReservationService $reservationService,
     ): SuccessResponse
     {
-        $reservationService->cancelUserReservation($reservation, $this->getUser());
+        $reservationService->cancelUserReservation($reservation, $routeGuard->getAuthorizedUserOrFail());
 
         return new SuccessResponse(['message' => 'Reservation has been cancelled']);
+    }
+
+    #[OA\Get(
+        summary: 'Get user reservation',
+        description: 'Returns data of the specified reservation linked to user account.'
+    )]
+    #[SuccessResponseDoc(
+        description: 'Requested Reservation Data',
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::USER_RESERVATIONS
+    )]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess]
+    #[Route('users/me/reservations/{reservation}', name: 'user_reservation_get', methods: ['GET'], requirements: ['reservation' => '\d+'])]
+    public function get(
+        RouteGuardInterface $routeGuard,
+        EntitySerializerInterface $entitySerializer, 
+        Reservation $reservation
+    ): SuccessResponse
+    {
+        if(!$routeGuard->getAuthorizedUserOrFail()->hasReservation($reservation)){
+            throw new EntityNotFoundException(Reservation::class);
+        }
+        $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
+
+        return new SuccessResponse($responseData);
     }
 }

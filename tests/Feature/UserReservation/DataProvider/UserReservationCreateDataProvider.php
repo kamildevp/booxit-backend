@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Reservation\DataProvider;
+namespace App\Tests\Feature\UserReservation\DataProvider;
 
 use App\Enum\Reservation\ReservationStatus;
 use App\Tests\Utils\DataProvider\BaseDataProvider;

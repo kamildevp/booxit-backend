@@ -31,7 +31,6 @@ use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationOrganizationCancelDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationPatchDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationVerifyDataProvider;
-use App\Tests\Feature\Reservation\DataProvider\UserReservationCreateDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
@@ -81,34 +80,6 @@ class ReservationControllerTest extends BaseWebTestCase
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
         $this->assertPathValidation($this->client, 'POST', '/api/reservations', $params, $expectedErrors);
-        $this->assertCount(0, $this->mailerTransport->getSent());
-    }
-
-    #[Fixtures([AvailabilityFixtures::class])]
-    #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validDataCases')]
-    public function testCreateUserReservation(array $params, array $expectedResponseData): void
-    {
-        $service = $this->serviceRepository->findOneBy([]);
-        $schedule = $this->scheduleRepository->findOneBy([]);
-        $params['service_id'] = $service->getId();
-        $params['schedule_id'] = $schedule->getId();
-        $expectedResponseData['schedule'] = $this->normalizer->normalize($schedule, context: ['groups' => ScheduleNormalizerGroup::BASE_INFO->normalizationGroups()]);
-        $expectedResponseData['service'] = $this->normalizer->normalize($service, context: ['groups' => ServiceNormalizerGroup::BASE_INFO->normalizationGroups()]);
-        $expectedResponseData['organization'] = $this->normalizer->normalize($schedule->getOrganization(), context: ['groups' => OrganizationNormalizerGroup::BASE_INFO->normalizationGroups()]);
-
-        $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/reservations/me', $params);
-        $this->assertIsInt($responseData['id']);
-        $this->assertArrayHasKey('reference', $responseData);
-        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
-        $this->assertCount(1, $this->mailerTransport->getSent());
-    }
-
-    #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validationDataCases')]
-    public function testCreateUserReservationValidation(array $params, array $expectedErrors): void
-    {
-        $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/reservations/me', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 

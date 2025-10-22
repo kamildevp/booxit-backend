@@ -11,7 +11,7 @@ use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
-use App\DTO\Reservation\UserReservationCreateDTO;
+use App\DTO\UserReservation\UserReservationCreateDTO;
 use App\Entity\EmailConfirmation;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use App\Entity\Reservation;

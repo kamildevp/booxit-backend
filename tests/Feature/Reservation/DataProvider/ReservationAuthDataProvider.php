@@ -12,7 +12,6 @@ class ReservationAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/reservations/me', 'POST'],
             ['/api/reservations/custom', 'POST'],
             ['/api/reservations/{reservation}/confirm', 'POST'],
             ['/api/reservations/{reservation}/organization-cancel', 'POST'],

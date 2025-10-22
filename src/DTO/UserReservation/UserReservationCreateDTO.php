@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Reservation;
+namespace App\DTO\UserReservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;

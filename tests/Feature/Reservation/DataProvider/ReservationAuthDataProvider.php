@@ -18,6 +18,7 @@ class ReservationAuthDataProvider extends BaseDataProvider
             ['/api/reservations/{reservation}/organization-cancel', 'POST'],
             ['/api/reservations/{reservation}', 'GET'],
             ['/api/reservations/{reservation}', 'PATCH'],
+            ['/api/reservations/{reservation}', 'DELETE'],
         ];
     }
 
@@ -42,6 +43,9 @@ class ReservationAuthDataProvider extends BaseDataProvider
             ['/api/reservations/{reservation}', 'PATCH', 'om-user1@example.com', ['schedule_id' => '{schedule}']],
             ['/api/reservations/{reservation}', 'PATCH', 'sa-user2@example.com', ['schedule_id' => 0]],
             ['/api/reservations/{reservation}', 'PATCH', 'sa-user2@example.com', ['schedule_id' => '{schedule}']],
+            ['/api/reservations/{reservation}', 'DELETE', 'user1@example.com'],
+            ['/api/reservations/{reservation}', 'DELETE', 'om-user1@example.com'],
+            ['/api/reservations/{reservation}', 'DELETE', 'sa-user2@example.com'],
         ];
     }
 }

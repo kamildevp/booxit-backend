@@ -19,6 +19,7 @@ use App\DTO\Reservation\ReservationVerifyDTO;
 use App\DTO\Reservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
 use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Repository\ReservationRepository;
 use App\Response\ApiResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
@@ -258,5 +259,25 @@ class ReservationController extends AbstractController
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
         
         return new SuccessResponse($responseData);
+    }
+
+    #[OA\Delete(
+        summary: 'Delete reservation',
+        description: 'Deletes the specified reservation.
+        </br><br>**Important:** This action can only be performed by organization admin or reservation schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Reservation has been removed'])]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
+    #[Route('reservations/{reservation}', name: 'reservation_delete', methods: ['DELETE'], requirements: ['reservation' => '\d+'])]
+    public function delete(        
+        Reservation $reservation,
+        ReservationRepository $reservationRepository,
+    ): SuccessResponse
+    {
+        $reservationRepository->remove($reservation, true);
+        
+        return new SuccessResponse(['message' => 'Reservation has been removed']);
     }
 }

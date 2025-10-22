@@ -302,6 +302,16 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
+    #[Fixtures([ReservationFixtures::class])]
+    public function testDelete(): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/reservations/$reservationId");
+
+        $this->assertEquals('Reservation has been removed', $responseData['message']);
+    }
+
     #[DataProviderExternal(ReservationNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method): void
     {

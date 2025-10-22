@@ -15,6 +15,7 @@ class ReservationNotFoundDataProvider extends BaseDataProvider
             ['/api/reservations/1000/organization-cancel', 'POST'],
             ['/api/reservations/1000', 'GET'],
             ['/api/reservations/1000', 'PATCH'],
+            ['/api/reservations/1000', 'DELETE'],
         ];
     }
 }

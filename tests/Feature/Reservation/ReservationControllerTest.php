@@ -9,6 +9,7 @@ use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationByUrlConflictFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationByUrlFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
+use App\DataFixtures\Test\Reservation\ConfirmReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
@@ -228,6 +229,18 @@ class ReservationControllerTest extends BaseWebTestCase
         $reservationId = $this->reservationRepository->findOneBy([])->getId();
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'POST', "/api/reservations/$reservationId/confirm", $params, $expectedErrors);
+        $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ConfirmReservationConflictFixtures::class])]
+    #[DataProviderExternal(ReservationConfirmDataProvider::class, 'validDataCases')]
+    public function testConfirmConflict(array $params): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'POST', "/api/reservations/$reservationId/confirm", $params, expectedCode: 409);
+        $this->assertEquals('Reservation has already been confirmed.', $responseData['message']);
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 

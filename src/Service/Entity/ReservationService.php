@@ -155,6 +155,10 @@ class ReservationService
 
     public function confirmReservation(Reservation $reservation, ReservationConfirmDTO $dto): void
     {
+        if($reservation->getStatus() == ReservationStatus::CONFIRMED->value){
+            throw new ConflictException('Reservation has already been confirmed.');
+        }
+
         $reservation->setStatus(ReservationStatus::CONFIRMED->value);
         
         $this->reservationRepository->save($reservation, true);

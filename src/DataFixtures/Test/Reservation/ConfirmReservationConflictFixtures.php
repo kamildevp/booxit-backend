@@ -18,7 +18,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class CancelReservationConflictFixtures extends Fixture implements DependentFixtureInterface
+class ConfirmReservationConflictFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -40,7 +40,7 @@ class CancelReservationConflictFixtures extends Fixture implements DependentFixt
         $reservation->setEstimatedPrice('42.00');
         $reservation->setStartDateTime($startDateTime);
         $reservation->setEndDateTime($endDateTime);
-        $reservation->setStatus(ReservationStatus::CUSTOMER_CANCELLED->value);
+        $reservation->setStatus(ReservationStatus::CONFIRMED->value);
         $reservation->setType(ReservationType::REGULAR->value);
         $reservation->setReservedBy($reservedBy);
         $manager->persist($reservation);

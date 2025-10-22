@@ -8,6 +8,7 @@ use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationByUrlConflictFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationByUrlFixtures;
+use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\VerifyReservationFixtures;
@@ -194,6 +195,18 @@ class ReservationControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'POST', "/api/reservations/$reservationId/cancel");
         $this->assertEquals('Reservation has been cancelled', $responseData['message']);
         $this->assertCount(1, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([CancelReservationConflictFixtures::class])]
+    public function testCancelConflict(): void
+    {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getFailureResponseData($this->client, 'POST', "/api/reservations/$reservationId/cancel", expectedCode: 409);
+        $this->assertEquals('Reservation has already been cancelled.', $responseData['message']);
+        $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
     #[Fixtures([ReservationFixtures::class])]

@@ -35,4 +35,12 @@ class ReservationServiceDataProvider extends BaseDataProvider
             [true, ReservationStatus::CUSTOMER_CANCELLED],
         ];
     }
+
+    public static function cancelReservationConflictDataCases()
+    {
+        return [
+            [ReservationStatus::ORGANIZATION_CANCELLED],
+            [ReservationStatus::CUSTOMER_CANCELLED],
+        ];
+    }
 }

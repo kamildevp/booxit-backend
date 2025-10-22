@@ -144,6 +144,10 @@ class ReservationService
 
     public function cancelReservation(Reservation $reservation): void
     {
+        if(in_array($reservation->getStatus(), ReservationStatus::getCancelledStatuses())){
+            throw new ConflictException('Reservation has already been cancelled.');
+        }
+
         $reservation->setStatus(ReservationStatus::ORGANIZATION_CANCELLED->value);
         $this->reservationRepository->save($reservation, true);
         $this->sendReservationCancelledNotification($reservation);

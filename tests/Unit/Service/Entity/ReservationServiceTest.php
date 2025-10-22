@@ -595,6 +595,17 @@ class ReservationServiceTest extends TestCase
         $this->service->cancelReservation($reservationMock);
     }
 
+    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelReservationConflictDataCases')]
+    public function testCancelReservationThrowsConflict(ReservationStatus $reservationStatus): void
+    {
+        $reservationMock = $this->createMock(Reservation::class);
+        $reservationMock->method('getStatus')->willReturn($reservationStatus->value);
+
+        $this->expectException(ConflictException::class);
+
+        $this->service->cancelReservation($reservationMock);
+    }
+
     public function testConfirmReservation(): void
     {
         $dto = new ReservationConfirmDTO('test');

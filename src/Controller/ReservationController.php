@@ -10,6 +10,7 @@ use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Reservation\ReservationConfirmDTO;
+use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
@@ -96,6 +97,35 @@ class ReservationController extends AbstractController
     }
 
     #[OA\Post(
+        summary: 'Create custom reservation',
+        description: 'Creates custom reservation. 
+        </br><br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+    )]
+    #[SuccessResponseDoc(
+        statusCode: 201,
+        description: 'Created Reservation',
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS
+    )]
+    #[NotFoundResponseDoc('Reservation not found')]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ReservationWritePrivilegesRule::class)]
+    #[Route('reservations/custom', name: 'reservation_create_custom', methods: ['POST'])]
+    public function createCustom(
+        ReservationService $reservationService, 
+        EntitySerializerInterface $entitySerializer,   
+        #[MapRequestPayload] ReservationCreateCustomDTO $dto,
+    ): ResourceCreatedResponse
+    {
+        $reservation = $reservationService->createCustomReservation($dto);
+        $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::ORGANIZATION_RESERVATIONS->normalizationGroups());
+
+        return new ResourceCreatedResponse($responseData);
+    }
+
+    #[OA\Post(
         summary: 'Verify reservation',
         description: 'Verifies reservation using the verification parameters provided in the link sent to reservation email address. 
         This endpoint should be called by the verification handler specified during reservation creation.'
@@ -147,11 +177,11 @@ class ReservationController extends AbstractController
         Reservation $reservation,
         ReservationService $reservationService, 
         #[MapRequestPayload] ReservationOrganizationCancelDTO $dto,
-    ): ResourceCreatedResponse
+    ): SuccessResponse
     {
         $reservationService->cancelOrganizationReservation($reservation, $dto);
 
-        return new ResourceCreatedResponse(['message' => 'Reservation has been cancelled']);
+        return new SuccessResponse(['message' => 'Reservation has been cancelled']);
     }
 
     #[OA\Post(
@@ -173,11 +203,11 @@ class ReservationController extends AbstractController
         Reservation $reservation,
         ReservationService $reservationService, 
         #[MapRequestPayload] ReservationConfirmDTO $dto,
-    ): ResourceCreatedResponse
+    ): SuccessResponse
     {
         $reservationService->confirmReservation($reservation, $dto);
 
-        return new ResourceCreatedResponse(['message' => 'Reservation has been confirmed']);
+        return new SuccessResponse(['message' => 'Reservation has been confirmed']);
     }
 
     #[OA\Get(

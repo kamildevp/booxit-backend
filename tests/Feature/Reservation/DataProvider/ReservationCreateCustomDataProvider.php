@@ -9,7 +9,7 @@ use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
 
-class ReservationPatchDataProvider extends BaseDataProvider 
+class ReservationCreateCustomDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()
@@ -20,46 +20,22 @@ class ReservationPatchDataProvider extends BaseDataProvider
         return [
             [
                 [
-                    'email' => 'new-user@example.com',
+                    'email' => 'user@example.com',
                     'phone_number' => '+48213735572',
                     'estimated_price' => '31.50',
                     'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
                     'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
                     'status' => ReservationStatus::CONFIRMED->value,
-                    'notify_customer' => true,
-                    'verification_handler' => self::VERIFICATION_HANDLER,
                 ],
                 [
-                    'email' => 'new-user@example.com',
+                    'email' => 'user@example.com',
                     'phone_number' => '+48213735572',
                     'estimated_price' => '31.50',
                     'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
                     'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
                     'status' => ReservationStatus::CONFIRMED->value,
                 ],
-                true
             ],
-            [
-                [
-                    'email' => 'new-user@example.com',
-                    'phone_number' => '+48213735572',
-                    'estimated_price' => '31.50',
-                    'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
-                    'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
-                    'status' => ReservationStatus::CONFIRMED->value,
-                    'notify_customer' => false,
-                    'verification_handler' => self::VERIFICATION_HANDLER,
-                ],
-                [
-                    'email' => 'new-user@example.com',
-                    'phone_number' => '+48213735572',
-                    'estimated_price' => '31.50',
-                    'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
-                    'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
-                    'status' => ReservationStatus::CONFIRMED->value,
-                ],
-                false
-            ]
         ];
     }
 
@@ -75,8 +51,6 @@ class ReservationPatchDataProvider extends BaseDataProvider
                     'start_date_time' => '',
                     'end_date_time' => '',
                     'status' => '',
-                    'notify_customer' => true,
-                    'verification_handler' => '',
                 ],
                 [
                     'service_id' => [
@@ -100,9 +74,6 @@ class ReservationPatchDataProvider extends BaseDataProvider
                     'status' => [
                         'Parameter must be one of valid statuses: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())),
                     ],
-                    'verification_handler' => [
-                        'This value should not be blank.'
-                    ]
                 ]
             ],
             [
@@ -139,9 +110,6 @@ class ReservationPatchDataProvider extends BaseDataProvider
                     'status' => [
                         'Parameter must be one of valid statuses: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())),
                     ],
-                    'verification_handler' => [
-                        'Invalid verification handler'
-                    ]
                 ]
             ],
         ];

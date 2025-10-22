@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Service\Entity;
 
 use App\DTO\Reservation\ReservationConfirmDTO;
+use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
@@ -342,6 +343,38 @@ class ReservationServiceTest extends TestCase
         $this->expectException(ConflictException::class);
 
         $this->service->createUserReservation($dto, $userMock);
+    }
+
+    public function testCreateCustomReservation(): void
+    {
+        $dto = new ReservationCreateCustomDTO(1, 2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value);
+        $serviceMock = $this->createMock(Service::class);
+        $serviceMock->method('getId')->willReturn(1);
+        $organizationMock = $this->createMock(Organization::class);
+        $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getId')->willReturn(2);
+        $scheduleMock->method('getOrganization')->willReturn($organizationMock);
+        $reservationMock = $this->createMock(Reservation::class);
+        $reservationMock->method('getService')->willReturn($serviceMock);
+        $reservationMock->method('getSchedule')->willReturn($scheduleMock);
+        $reservationMock->method('getStartDateTime')->willReturn(new DateTimeImmutable());
+
+        $this->entitySerializerMock
+            ->method('parseToEntity')
+            ->with($dto, Reservation::class)
+            ->willReturn($reservationMock);
+
+        $reservationMock->expects($this->once())->method('setOrganization')->with($organizationMock);
+        $reservationMock->expects($this->once())->method('setType')->with(ReservationType::CUSTOM->value);
+        $reservationMock->expects($this->once())->method('setVerified')->with(true);
+
+        $this->reservationRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($reservationMock, true);
+
+        $result = $this->service->createCustomReservation($dto);
+        $this->assertSame($reservationMock, $result);
     }
 
     public function testVerifyReservationSucceeds(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Entity;
 
 use App\DTO\Reservation\ReservationConfirmDTO;
+use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationOrganizationCancelDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
@@ -79,6 +80,19 @@ class ReservationService
         
         $this->reservationRepository->save($reservation, true);
         $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_SUMMARY);
+
+        return $reservation;
+    }
+
+    public function createCustomReservation(ReservationCreateCustomDTO $dto): Reservation
+    {
+        $reservation = $this->entitySerializer->parseToEntity($dto, Reservation::class);
+        $reference = $this->generateReservationReference($reservation);
+        $reservation->setReference($reference);
+        $reservation->setOrganization($reservation->getSchedule()->getOrganization());
+        $reservation->setType(ReservationType::CUSTOM->value);
+        $reservation->setVerified(true);
+        $this->reservationRepository->save($reservation, true);
 
         return $reservation;
     }

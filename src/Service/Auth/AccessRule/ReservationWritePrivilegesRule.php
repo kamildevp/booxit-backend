@@ -12,6 +12,7 @@ use App\Exceptions\UnauthorizedException;
 use App\Repository\OrganizationMemberRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\ScheduleAssignmentRepository;
+use App\Repository\ScheduleRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -21,6 +22,7 @@ class ReservationWritePrivilegesRule implements AccessRuleInterface
         protected OrganizationMemberRepository $organizationMemberRepository,
         protected ScheduleAssignmentRepository $scheduleAssignmentRepository,
         protected ReservationRepository $reservationRepository,
+        protected ScheduleRepository $scheduleRepository,
     )
     {
         
@@ -32,10 +34,12 @@ class ReservationWritePrivilegesRule implements AccessRuleInterface
             throw new UnauthorizedException;
         }
 
+        $requestContent = json_decode($request->getContent(), true) ?? [];
+        $scheduleId = $requestContent['schedule_id'] ?? null;
         $reservationId = $request->attributes->get('reservation');
         $reservation = !is_null($reservationId) ? $this->reservationRepository->findOrFail($reservationId) : null;
 
-        $schedule = $reservation?->getSchedule();
+        $schedule = is_int($scheduleId) ? $this->scheduleRepository->find($scheduleId) : $reservation?->getSchedule();
         $organization = $schedule?->getOrganization();
 
         $actionMember = $organization ? $this->organizationMemberRepository->findOneBy([

@@ -25,6 +25,7 @@ use App\Response\ForbiddenResponse;
 use App\Tests\Feature\Reservation\DataProvider\ReservationAuthDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCancelByUrlDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationConfirmDataProvider;
+use App\Tests\Feature\Reservation\DataProvider\ReservationCreateCustomDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationCreateDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationNotFoundDataProvider;
 use App\Tests\Feature\Reservation\DataProvider\ReservationOrganizationCancelDataProvider;
@@ -109,6 +110,39 @@ class ReservationControllerTest extends BaseWebTestCase
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'POST', '/api/reservations/me', $params, $expectedErrors);
         $this->assertCount(0, $this->mailerTransport->getSent());
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationCreateCustomDataProvider::class, 'validDataCases')]
+    public function testCreateCustom(array $params, array $expectedResponseData): void
+    {
+        $service = $this->serviceRepository->findOneBy([]);
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $params['service_id'] = $service->getId();
+        $params['schedule_id'] = $schedule->getId();
+        $expectedResponseData['schedule'] = $this->normalizer->normalize($schedule, context: ['groups' => ScheduleNormalizerGroup::BASE_INFO->normalizationGroups()]);
+        $expectedResponseData['service'] = $this->normalizer->normalize($service, context: ['groups' => ServiceNormalizerGroup::BASE_INFO->normalizationGroups()]);
+
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/reservations/custom', $params);
+        $this->assertIsInt($responseData['id']);
+        $this->assertArrayHasKey('reference', $responseData);   
+        $this->assertArrayHasKey('reserved_by', $responseData);
+        $this->assertArrayHasKey('created_by', $responseData);
+        $this->assertArrayHasKey('updated_by', $responseData);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
+    }
+
+    #[Fixtures([ReservationFixtures::class])]
+    #[DataProviderExternal(ReservationCreateCustomDataProvider::class, 'validationDataCases')]
+    public function testCreateCustomValidation(array $params, array $expectedErrors): void
+    {
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $params['schedule_id'] = $schedule->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $this->assertPathValidation($this->client, 'POST', '/api/reservations/custom', $params, $expectedErrors);
     }
 
     #[Fixtures([VerifyReservationFixtures::class])]
@@ -260,6 +294,8 @@ class ReservationControllerTest extends BaseWebTestCase
     {
         $reservation = $this->reservationRepository->findOneBy([]);
         $reservationId = $reservation->getId();
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $params['schedule_id'] = $schedule->getId();
         
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'PATCH', "/api/reservations/$reservationId", $params, $expectedErrors);
@@ -285,10 +321,12 @@ class ReservationControllerTest extends BaseWebTestCase
 
     #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ReservationFixtures::class])]
     #[DataProviderExternal(ReservationAuthDataProvider::class, 'privilegesOnlyPaths')]
-    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail, array $parameters = []): void
     {
         $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
         $path = str_replace('{reservation}', (string)$reservationId, $path);
+        $parameters = array_map(fn($val) => $val == '{schedule}' ? $scheduleId : $val, $parameters);
         $user = $this->userRepository->findOneBy(['email' => $userEmail]);
 
         $this->client->loginUser($user, 'api');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DataFixtures\Test\Schedule;
+namespace App\DataFixtures\Test\ScheduleService;
 
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;

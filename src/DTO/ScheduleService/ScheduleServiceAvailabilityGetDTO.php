@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Schedule;
+namespace App\DTO\ScheduleService;
 
 use App\DTO\AbstractDTO;
 use App\Validator\Constraints\Compound as Compound;
@@ -10,7 +10,7 @@ use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
-class ScheduleAvailabilityGetDTO extends AbstractDTO
+class ScheduleServiceAvailabilityGetDTO extends AbstractDTO
 {
     public function __construct(
         #[Compound\DateStringRequirements(true)]

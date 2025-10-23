@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Schedule;
+namespace App\DTO\ScheduleService;
 
 use App\DTO\AbstractDTO;
 use App\Entity\Service;

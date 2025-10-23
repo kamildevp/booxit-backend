@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Schedule\DataProvider;
+namespace App\Tests\Feature\ScheduleService\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 

@@ -14,8 +14,6 @@ class ScheduleAuthDataProvider extends BaseDataProvider
             ['/api/schedules', 'POST'],
             ['/api/schedules/{schedule}', 'PATCH'],
             ['/api/schedules/{schedule}', 'DELETE'],
-            ['/api/schedules/{schedule}/services', 'POST'],
-            ['/api/schedules/{schedule}/services/{service}', 'DELETE'],
         ];
     }
 
@@ -30,10 +28,6 @@ class ScheduleAuthDataProvider extends BaseDataProvider
             ['/api/schedules/{schedule}', 'DELETE', 'user1@example.com'],
             ['/api/schedules/{schedule}', 'PATCH', 'om-user1@example.com'],
             ['/api/schedules/{schedule}', 'DELETE', 'om-user1@example.com'],
-            ['/api/schedules/{schedule}/services', 'POST', 'user1@example.com'],
-            ['/api/schedules/{schedule}/services', 'POST', 'om-user1@example.com'],
-            ['/api/schedules/{schedule}/services/{service}', 'DELETE', 'user1@example.com'],
-            ['/api/schedules/{schedule}/services/{service}', 'DELETE', 'om-user1@example.com'],
         ];
     }
 }

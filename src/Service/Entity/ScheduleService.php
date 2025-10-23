@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\Schedule\ScheduleAvailabilityGetDTO;
+use App\DTO\ScheduleService\ScheduleServiceAvailabilityGetDTO;
 use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Exceptions\ConflictException;
@@ -49,7 +49,7 @@ class ScheduleService
     }
 
     /** @return array<string, string[]> */
-    public function getScheduleAvailability(Schedule $schedule, Service $service, ScheduleAvailabilityGetDTO $dto): array
+    public function getScheduleAvailability(Schedule $schedule, Service $service, ScheduleServiceAvailabilityGetDTO $dto): array
     {
         if(!$schedule->hasService($service)){
             throw new EntityNotFoundException(Service::class);

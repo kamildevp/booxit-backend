@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\ScheduleReservation;
 
-use App\DataFixtures\Test\Schedule\ScheduleServiceFixtures;
+use App\DataFixtures\Test\ScheduleService\ScheduleServiceFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Entity\Reservation;

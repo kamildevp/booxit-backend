@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\Availability;
 
-use App\DataFixtures\Test\Schedule\ScheduleServiceFixtures;
+use App\DataFixtures\Test\ScheduleService\ScheduleServiceFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\Entity\CustomTimeWindow;
 use App\Entity\Reservation;

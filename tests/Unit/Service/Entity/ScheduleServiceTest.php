@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity;
 
-use App\DTO\Schedule\ScheduleAvailabilityGetDTO;
+use App\DTO\ScheduleService\ScheduleServiceAvailabilityGetDTO;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Entity\Service;
@@ -167,7 +167,7 @@ class ScheduleServiceTest extends TestCase
             ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
             ->willReturn($availabilityMock);
 
-        $result = $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleAvailabilityGetDTO($startDate, $endDate));
+        $result = $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleServiceAvailabilityGetDTO($startDate, $endDate));
         $this->assertEquals($availabilityMock, $result);
     }
 
@@ -180,6 +180,6 @@ class ScheduleServiceTest extends TestCase
 
         $this->expectException(EntityNotFoundException::class);
 
-        $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleAvailabilityGetDTO());
+        $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleServiceAvailabilityGetDTO());
     }
 }

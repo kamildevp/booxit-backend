@@ -202,7 +202,7 @@ class UserReservationListDataProvider extends ListDataProvider
                                 'This value should not be blank.'
                             ],
                             'status' => [
-                                'One or more of the given values is invalid, allowed values: "pending", "confirmed", "organization_cancelled", "customer_cancelled".'
+                                'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())).'.'
                             ],
                             'estimated_price_from' => [
                                 'This value should not be blank.'

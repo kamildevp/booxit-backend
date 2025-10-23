@@ -22,7 +22,7 @@ use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\Auth\RouteGuardInterface;
-use App\Service\Entity\ReservationService;
+use App\Service\Entity\UserReservationService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -54,12 +54,12 @@ class UserReservationController extends AbstractController
     #[Route('users/me/reservations', name: 'user_reservation_new', methods: ['POST'])]
     public function create(
         RouteGuardInterface $routeGuard,
-        ReservationService $reservationService, 
+        UserReservationService $userReservationService, 
         #[MapRequestPayload] UserReservationCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,   
     ): ResourceCreatedResponse
     {
-        $reservation = $reservationService->createUserReservation($dto, $routeGuard->getAuthorizedUserOrFail());
+        $reservation = $userReservationService->createUserReservation($dto, $routeGuard->getAuthorizedUserOrFail());
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
         
         return new ResourceCreatedResponse($responseData);
@@ -78,10 +78,10 @@ class UserReservationController extends AbstractController
     public function cancel(
         RouteGuardInterface $routeGuard,
         Reservation $reservation,
-        ReservationService $reservationService,
+        UserReservationService $userReservationService,
     ): SuccessResponse
     {
-        $reservationService->cancelUserReservation($reservation, $routeGuard->getAuthorizedUserOrFail());
+        $userReservationService->cancelUserReservation($reservation, $routeGuard->getAuthorizedUserOrFail());
 
         return new SuccessResponse(['message' => 'Reservation has been cancelled']);
     }

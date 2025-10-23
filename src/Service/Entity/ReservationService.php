@@ -10,18 +10,15 @@ use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
-use App\DTO\UserReservation\UserReservationCreateDTO;
 use App\Entity\EmailConfirmation;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use App\Entity\Reservation;
-use App\Entity\User;
 use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\EmailType;
 use App\Enum\Reservation\ReservationStatus;
 use App\Enum\Reservation\ReservationType;
 use App\Exceptions\ConflictException;
-use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\EmailConfirmationMessage;
 use App\Message\EmailMessage;
@@ -59,27 +56,6 @@ class ReservationService
         
         $this->reservationRepository->save($reservation, true);
         $this->sendReservationVerification($reservation, $dto->verificationHandler);
-
-        return $reservation;
-    }
-
-    public function createUserReservation(UserReservationCreateDTO $dto, User $user): Reservation
-    {
-        $reservation = $this->makeReservation(new ReservationCreateDTO(
-            $dto->scheduleId,
-            $dto->serviceId,
-            $user->getEmail(),
-            $dto->phoneNumber,
-            $dto->startDateTime,
-            $dto->verificationHandler
-        ));
-        $this->validateReservationAvailability($reservation);
-
-        $reservation->setVerified(true);
-        $reservation->setReservedBy($user);
-        
-        $this->reservationRepository->save($reservation, true);
-        $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_SUMMARY);
 
         return $reservation;
     }
@@ -154,21 +130,6 @@ class ReservationService
         $this->sendReservationCancelledNotification($reservation);
     }
 
-    public function cancelUserReservation(Reservation $reservation, User $user): void
-    {
-        if(!$user->hasReservation($reservation)){
-            throw new EntityNotFoundException(Reservation::class);
-        }
-
-        if(in_array($reservation->getStatus(), ReservationStatus::getCancelledStatuses())){
-            throw new ConflictException('Reservation has already been cancelled.');
-        }
-
-        $reservation->setStatus(ReservationStatus::CUSTOMER_CANCELLED->value);
-        $this->reservationRepository->save($reservation, true);
-        $this->sendReservationCancelledNotification($reservation);
-    }
-
     public function confirmReservation(Reservation $reservation, ReservationConfirmDTO $dto): void
     {
         if($reservation->getStatus() == ReservationStatus::CONFIRMED->value){
@@ -193,24 +154,7 @@ class ReservationService
         return $reservation;
     }
 
-    private function resolveReservationEmailConfirmation(ReservationVerifyDTO|ReservationUrlCancelDTO $dto): ?EmailConfirmation
-    {
-        try{
-            return $this->emailConfirmationService->resolveEmailConfirmation(
-                $dto->id,
-                $dto->token,
-                $dto->_hash,
-                $dto->expires,
-                $dto->type
-            );
-        }
-        catch(VerifyEmailConfirmationException)
-        {
-            return null;
-        }
-    }
-
-    private function makeReservation(ReservationCreateDTO $dto): Reservation
+    public function makeReservation(ReservationCreateDTO $dto): Reservation
     {
         $reservation = $this->entitySerializer->parseToEntity($dto, Reservation::class);
         $endDateTime = $reservation->getStartDateTime()->add($reservation->getService()->getDuration());
@@ -227,7 +171,7 @@ class ReservationService
         return $reservation;
     }
 
-    private function validateReservationAvailability(Reservation $reservation): void
+    public function validateReservationAvailability(Reservation $reservation): void
     {
         $startDateTime = $reservation->getStartDateTime();
         $date = $startDateTime->format('Y-m-d');
@@ -244,7 +188,7 @@ class ReservationService
         }
     }
 
-    private function sendReservationVerification(Reservation $reservation, string $verificationHandler): void
+    public function sendReservationVerification(Reservation $reservation, string $verificationHandler): void
     {
         $verificationEmailConfirmation = $this->createReservationVerification($reservation, $verificationHandler);
         $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
@@ -271,7 +215,7 @@ class ReservationService
         ));
     }
 
-    private function sendReservationNotification(Reservation $reservation, string $verificationHandler, EmailType $type): void
+    public function sendReservationNotification(Reservation $reservation, string $verificationHandler, EmailType $type): void
     {
         $cancellationEmailConfirmation = $this->createReservationCancellation($reservation, $verificationHandler);
         $this->reservationRepository->flush();
@@ -293,7 +237,7 @@ class ReservationService
         ));
     }
 
-    private function sendReservationCancelledNotification(Reservation $reservation): void
+    public function sendReservationCancelledNotification(Reservation $reservation): void
     {
         $this->messageBus->dispatch(new EmailMessage(
             EmailType::RESERVATION_CANCELLED_NOTIFICATION->value,
@@ -307,6 +251,23 @@ class ReservationService
                 'duration' => $reservation->getService()->getDuration()->format('%h:%ih'),
             ]
         ));
+    }
+
+    private function resolveReservationEmailConfirmation(ReservationVerifyDTO|ReservationUrlCancelDTO $dto): ?EmailConfirmation
+    {
+        try{
+            return $this->emailConfirmationService->resolveEmailConfirmation(
+                $dto->id,
+                $dto->token,
+                $dto->_hash,
+                $dto->expires,
+                $dto->type
+            );
+        }
+        catch(VerifyEmailConfirmationException)
+        {
+            return null;
+        }
     }
 
     private function createReservationVerification(Reservation $reservation, string $verificationHandler): EmailConfirmation

@@ -10,13 +10,11 @@ use App\DTO\Reservation\ReservationCreateDTO;
 use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
-use App\DTO\UserReservation\UserReservationCreateDTO;
 use App\Entity\Reservation;
 use App\Entity\EmailConfirmation;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Entity\Service;
-use App\Entity\User;
 use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\EmailType;
@@ -207,141 +205,6 @@ class ReservationServiceTest extends TestCase
         $this->expectException(ConflictException::class);
 
         $this->service->createReservation($dto);
-    }
-
-    public function testCreateUserReservationSuccess(): void
-    {
-        $dto = new UserReservationCreateDTO(1, 2, '+48213721372', '2025-10-20T10:00+00:00', 'test');
-        $userMock = $this->createMock(User::class);
-        $userMock->method('getEmail')->willReturn('user@example.com');
-        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
-        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
-        $organizationMock = $this->prepareOrganizationMock();
-        $serviceMock = $this->prepareServiceMock();
-        $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $userMock->getEmail(), $startDateTime, $endDateTime);
-        $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
-        $templateData = $this->prepareReservationNotificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
-
-        $reservationMock->expects($this->once())->method('setEndDateTime')->with($endDateTime);
-        $reservationMock->expects($this->once())->method('setOrganization')->with($organizationMock);
-        $reservationMock->expects($this->once())->method('setEstimatedPrice')->with($serviceMock->getEstimatedPrice());
-        $reservationMock->expects($this->once())->method('setStatus')->with(ReservationStatus::PENDING->value);
-        $reservationMock->expects($this->once())->method('setType')->with(ReservationType::REGULAR->value);
-        $reservationMock->expects($this->once())->method('setReservedBy')->with($userMock);
-        $lastVerifiedState = false;
-        $reservationMock->method('setVerified')->willReturnCallback(function($arg) use (&$lastVerifiedState, $reservationMock){
-            $lastVerifiedState = $arg;
-            return $reservationMock;
-        });
-
-        $reservationMock->expects($this->once())->method('addEmailConfirmation')->with($cancellationEmailConfirmationMock);
-
-        $this->entitySerializerMock
-            ->method('parseToEntity')
-            ->with(
-                $this->callback(fn($arg) => 
-                    $arg instanceof ReservationCreateDTO && 
-                    $arg->scheduleId == $dto->scheduleId && 
-                    $arg->serviceId == $dto->serviceId &&
-                    $arg->email == $userMock->getEmail() && 
-                    $arg->phoneNumber == $dto->phoneNumber && 
-                    $arg->startDateTime == $dto->startDateTime && 
-                    $arg->verificationHandler == $dto->verificationHandler
-                ), 
-                Reservation::class)
-            ->willReturn($reservationMock);
-
-        $this->availabilityServiceMock
-            ->method('getScheduleAvailability')
-            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
-            ->willReturn([
-                $startDateTime->format('Y-m-d') => [$startDateTime->format('H:i')]
-            ]);
-
-        $this->reservationRepositoryMock
-            ->expects($this->once())
-            ->method('save')
-            ->with($reservationMock, true);
-
-        $this->emailConfirmationServiceMock
-            ->method('createEmailConfirmation')
-            ->with(
-                $userMock->getEmail(), 
-                $dto->verificationHandler, 
-                EmailConfirmationType::RESERVATION_CANCELLATION->value, 
-                null, 
-                $startDateTime,
-            )
-            ->willReturn($cancellationEmailConfirmationMock);
-
-        $this->emailConfirmationHandlerMock
-            ->method('generateSignedUrl')
-            ->with($cancellationEmailConfirmationMock)
-            ->willReturn($templateData['cancellation_url']);
-
-        $this->messageBusMock
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->callback(fn($arg) => 
-                $arg instanceof EmailConfirmationMessage &&
-                $arg->getEmailConfirmationId() == $cancellationEmailConfirmationMock->getId() &&
-                $arg->getEmailType() == EmailType::RESERVATION_SUMMARY->value && 
-                $arg->getEmail() == $userMock->getEmail() && 
-                $arg->getTemplateParams() == $templateData
-            ))
-            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
-
-        $result = $this->service->createUserReservation($dto, $userMock);
-        $this->assertSame($reservationMock, $result);
-        $this->assertTrue($lastVerifiedState);
-    }
-
-    public function testCreateUserReservationThrowsConflictWhenUnavailableTimeSlot(): void
-    {
-        $dto = new UserReservationCreateDTO(1, 2, '+48213721372', '2025-10-20T10:00+00:00', 'test');
-        $userMock = $this->createMock(User::class);
-        $userMock->method('getEmail')->willReturn('user@example.com');
-        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
-        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
-        $organizationMock = $this->prepareOrganizationMock();
-        $serviceMock = $this->prepareServiceMock();
-        $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $userMock->getEmail(), $startDateTime, $endDateTime);
-
-        $this->entitySerializerMock
-            ->method('parseToEntity')
-            ->with(
-                $this->callback(fn($arg) => 
-                    $arg instanceof ReservationCreateDTO && 
-                    $arg->scheduleId == $dto->scheduleId && 
-                    $arg->serviceId == $dto->serviceId &&
-                    $arg->email == $userMock->getEmail() && 
-                    $arg->phoneNumber == $dto->phoneNumber && 
-                    $arg->startDateTime == $dto->startDateTime && 
-                    $arg->verificationHandler == $dto->verificationHandler
-                ), 
-                Reservation::class)
-            ->willReturn($reservationMock);
-
-        $this->availabilityServiceMock
-            ->method('getScheduleAvailability')
-            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
-            ->willReturn([
-                $startDateTime->format('Y-m-d') => []
-            ]);
-
-        $this->reservationRepositoryMock
-            ->expects($this->never())
-            ->method('save');
-
-        $this->messageBusMock
-            ->expects($this->never())
-            ->method('dispatch');
-
-        $this->expectException(ConflictException::class);
-
-        $this->service->createUserReservation($dto, $userMock);
     }
 
     public function testCreateCustomReservation(): void
@@ -606,49 +469,6 @@ class ReservationServiceTest extends TestCase
         $this->service->cancelReservation($reservationMock);
     }
 
-    public function testCancelUserReservation(): void
-    {
-        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
-        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
-        $email = 'user@example.com';
-        $organizationMock = $this->prepareOrganizationMock();
-        $serviceMock = $this->prepareServiceMock();
-        $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
-        $userMock  = $this->createMock(User::class);
-        $userMock->method('hasReservation')->with($reservationMock)->willReturn(true);
-        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
-
-        $reservationMock->expects($this->once())->method('setStatus')->with(ReservationStatus::CUSTOMER_CANCELLED->value);
-        $this->reservationRepositoryMock->expects($this->once())->method('save')->with($reservationMock, true);
-
-        $this->messageBusMock
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->callback(fn($arg) => 
-                $arg instanceof EmailMessage &&
-                $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
-                $arg->getEmail() == $email && 
-                $arg->getTemplateParams() == $templateData
-            ))
-            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
-
-        $this->service->cancelUserReservation($reservationMock, $userMock);
-    }
-
-    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelUserReservationExceptionDataCases')]
-    public function testCancelReservationThrowsException(ReservationStatus $reservationStatus, bool $hasReservation, string $expectedException): void
-    {
-        $reservationMock = $this->createMock(Reservation::class);
-        $reservationMock->method('getStatus')->willReturn($reservationStatus->value);
-        $userMock = $this->createMock(User::class);
-        $userMock->method('hasReservation')->with($reservationMock)->willReturn($hasReservation);
-
-        $this->expectException($expectedException);
-
-        $this->service->cancelUserReservation($reservationMock, $userMock);
-    }
-
     public function testConfirmReservation(): void
     {
         $dto = new ReservationConfirmDTO('test');
@@ -768,6 +588,212 @@ class ReservationServiceTest extends TestCase
 
         $result = $this->service->patchReservation($reservationMock, $dto);
         $this->assertSame($reservationMock, $result);
+    }
+
+    public function testMakeReservation()
+    {
+        $dto = new ReservationCreateDTO(1, 2, 'user@example.com', '+48213721372', '2025-10-20T10:00+00:00', 'test');
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $dto->email, $startDateTime, $endDateTime);
+
+        $this->entitySerializerMock
+            ->method('parseToEntity')
+            ->with($dto, Reservation::class)
+            ->willReturn($reservationMock);
+
+        $reservationMock->expects($this->once())->method('setEndDateTime')->with($startDateTime->add($serviceMock->getDuration()));
+        $reservationMock->expects($this->once())->method('setOrganization')->with($organizationMock);
+        $reservationMock->expects($this->once())->method('setEstimatedPrice')->with($serviceMock->getEstimatedPrice());
+        $reservationMock->expects($this->once())->method('setStatus')->with(ReservationStatus::PENDING->value);
+        $reservationMock->expects($this->once())->method('setType')->with(ReservationType::REGULAR->value);
+        $reservationMock->expects($this->once())->method('setVerified')->with(false);
+
+        $result = $this->service->makeReservation($dto);
+        $this->assertSame($reservationMock, $result);
+    }
+
+    public function testValidateReservationAvailabilitySuccess()
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime);
+        $availabilityMock = [$startDateTime->format('Y-m-d') => [$startDateTime->format('H:i')]];
+
+        $this->availabilityServiceMock->expects($this->once())
+            ->method('getScheduleAvailability')
+            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
+            ->willReturn($availabilityMock);
+
+        $this->service->validateReservationAvailability($reservationMock);
+    }
+
+    public function testValidateReservationAvailabilityFailure()
+    {
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime);
+        $availabilityMock = [$startDateTime->format('Y-m-d') => []];
+
+        $this->availabilityServiceMock->expects($this->once())
+            ->method('getScheduleAvailability')
+            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
+            ->willReturn($availabilityMock);
+        
+        $this->expectException(ConflictException::class);
+        $this->service->validateReservationAvailability($reservationMock);
+    }
+
+    public function testSendReservationVerification()
+    {
+        $email = 'user@example.com';
+        $verificationHandler = 'test';
+        $expiryDate = new DateTimeImmutable('+ 30 minutes');
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime, $expiryDate);
+        $verificationEmailConfirmationMock = $this->prepareEmailConfirmationMock(123, EmailConfirmationType::RESERVATION_VERIFICATION, $expiryDate);
+        $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
+        $templateData = $this->prepareReservationVerificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock, $expiryDate);
+
+        $this->emailConfirmationServiceMock
+            ->method('createEmailConfirmation')
+            ->willReturnMap([
+                [
+                    $email, 
+                    $verificationHandler, 
+                    EmailConfirmationType::RESERVATION_VERIFICATION->value, 
+                    null, 
+                    $expiryDate,
+                    $verificationEmailConfirmationMock
+                ],
+                [
+                    $email, 
+                    $verificationHandler, 
+                    EmailConfirmationType::RESERVATION_CANCELLATION->value, 
+                    null, 
+                    $startDateTime,
+                    $cancellationEmailConfirmationMock
+                ]
+            ]);
+        
+        $callNr = 0;
+        $reservationMock->expects($this->exactly(2))->method('addEmailConfirmation')->with(
+            $this->callback(function($arg) use (&$callNr, $verificationEmailConfirmationMock, $cancellationEmailConfirmationMock){
+                $callNr++;
+                return match($callNr){
+                    1 => $arg === $verificationEmailConfirmationMock,
+                    2 => $arg === $cancellationEmailConfirmationMock,
+                };
+            })
+        );
+
+        $this->emailConfirmationHandlerMock
+            ->method('generateSignedUrl')
+            ->willReturnMap([
+                [$verificationEmailConfirmationMock, $templateData['verification_url']],
+                [$cancellationEmailConfirmationMock, $templateData['cancellation_url']],
+            ]);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof ReservationVerificationMessage &&
+                $arg->getCancellationEmailConfirmationId() == $cancellationEmailConfirmationMock->getId() &&
+                $arg->getVerificationEmailConfirmationId() == $verificationEmailConfirmationMock->getId() &&
+                $arg->getReservationId() == $reservationMock->getId() &&
+                $arg->getEmailType() == EmailType::RESERVATION_VERIFICATION->value && 
+                $arg->getEmail() == $email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(ReservationVerificationMessage::class)));
+
+        $this->service->sendReservationVerification($reservationMock, $verificationHandler);
+    }
+
+    public function testSendReservationNotification()
+    {
+        $emailType = EmailType::RESERVATION_UPDATED_NOTIFICATION;
+        $email = 'user@example.com';
+        $verificationHandler = 'test';
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
+        $templateData = $this->prepareReservationNotificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+
+        $this->emailConfirmationServiceMock
+            ->method('createEmailConfirmation')
+            ->with(
+                $email, 
+                $verificationHandler, 
+                EmailConfirmationType::RESERVATION_CANCELLATION->value, 
+                null, 
+                $startDateTime,
+            )
+            ->willReturn($cancellationEmailConfirmationMock);
+        
+        $reservationMock->expects($this->once())->method('addEmailConfirmation')->with($cancellationEmailConfirmationMock);
+
+        $this->emailConfirmationHandlerMock
+            ->method('generateSignedUrl')
+            ->with($cancellationEmailConfirmationMock)
+            ->willReturn($templateData['cancellation_url']);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof EmailConfirmationMessage &&
+                $arg->getEmailConfirmationId() == $cancellationEmailConfirmationMock->getId() &&
+                $arg->getEmailType() == $emailType->value && 
+                $arg->getEmail() == $email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
+
+        $this->service->sendReservationNotification($reservationMock, $verificationHandler, $emailType);
+    }
+
+    public function testSendReservationCancelledNotification()
+    {
+        $email = 'user@example.com';
+        $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
+        $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
+        $organizationMock = $this->prepareOrganizationMock();
+        $serviceMock = $this->prepareServiceMock();
+        $scheduleMock = $this->prepareScheduleMock($organizationMock);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+
+        $this->messageBusMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(fn($arg) => 
+                $arg instanceof EmailMessage &&
+                $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
+                $arg->getEmail() == $email && 
+                $arg->getTemplateParams() == $templateData
+            ))
+            ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
+
+        $this->service->sendReservationCancelledNotification($reservationMock);
     }
 
     private function prepareReservationVerificationTemplateParams(

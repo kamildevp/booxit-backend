@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Exception\UnexpectedValueException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -66,7 +67,7 @@ class EntityExistsValidator extends ConstraintValidator
         $relationIndx = 0;
         foreach($relations as $relation => $relatedId){
             if(is_null($relatedId)){
-                continue;
+                throw new InvalidArgumentException('Cannot resolve related to parameters');
             }
 
             $isCollection = $this->entityManager
@@ -99,7 +100,7 @@ class EntityExistsValidator extends ConstraintValidator
         $relationIndx = 0;
         foreach($commonRelations as $relatedThrough => [$commonRelationProperty, $relatedId, $relatedIdentifierField]){
             if(is_null($relatedId)){
-                continue;
+                throw new InvalidArgumentException('Cannot resolve common relations parameters');
             }
 
             $qbRelatedThroughIdentifier = "crt$relationIndx";

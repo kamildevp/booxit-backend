@@ -7,16 +7,20 @@ namespace App\Tests\Feature\UserReservation;
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
 use App\DataFixtures\Test\Reservation\ReservationFixtures;
+use App\DataFixtures\Test\UserReservation\UserReservationFixtures;
+use App\DataFixtures\Test\UserReservation\UserReservationSortingFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\Service\ServiceNormalizerGroup;
+use App\Repository\OrganizationRepository;
 use App\Repository\ReservationRepository;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 use App\Repository\UserRepository;
 use App\Tests\Feature\UserReservation\DataProvider\UserReservationAuthDataProvider;
 use App\Tests\Feature\UserReservation\DataProvider\UserReservationCreateDataProvider;
+use App\Tests\Feature\UserReservation\DataProvider\UserReservationListDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
@@ -32,6 +36,7 @@ class UserReservationControllerTest extends BaseWebTestCase
     protected ScheduleRepository $scheduleRepository;
     protected ReservationRepository $reservationRepository;
     protected UserRepository $userRepository;
+    protected OrganizationRepository $organizationRepository;
 
     protected function setUp(): void
     {
@@ -41,6 +46,7 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->scheduleRepository = $this->container->get(ScheduleRepository::class);
         $this->reservationRepository = $this->container->get(ReservationRepository::class);
         $this->userRepository = $this->container->get(UserRepository::class);
+        $this->organizationRepository = $this->container->get(OrganizationRepository::class);
     }
 
     #[Fixtures([AvailabilityFixtures::class])]
@@ -118,6 +124,75 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->client->loginUser($user, 'api');
         $responseData = $this->getFailureResponseData($this->client, 'GET', "/api/users/me/reservations/$reservationId", expectedCode: 404);
         $this->assertEquals('Reservation not found', $responseData['message']);
+    }
+
+    #[Fixtures([UserReservationFixtures::class])]
+    #[DataProviderExternal(UserReservationListDataProvider::class, 'listDataCases')]
+    public function testList(int $page, int $perPage, int $total): void
+    {
+        $path = '/api/users/me/reservations?' . http_build_query([
+            'page' => $page,
+            'per_page' => $perPage,
+        ]);
+        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->reservationRepository->findBy([], ['id' => 'ASC'], $perPage, $offset);
+        $formattedItems = $this->normalize($items, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
+
+        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
+    }
+
+    #[Fixtures([UserReservationSortingFixtures::class])]
+    #[DataProviderExternal(UserReservationListDataProvider::class, 'filtersDataCases')]
+    public function testListFilters(array $filters, array $expectedItemData): void
+    {
+        $mappedFilters = [];
+        foreach($filters as $paramName => $value){
+            $mappedFilters[$paramName] = match($paramName){
+                'organization_id' => [$this->organizationRepository->findOneBy(['name' => $value])->getId()],
+                'schedule_id' => [$this->scheduleRepository->findOneBy(['name' => $value])->getId()],
+                'service_id' => [$this->serviceRepository->findOneBy(['name' => $value])->getId()],
+                default => $value
+            };
+        }
+
+        $path = '/api/users/me/reservations?' . http_build_query(['filters' => $mappedFilters]);
+        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertCount(1, $responseData['items']);
+        $dotExpectedItemData = array_dot($expectedItemData);
+        $dotResponseItemData = array_dot($responseData['items'][0]);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+    }
+
+    #[Fixtures([UserReservationSortingFixtures::class])]
+    #[DataProviderExternal(UserReservationListDataProvider::class, 'sortingDataCases')]
+    public function testListSorting(string $sorting, array $orderedItems): void
+    {
+        $path = '/api/users/me/reservations?' . http_build_query(['order' => $sorting]);
+        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
+        foreach($orderedItems as $indx => $item){
+            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($item, $responseData['items'][$indx], array_keys($item));
+        }
+    }
+
+    #[Fixtures([UserReservationSortingFixtures::class])]
+    #[DataProviderExternal(UserReservationListDataProvider::class, 'validationDataCases')]
+    public function testListValidation(array $params, array $expectedErrors): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => 'user1@example.com']);
+        $this->client->loginUser($user, 'api');
+        $path = '/api/users/me/reservations?' . http_build_query($params);
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
     #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validationDataCases')]

@@ -4,14 +4,20 @@ namespace App\Controller;
 
 use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
+use App\Documentation\Response\PaginatorResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
 use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\UserReservation\UserReservationCreateDTO;
+use App\DTO\UserReservation\UserReservationListQueryDTO;
+use App\Entity\Organization;
 use App\Entity\Reservation;
+use App\Entity\Schedule;
+use App\Entity\Service;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Exceptions\EntityNotFoundException;
+use App\Repository\ReservationRepository;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\Attribute\RestrictedAccess;
@@ -22,6 +28,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('UserReservation')]
@@ -104,5 +111,39 @@ class UserReservationController extends AbstractController
         $responseData = $entitySerializer->normalize($reservation, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
 
         return new SuccessResponse($responseData);
+    }
+
+    #[OA\Get(
+        summary: 'List user reservations',
+        description: 'Retrieves a paginated list of user reservations.'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated reservations list', 
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::USER_RESERVATIONS
+    )]
+    #[ValidationErrorResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess]
+    #[Route('users/me/reservations', name: 'user_reservations_list', methods: ['GET'])]
+    public function list(
+        RouteGuardInterface $routeGuard,
+        ReservationRepository $reservationRepository, 
+        EntitySerializerInterface $entitySerializer, 
+        #[MapQueryString]UserReservationListQueryDTO $queryDTO = new UserReservationListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $reservationRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['reservedBy' => $routeGuard->getAuthorizedUserOrFail()],
+            [
+                'organization' => Organization::class,
+                'schedule' => Schedule::class,
+                'service' => Service::class
+            ]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ReservationNormalizerGroup::USER_RESERVATIONS->normalizationGroups());
+
+        return new SuccessResponse($result);
     }
 }

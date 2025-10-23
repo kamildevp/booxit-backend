@@ -5,6 +5,11 @@ namespace App\Entity;
 use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Repository\Filter\EntityFilter\DateTimeFieldValue;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\FieldInSet;
+use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ReservationRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -88,7 +93,7 @@ class Reservation
     #[ORM\JoinTable(name: 'reservation_email_confirmation')]
     #[ORM\JoinColumn(name: 'reservation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'email_confirmation_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
-    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class, inversedBy: 'reservations')]
+    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class)]
     private Collection $emailConfirmations;
 
     public function __construct()
@@ -291,6 +296,46 @@ class Reservation
         $this->emailConfirmations->removeElement($emailConfirmation);
 
         return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'organizationId' => new FieldInSet('organization'),
+            'scheduleId' => new FieldInSet('schedule'),
+            'serviceId' => new FieldInSet('service'),
+            'reference' => new FieldContains('reference'),
+            'email' => new FieldContains('email'),
+            'phoneNumber' => new FieldContains('phoneNumber'),
+            'verified' => new FieldValue('verified', '='),
+            'expiryDateFrom' => new DateTimeFieldValue('expiryDate', '>='),
+            'expiryDateTo' => new DateTimeFieldValue('expiryDate', '<='),
+            'estimatedPriceFrom' => new FieldValue('estimatedPrice', '>='),
+            'estimatedPriceTo' => new FieldValue('estimatedPrice', '<='),
+            'startDateTimeFrom' => new DateTimeFieldValue('startDateTime', '>='),
+            'startDateTimeTo' => new DateTimeFieldValue('startDateTime', '<='),
+            'endDateTimeFrom' => new DateTimeFieldValue('endDateTime', '>='),
+            'endDateTimeTo' => new DateTimeFieldValue('endDateTime', '<='),
+            'type' => new FieldInSet('type'),
+            'status' => new FieldInSet('status'),
+            'reservedById' => new FieldInSet('reservedBy'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'reference' => new BaseFieldOrder('reference'),
+            'email' => new BaseFieldOrder('email'),
+            'verified' => new BaseFieldOrder('verified'),
+            'expiry_date' => new BaseFieldOrder('expiryDate'),
+            'estimated_price' => new BaseFieldOrder('estimatedPrice'),
+            'start_date_time' => new BaseFieldOrder('startDateTime'),
+            'end_date_time' => new BaseFieldOrder('endDateTime'),
+            'type' => new BaseFieldOrder('type'),
+            'status' => new BaseFieldOrder('status'),
+        ]);
     }
 
 }

@@ -12,7 +12,10 @@ class UserReservationAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/user/me/reservations', 'POST'],
+            ['/api/users/me/reservations', 'POST'],
+            ['/api/users/me/reservations/{reservation}', 'GET'],
+            ['/api/users/me/reservations', 'GET'],
+            ['/api/users/me/reservations/{reservation}/cancel', 'POST'],
         ];
     }
 }

@@ -18,6 +18,7 @@ use App\Repository\ReservationRepository;
 use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 use App\Repository\UserRepository;
+use App\Tests\Feature\UserReservation\DataProvider\UserReservationNotFoundDataProvider;
 use App\Tests\Feature\UserReservation\DataProvider\UserReservationAuthDataProvider;
 use App\Tests\Feature\UserReservation\DataProvider\UserReservationCreateDataProvider;
 use App\Tests\Feature\UserReservation\DataProvider\UserReservationListDataProvider;
@@ -62,11 +63,19 @@ class UserReservationControllerTest extends BaseWebTestCase
         $expectedResponseData['organization'] = $this->normalizer->normalize($schedule->getOrganization(), context: ['groups' => OrganizationNormalizerGroup::BASE_INFO->normalizationGroups()]);
 
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/user/me/reservations', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/users/me/reservations', $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayHasKey('reference', $responseData);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
         $this->assertCount(1, $this->mailerTransport->getSent());
+    }
+
+    #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validationDataCases')]
+    public function testCreateValidation(array $params, array $expectedErrors): void
+    {
+        $this->client->loginUser($this->user, 'api');
+        $this->assertPathValidation($this->client, 'POST', '/api/users/me/reservations', $params, $expectedErrors);
+        $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
     #[Fixtures([ReservationFixtures::class])]
@@ -195,17 +204,20 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
-    #[DataProviderExternal(UserReservationCreateDataProvider::class, 'validationDataCases')]
-    public function testCreateValidation(array $params, array $expectedErrors): void
+    #[DataProviderExternal(UserReservationNotFoundDataProvider::class, 'dataCases')]
+    public function testNotFoundResponses(string $path, string $method): void
     {
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/user/me/reservations', $params, $expectedErrors);
-        $this->assertCount(0, $this->mailerTransport->getSent());
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
+        $this->assertEquals('Reservation not found', $responseData['message']);
     }
 
+    #[Fixtures([UserReservationFixtures::class])]
     #[DataProviderExternal(UserReservationAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
+        $reservationId = $this->reservationRepository->findOneBy([])->getId();
+        $path = str_replace('{reservation}', (string)$reservationId, $path);
         $this->assertPathIsProtected($path, $method);
     }
 }

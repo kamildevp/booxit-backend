@@ -51,7 +51,7 @@ class UserReservationController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]
-    #[Route('user/me/reservations', name: 'user_reservation_new', methods: ['POST'])]
+    #[Route('users/me/reservations', name: 'user_reservation_new', methods: ['POST'])]
     public function create(
         RouteGuardInterface $routeGuard,
         ReservationService $reservationService, 

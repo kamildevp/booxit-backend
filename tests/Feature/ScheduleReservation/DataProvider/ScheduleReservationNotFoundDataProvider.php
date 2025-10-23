@@ -23,6 +23,7 @@ class ScheduleReservationNotFoundDataProvider extends BaseDataProvider
             ['/api/schedules/{schedule}/reservations/1000', 'PATCH', 'Reservation not found'],
             ['/api/schedules/1000/reservations/1000', 'DELETE', 'Schedule not found'],
             ['/api/schedules/{schedule}/reservations/1000', 'DELETE', 'Reservation not found'],
+            ['/api/schedules/1000/reservations', 'GET', 'Schedule not found'],
         ];
     }
 }

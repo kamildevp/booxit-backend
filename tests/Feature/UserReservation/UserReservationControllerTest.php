@@ -6,7 +6,6 @@ namespace App\Tests\Feature\UserReservation;
 
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
-use App\DataFixtures\Test\Reservation\ReservationFixtures;
 use App\DataFixtures\Test\UserReservation\UserReservationFixtures;
 use App\DataFixtures\Test\UserReservation\UserReservationSortingFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
@@ -75,7 +74,7 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([UserReservationFixtures::class])]
     public function testCancel(): void
     {
         $reservation = $this->reservationRepository->findOneBy([]);
@@ -99,7 +98,7 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([UserReservationFixtures::class])]
     public function testCancelForReservationNotLinkedToUserAccount(): void
     {
         $reservationId = $this->reservationRepository->findOneBy(['reference' => 'ref1'])->getId();
@@ -109,7 +108,7 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertEquals('Reservation not found', $responseData['message']);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([UserReservationFixtures::class])]
     public function testGet(): void
     {
         $reservation = $this->reservationRepository->findOneBy([]);
@@ -122,7 +121,7 @@ class UserReservationControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([UserReservationFixtures::class])]
     public function testGetForReservationNotLinkedToUserAccount(): void
     {
         $reservationId = $this->reservationRepository->findOneBy(['reference' => 'ref1'])->getId();

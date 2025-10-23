@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DataFixtures\Test\Reservation;
+namespace App\DataFixtures\Test\ScheduleReservation;
 
 use App\DataFixtures\Test\Schedule\ScheduleServiceFixtures;
 use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
@@ -18,7 +18,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class ConfirmReservationConflictFixtures extends Fixture implements DependentFixtureInterface
+class ConfirmScheduleReservationConflictFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {

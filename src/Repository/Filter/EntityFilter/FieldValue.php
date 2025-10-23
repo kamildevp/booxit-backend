@@ -16,7 +16,7 @@ class FieldValue extends AbstractFieldFilter
 
     public function supports(mixed $value): bool
     {
-        return is_string($value) || is_numeric($value) || $value instanceof DateTimeInterface;
+        return is_string($value) || is_numeric($value) || is_bool($value) || $value instanceof DateTimeInterface;
     }
 
     public function apply(QueryBuilder $qb, mixed $value, string $filterId): void

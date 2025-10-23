@@ -7,9 +7,11 @@ namespace App\Tests\Feature\ScheduleReservation;
 use App\DataFixtures\Test\Availability\AvailabilityFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Reservation\CancelReservationConflictFixtures;
-use App\DataFixtures\Test\Reservation\ConfirmReservationConflictFixtures;
-use App\DataFixtures\Test\Reservation\ReservationFixtures;
+use App\DataFixtures\Test\ScheduleReservation\ConfirmScheduleReservationConflictFixtures;
+use App\DataFixtures\Test\ScheduleReservation\ScheduleReservationFixtures;
+use App\DataFixtures\Test\ScheduleReservation\ScheduleReservationSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
+use App\DataFixtures\Test\UserReservation\UserReservationSortingFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
@@ -23,6 +25,7 @@ use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationAuthDa
 use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationConfirmDataProvider;
 use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationCreateCustomDataProvider;
 use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationCreateDataProvider;
+use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationListDataProvider;
 use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationNotFoundDataProvider;
 use App\Tests\Feature\ScheduleReservation\DataProvider\ScheduleReservationPatchDataProvider;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -76,7 +79,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationCreateCustomDataProvider::class, 'validDataCases')]
     public function testCreateCustom(array $params, array $expectedResponseData): void
     {
@@ -96,7 +99,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationCreateCustomDataProvider::class, 'validationDataCases')]
     public function testCreateCustomValidation(array $params, array $expectedErrors): void
     {
@@ -106,7 +109,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'POST', "/api/schedules/$scheduleId/reservations/custom", $params, $expectedErrors);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     public function testCancel(): void
     {
         $reservation = $this->reservationRepository->findOneBy([]);
@@ -133,7 +136,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationConfirmDataProvider::class, 'validDataCases')]
     public function testConfirm(array $params): void
     {
@@ -147,7 +150,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(1, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationConfirmDataProvider::class, 'validationDataCases')]
     public function testConfirmValidation(array $params, array $expectedErrors): void
     {
@@ -159,7 +162,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ConfirmReservationConflictFixtures::class])]
+    #[Fixtures([ConfirmScheduleReservationConflictFixtures::class])]
     #[DataProviderExternal(ScheduleReservationConfirmDataProvider::class, 'validDataCases')]
     public function testConfirmConflict(array $params): void
     {
@@ -173,7 +176,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     public function testGet(): void
     {
         $reservation = $this->reservationRepository->findOneBy([]);
@@ -187,7 +190,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedResponseData, $responseData);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationPatchDataProvider::class, 'validDataCases')]
     public function testPatch(array $params, array $expectedResponseData, bool $emailSent): void
     {
@@ -211,7 +214,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount($emailSent ? 1 : 0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationPatchDataProvider::class, 'validationDataCases')]
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
@@ -224,7 +227,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertCount(0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     public function testDelete(): void
     {
         $reservation = $this->reservationRepository->findOneBy([]);
@@ -236,7 +239,79 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertEquals('Reservation has been removed', $responseData['message']);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
+    #[DataProviderExternal(ScheduleReservationListDataProvider::class, 'listDataCases')]
+    public function testList(int $page, int $perPage, int $total): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $path = "/api/schedules/$scheduleId/reservations?" . http_build_query([
+            'page' => $page,
+            'per_page' => $perPage,
+        ]);
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user2@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->reservationRepository->findBy([], ['id' => 'ASC'], $perPage, $offset);
+        $formattedItems = $this->normalize($items, ReservationNormalizerGroup::SCHEDULE_RESERVATIONS->normalizationGroups());
+
+        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
+    }
+
+    #[Fixtures([ScheduleReservationSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleReservationListDataProvider::class, 'filtersDataCases')]
+    public function testListFilters(array $filters, array $expectedItemData): void
+    {
+        $mappedFilters = [];
+        foreach($filters as $paramName => $value){
+            $mappedFilters[$paramName] = match($paramName){
+                'service_id' => [$this->serviceRepository->findOneBy(['name' => $value])->getId()],
+                'reserved_by_id' => [$this->userRepository->findOneBy(['name' => $value])->getId()],
+                default => $value
+            };
+        }
+
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $path = "/api/schedules/$scheduleId/reservations?" . http_build_query(['filters' => $mappedFilters]);
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user2@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertCount(1, $responseData['items']);
+        $dotExpectedItemData = array_dot($expectedItemData);
+        $dotResponseItemData = array_dot($responseData['items'][0]);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
+    }
+
+    #[Fixtures([ScheduleReservationSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleReservationListDataProvider::class, 'sortingDataCases')]
+    public function testListSorting(string $sorting, array $orderedItems): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $path = "/api/schedules/$scheduleId/reservations?" . http_build_query(['order' => $sorting]);
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user2@example.com']);
+        $this->client->loginUser($user, 'api');
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
+
+        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
+        foreach($orderedItems as $indx => $item){
+            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($item, $responseData['items'][$indx], array_keys($item));
+        }
+    }
+
+    #[Fixtures([ScheduleReservationSortingFixtures::class])]
+    #[DataProviderExternal(ScheduleReservationListDataProvider::class, 'validationDataCases')]
+    public function testListValidation(array $params, array $expectedErrors): void
+    {
+        $scheduleId = $this->scheduleRepository->findOneBy([])->getId();
+        $user = $this->userRepository->findOneBy(['email' => 'sa-user2@example.com']);
+        $this->client->loginUser($user, 'api');
+        $path = "/api/schedules/$scheduleId/reservations?" . http_build_query($params);
+        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
+    }
+
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
     {
@@ -247,7 +322,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertEquals($expectedMessage, $responseData['message']);
     }
 
-    #[Fixtures([ReservationFixtures::class])]
+    #[Fixtures([ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationAuthDataProvider::class, 'protectedPaths')]
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
@@ -259,7 +334,7 @@ class ScheduleReservationControllerTest extends BaseWebTestCase
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ReservationFixtures::class])]
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ScheduleReservationFixtures::class])]
     #[DataProviderExternal(ScheduleReservationAuthDataProvider::class, 'privilegesOnlyPaths')]
     public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail, array $parameters = []): void
     {

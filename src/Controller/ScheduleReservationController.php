@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
+use App\Documentation\Response\PaginatorResponseDoc;
 use App\Documentation\Response\ServerErrorResponseDoc;
 use App\Documentation\Response\SuccessResponseDoc;
 use App\Documentation\Response\UnauthorizedResponseDoc;
@@ -12,9 +13,12 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\ScheduleReservation\ScheduleReservationConfirmDTO;
 use App\DTO\ScheduleReservation\ScheduleReservationCreateCustomDTO;
 use App\DTO\ScheduleReservation\ScheduleReservationCreateDTO;
+use App\DTO\ScheduleReservation\ScheduleReservationListQueryDTO;
 use App\DTO\ScheduleReservation\ScheduleReservationPatchDTO;
 use App\Entity\Reservation;
 use App\Entity\Schedule;
+use App\Entity\Service;
+use App\Entity\User;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Repository\ReservationRepository;
 use App\Response\ResourceCreatedResponse;
@@ -29,6 +33,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('ScheduleReservation')]
@@ -214,5 +219,39 @@ class ScheduleReservationController extends AbstractController
         $reservationRepository->remove($reservation, true);
         
         return new SuccessResponse(['message' => 'Reservation has been removed']);
+    }
+
+    #[OA\Get(
+        summary: 'List schedule reservations',
+        description: 'Retrieves a paginated list of schedule reservations.
+        </br><br>**Important:** This endpoint can only be accessed by organization admin or reservation schedule assignee.'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated reservations list', 
+        dataModel: Reservation::class,
+        dataModelGroups: ReservationNormalizerGroup::SCHEDULE_RESERVATIONS
+    )]
+    #[ValidationErrorResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess]
+    #[Route('schedules/{schedule}/reservations', name: 'schedule_reservations_list', methods: ['GET'], requirements: ['schedule' => '\d+'])]
+    public function list(
+        Schedule $schedule,
+        ReservationRepository $reservationRepository, 
+        EntitySerializerInterface $entitySerializer, 
+        #[MapQueryString]ScheduleReservationListQueryDTO $queryDTO = new ScheduleReservationListQueryDTO,
+    ): SuccessResponse
+    {
+        $paginationResult = $reservationRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['schedule' => $schedule],
+            [
+                'service' => Service::class,
+                'reservedBy' => User::class,
+            ]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ReservationNormalizerGroup::SCHEDULE_RESERVATIONS->normalizationGroups());
+
+        return new SuccessResponse($result);
     }
 }

@@ -18,6 +18,7 @@ class ScheduleReservationAuthDataProvider extends BaseDataProvider
             ['/api/schedules/{schedule}/reservations/{reservation}', 'GET'],
             ['/api/schedules/{schedule}/reservations/{reservation}', 'PATCH'],
             ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE'],
+            ['/api/schedules/{schedule}/reservations', 'GET'],
         ];
     }
 
@@ -41,6 +42,8 @@ class ScheduleReservationAuthDataProvider extends BaseDataProvider
             ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE', 'user1@example.com'],
             ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE', 'om-user1@example.com'],
             ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE', 'sa-user2@example.com'],
+            ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE', 'user1@example.com'],
+            ['/api/schedules/{schedule}/reservations/{reservation}', 'DELETE', 'om-user1@example.com'],
         ];
     }
 }

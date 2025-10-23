@@ -245,32 +245,4 @@ class OrganizationController extends AbstractController
 
         return new SuccessResponse($result);
     }
-
-    #[OA\Get(
-        summary: 'List organization services',
-        description: 'Retrieves a paginated list of specified organization’s services'
-    )]
-    #[PaginatorResponseDoc(
-        description: 'Paginated list of services', 
-        dataModel: Schedule::class,
-        dataModelGroups: ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES
-    )]
-    #[NotFoundResponseDoc('Organization not found')]
-    #[ValidationErrorResponseDoc]
-    #[Route('organizations/{organization}/services', name: 'organization_service_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
-    public function listOrganizationServices(
-        Organization $organization,
-        EntitySerializerInterface $entitySerializer, 
-        ServiceRepository $serviceRepository, 
-        #[MapQueryString] ServiceListQueryDTO $queryDTO = new ServiceListQueryDTO,
-    ): SuccessResponse
-    {
-        $paginationResult = $serviceRepository->paginateRelatedTo(
-            $queryDTO, 
-            ['organization' => $organization]
-        );
-        $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
-
-        return new SuccessResponse($result);
-    }
 }

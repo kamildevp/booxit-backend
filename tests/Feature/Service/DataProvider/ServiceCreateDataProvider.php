@@ -25,9 +25,6 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'description' => 'test',
                     'duration' => 'P0Y0M0DT1H30M',
                     'estimated_price' => '15.5',
-                    'organization' => [
-                        'name' => OrganizationAdminFixtures::ORGANIZATION_NAME
-                    ]
                 ]
             ]
         ];

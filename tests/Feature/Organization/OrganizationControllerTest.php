@@ -294,63 +294,6 @@ class OrganizationControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
-    #[Fixtures([ServiceFixtures::class])]
-    #[DataProviderExternal(ServiceListDataProvider::class, 'listDataCases')]
-    public function testListOrganizationServices(int $page, int $perPage, int $total): void
-    {
-        $organization = $this->organizationRepository->findOneBy([]);
-        $organizationId = $organization->getId();
-        $path = "/api/organizations/$organizationId/services?" . http_build_query([
-            'page' => $page,
-            'per_page' => $perPage,
-        ]);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
-
-        $offset = ($page - 1) * $perPage;
-        $items = $this->serviceRepository->findBy(['organization' => $organization], ['id' => 'ASC'], $perPage, $offset);
-        $formattedItems = $this->normalize($items, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
-
-        $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
-    }
-
-    #[Fixtures([ServiceSortingFixtures::class])]
-    #[DataProviderExternal(ServiceListDataProvider::class, 'filtersDataCases')]
-    public function testListOrganizationServicesFilters(array $filters, array $expectedItemData): void
-    {
-        $organization = $this->organizationRepository->findOneBy([]);
-        $organizationId = $organization->getId();
-        $path = "/api/organizations/$organizationId/services?" . http_build_query(['filters' => $filters]);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
-
-        $this->assertCount(1, $responseData['items']);
-        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
-    }
-
-    #[Fixtures([ServiceSortingFixtures::class])]
-    #[DataProviderExternal(ServiceListDataProvider::class, 'sortingDataCases')]
-    public function testListOrganizationServicesSorting(string $sorting, array $orderedItems): void
-    {
-        $organization = $this->organizationRepository->findOneBy([]);
-        $organizationId = $organization->getId();
-        $path = "/api/organizations/$organizationId/services?" . http_build_query(['order' => $sorting]);
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
-
-        $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
-        foreach($orderedItems as $indx => $item){
-            $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($item, $responseData['items'][$indx], array_keys($item));
-        }
-    }
-
-    #[Fixtures([ServiceSortingFixtures::class])]
-    #[DataProviderExternal(ServiceListDataProvider::class, 'validationDataCases')]
-    public function testListOrganizationServicesValidation(array $params, array $expectedErrors): void
-    {
-        $organization = $this->organizationRepository->findOneBy([]);
-        $organizationId = $organization->getId();
-        $path = "/api/organizations/$organizationId/services?" . http_build_query($params);
-        $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
-    }
-
     #[DataProviderExternal(OrganizationNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method): void
     {

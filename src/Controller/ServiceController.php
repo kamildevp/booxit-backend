@@ -14,12 +14,13 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Service\ServiceCreateDTO;
 use App\DTO\Service\ServiceListQueryDTO;
 use App\DTO\Service\ServicePatchDTO;
+use App\Entity\Organization;
 use App\Entity\Service;
 use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\ServiceRepository;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
-use App\Service\Auth\AccessRule\ServiceManagementPrivilegesRule;
+use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('Service')]
@@ -46,15 +48,17 @@ class ServiceController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('services', name: 'service_new', methods: ['POST'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/services', name: 'service_new', methods: ['POST'], requirements: ['organization' => '\d+'])]
     public function create(
+        Organization $organization,
         #[MapRequestPayload] ServiceCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
         ServiceRepository $serviceRepository,   
     ): ResourceCreatedResponse
     {
         $service = $entitySerializer->parseToEntity($dto, Service::class);
+        $service->setOrganization($organization);
         $serviceRepository->save($service, true);
         $responseData = $entitySerializer->normalize($service, ServiceNormalizerGroup::PRIVATE->normalizationGroups());
         
@@ -71,10 +75,13 @@ class ServiceController extends AbstractController
         dataModelGroups: ServiceNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('Service not found')]
-    #[Route('services/{service}', name: 'service_get', methods: ['GET'], requirements: ['service' => '\d+'])]
-    public function get(Service $service, EntitySerializerInterface $entitySerializer): SuccessResponse
+    #[Route('organizations/{organization}/services/{service}', name: 'service_get', methods: ['GET'], requirements: ['organization' => '\d+', 'service' => '\d+'])]
+    public function get(
+        #[MapEntity(mapping: ['service' => 'id', 'organization' => 'organization'])]Service $service, 
+        EntitySerializerInterface $entitySerializer
+    ): SuccessResponse
     {
-        $responseData = $entitySerializer->normalize($service, ServiceNormalizerGroup::PUBLIC->normalizationGroups());
+        $responseData = $entitySerializer->normalize($service, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
 
         return new SuccessResponse($responseData);
     }
@@ -82,7 +89,7 @@ class ServiceController extends AbstractController
     #[OA\Patch(
         summary: 'Update service',
         description: 'Updates service data.
-        </br>**Important:** This action can only be performed by organization admin.'
+        </br>**Important:** This action can only be performed by organization administrator.'
     )]
     #[SuccessResponseDoc(
         description: 'Updated Service Data',
@@ -92,10 +99,10 @@ class ServiceController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('services/{service}', name: 'service_patch', methods: ['PATCH'], requirements: ['service' => '\d+'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/services/{service}', name: 'service_patch', methods: ['PATCH'], requirements: ['organization' => '\d+', 'service' => '\d+'])]
     public function patch(
-        Service $service, 
+        #[MapEntity(mapping: ['service' => 'id', 'organization' => 'organization'])]Service $service, 
         EntitySerializerInterface $entitySerializer, 
         ServiceRepository $serviceRepository,
         #[MapRequestPayload] ServicePatchDTO $dto,
@@ -111,15 +118,15 @@ class ServiceController extends AbstractController
     #[OA\Delete(
         summary: 'Delete service',
         description: 'Deletes the specified service.
-        </br>**Important:** This action can only be performed by organization admin.'
+        </br>**Important:** This action can only be performed by organization administrator.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Service removed successfully'])]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ServiceManagementPrivilegesRule::class)]
-    #[Route('services/{service}', name: 'service_delete', methods: ['DELETE'], requirements: ['service' => '\d+'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/services/{service}', name: 'service_delete', methods: ['DELETE'], requirements: ['organization' => '\d+','service' => '\d+'])]
     public function delete(        
-        Service $service, 
+        #[MapEntity(mapping: ['service' => 'id', 'organization' => 'organization'])]Service $service, 
         ServiceRepository $serviceRepository
     ): SuccessResponse
     {
@@ -130,23 +137,28 @@ class ServiceController extends AbstractController
 
     #[OA\Get(
         summary: 'List services',
-        description: 'Retrieves a paginated list of existing services with their public information.'
+        description: 'Retrieves a paginated list of services for specified organization'
     )]
     #[PaginatorResponseDoc(
-        description: 'Paginated users list', 
+        description: 'Paginated list of services', 
         dataModel: Service::class,
-        dataModelGroups: ServiceNormalizerGroup::PUBLIC
+        dataModelGroups: ServiceNormalizerGroup::ORGANIZATION_SERVICES
     )]
+    #[NotFoundResponseDoc('Organization not found')]
     #[ValidationErrorResponseDoc]
-    #[Route('services', name: 'service_list', methods: ['GET'])]
+    #[Route('organizations/{organization}/services', name: 'service_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
     public function list(
-        ServiceRepository $serviceRepository, 
+        Organization $organization,
         EntitySerializerInterface $entitySerializer, 
+        ServiceRepository $serviceRepository, 
         #[MapQueryString] ServiceListQueryDTO $queryDTO = new ServiceListQueryDTO,
     ): SuccessResponse
     {
-        $paginationResult = $serviceRepository->paginate($queryDTO);
-        $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::PUBLIC->normalizationGroups());
+        $paginationResult = $serviceRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['organization' => $organization]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ServiceNormalizerGroup::ORGANIZATION_SERVICES->normalizationGroups());
 
         return new SuccessResponse($result);
     }

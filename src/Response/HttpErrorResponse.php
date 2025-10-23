@@ -24,6 +24,7 @@ class HttpErrorResponse implements ExceptionResponseInterface
                 $requestParameterName = $camelCaseConverter->normalize($propertyPath);
                 $requestParameterName = str_replace(['[',']'], '.', $requestParameterName);
                 $requestParameterName = str_replace('..', '.', $requestParameterName);
+                $requestParameterName = trim($requestParameterName, '.');
                 $errors[$requestParameterName][] = $violation->getMessage();
             }
 

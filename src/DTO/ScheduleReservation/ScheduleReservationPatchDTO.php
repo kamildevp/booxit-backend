@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Reservation;
+namespace App\DTO\ScheduleReservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;
-use App\Entity\Schedule;
+use App\DTO\EmailConfirmation\Trait\VerificationHandlerFieldDTO;
 use App\Entity\Service;
 use App\Enum\Reservation\ReservationStatus;
 use App\Validator\Constraints as CustomAssert;
@@ -17,13 +17,12 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
-class ReservationCreateCustomDTO extends AbstractDTO 
+class ScheduleReservationPatchDTO extends AbstractDTO 
 {
+    use VerificationHandlerFieldDTO;
+
     public function __construct(
-        #[CustomAssert\EntityExists(Schedule::class, commonRelations: ['organization' => ['reservations', '{route:reservation}']])]
-        #[EntityReference(Schedule::class, 'schedule')]
-        public readonly int $scheduleId,
-        #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{body:schedule_id}'])]
+        #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{route:schedule}'])]
         #[EntityReference(Service::class, 'service')]
         public readonly int $serviceId,
         #[OA\Property(format: 'email')]
@@ -43,9 +42,11 @@ class ReservationCreateCustomDTO extends AbstractDTO
         public readonly string $endDateTime,
         #[Assert\Choice(callback: [ReservationStatus::class, 'values'], message: 'Parameter must be one of valid statuses: {{ choices }}')]
         public readonly string $status,
+        public readonly bool $notifyCustomer,
+        string $verificationHandler
     )
     {
-
+        $this->verificationHandler = $verificationHandler;
     }
 
     #[Assert\Callback]

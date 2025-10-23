@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Entity;
 
-use App\DTO\Reservation\ReservationConfirmDTO;
-use App\DTO\Reservation\ReservationCreateCustomDTO;
 use App\DTO\Reservation\ReservationCreateDTO;
-use App\DTO\Reservation\ReservationPatchDTO;
 use App\DTO\Reservation\ReservationUrlCancelDTO;
 use App\DTO\Reservation\ReservationVerifyDTO;
 use App\Entity\EmailConfirmation;
@@ -26,7 +23,6 @@ use App\Message\ReservationVerificationMessage;
 use App\Repository\EmailConfirmationRepository;
 use App\Repository\ReservationRepository;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
-use DateTime;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -45,32 +41,6 @@ class ReservationService
     )
     {
 
-    }
-
-    public function createReservation(ReservationCreateDTO $dto): Reservation
-    {
-        $reservation = $this->makeReservation($dto);
-        $this->validateReservationAvailability($reservation);
-        
-        $reservation->setExpiryDate(new DateTime(self::DEFAULT_RESERVATION_VERIFICATION_EXPIRY));
-        
-        $this->reservationRepository->save($reservation, true);
-        $this->sendReservationVerification($reservation, $dto->verificationHandler);
-
-        return $reservation;
-    }
-
-    public function createCustomReservation(ReservationCreateCustomDTO $dto): Reservation
-    {
-        $reservation = $this->entitySerializer->parseToEntity($dto, Reservation::class);
-        $reference = $this->generateReservationReference($reservation);
-        $reservation->setReference($reference);
-        $reservation->setOrganization($reservation->getSchedule()->getOrganization());
-        $reservation->setType(ReservationType::CUSTOM->value);
-        $reservation->setVerified(true);
-        $this->reservationRepository->save($reservation, true);
-
-        return $reservation;
     }
 
     public function verifyReservation(ReservationVerifyDTO $dto): bool
@@ -117,41 +87,6 @@ class ReservationService
         $this->sendReservationCancelledNotification($reservation);
 
         return true;
-    }
-
-    public function cancelReservation(Reservation $reservation): void
-    {
-        if(in_array($reservation->getStatus(), ReservationStatus::getCancelledStatuses())){
-            throw new ConflictException('Reservation has already been cancelled.');
-        }
-
-        $reservation->setStatus(ReservationStatus::ORGANIZATION_CANCELLED->value);
-        $this->reservationRepository->save($reservation, true);
-        $this->sendReservationCancelledNotification($reservation);
-    }
-
-    public function confirmReservation(Reservation $reservation, ReservationConfirmDTO $dto): void
-    {
-        if($reservation->getStatus() == ReservationStatus::CONFIRMED->value){
-            throw new ConflictException('Reservation has already been confirmed.');
-        }
-
-        $reservation->setStatus(ReservationStatus::CONFIRMED->value);
-        
-        $this->reservationRepository->save($reservation, true);
-        $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_CONFIRMATION);
-    }
-
-    public function patchReservation(Reservation $reservation, ReservationPatchDTO $dto): Reservation
-    {
-        $reservation = $this->entitySerializer->parseToEntity($dto, $reservation);
-
-        $this->reservationRepository->save($reservation, true);
-        if($dto->notifyCustomer){
-            $this->sendReservationNotification($reservation, $dto->verificationHandler, EmailType::RESERVATION_UPDATED_NOTIFICATION);
-        }
-        
-        return $reservation;
     }
 
     public function makeReservation(ReservationCreateDTO $dto): Reservation
@@ -298,7 +233,7 @@ class ReservationService
         return $emailConfirmation;
     }
 
-    private function generateReservationReference(Reservation $reservation): string
+    public function generateReservationReference(Reservation $reservation): string
     {
         $uuid = Uuid::uuid4()->toString();
         $date = $reservation->getStartDateTime()->format('Y-m-d');

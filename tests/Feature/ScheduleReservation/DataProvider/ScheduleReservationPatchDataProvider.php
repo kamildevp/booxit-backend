@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Reservation\DataProvider;
+namespace App\Tests\Feature\ScheduleReservation\DataProvider;
 
 use App\Enum\Reservation\ReservationStatus;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
 
-class ReservationPatchDataProvider extends BaseDataProvider 
+class ScheduleReservationPatchDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()

@@ -2,23 +2,22 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Reservation;
+namespace App\DTO\ScheduleReservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;
-use App\Entity\Schedule;
+use App\DTO\EmailConfirmation\Trait\VerificationHandlerFieldDTO;
 use App\Entity\Service;
 use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
 use OpenApi\Attributes as OA;
 
-class ReservationCreateDTO extends AbstractDTO 
+class ScheduleReservationCreateDTO extends AbstractDTO 
 {
+    use VerificationHandlerFieldDTO;
+
     public function __construct(
-        #[CustomAssert\EntityExists(Schedule::class)]
-        #[EntityReference(Schedule::class, 'schedule')]
-        public readonly int $scheduleId,
-        #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{body:schedule_id}'])]
+        #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{route:schedule}'])]
         #[EntityReference(Service::class, 'service')]
         public readonly int $serviceId,
         #[OA\Property(format: 'email')]
@@ -30,8 +29,9 @@ class ReservationCreateDTO extends AbstractDTO
         #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]
         public readonly string $startDateTime,
+        string $verificationHandler
     )
     {
-
+        $this->verificationHandler = $verificationHandler;
     }
 }

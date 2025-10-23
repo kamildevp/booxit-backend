@@ -14,7 +14,7 @@ use App\Exceptions\ConflictException;
 use App\Repository\ReservationRepository;
 use App\Service\Entity\ReservationService;
 use App\Service\Entity\UserReservationService;
-use App\Tests\Unit\Service\Entity\DataProvider\ReservationServiceDataProvider;
+use App\Tests\Unit\Service\Entity\DataProvider\UserReservationServiceDataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -55,7 +55,6 @@ class UserReservationServiceTest extends TestCase
                 $userEmail,
                 $dto->phoneNumber,
                 $dto->startDateTime,
-                $dto->verificationHandler
             ))
             ->willReturn($reservationMock);
 
@@ -97,7 +96,6 @@ class UserReservationServiceTest extends TestCase
                 $userEmail,
                 $dto->phoneNumber,
                 $dto->startDateTime,
-                $dto->verificationHandler
             ))
             ->willReturn($reservationMock);
 
@@ -136,7 +134,7 @@ class UserReservationServiceTest extends TestCase
         $this->service->cancelUserReservation($reservationMock, $userMock);
     }
 
-    #[DataProviderExternal(ReservationServiceDataProvider::class, 'cancelUserReservationExceptionDataCases')]
+    #[DataProviderExternal(UserReservationServiceDataProvider::class, 'cancelUserReservationExceptionDataCases')]
     public function testCancelUserReservationThrowsException(ReservationStatus $reservationStatus, bool $hasReservation, string $expectedException): void
     {
         $reservationMock = $this->createMock(Reservation::class);

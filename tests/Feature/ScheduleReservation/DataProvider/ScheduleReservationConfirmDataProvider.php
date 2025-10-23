@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Reservation\DataProvider;
+namespace App\Tests\Feature\ScheduleReservation\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
-class ReservationConfirmDataProvider extends BaseDataProvider 
+class ScheduleReservationConfirmDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()

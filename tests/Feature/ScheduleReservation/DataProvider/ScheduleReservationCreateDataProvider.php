@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Feature\Reservation\DataProvider;
+namespace App\Tests\Feature\ScheduleReservation\DataProvider;
 
 use App\Enum\Reservation\ReservationStatus;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
 
-class ReservationCreateDataProvider extends BaseDataProvider 
+class ScheduleReservationCreateDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()
@@ -42,7 +42,6 @@ class ReservationCreateDataProvider extends BaseDataProvider
         return [
             [
                 [
-                    'schedule_id' => 0,
                     'service_id' => 0,
                     'email' => '',
                     'phone_number' => '',
@@ -50,9 +49,6 @@ class ReservationCreateDataProvider extends BaseDataProvider
                     'verification_handler' => '',
                 ],
                 [
-                    'schedule_id' => [
-                        'Schedule does not exist',
-                    ],
                     'service_id' => [
                         'Service does not exist',
                     ],
@@ -72,7 +68,6 @@ class ReservationCreateDataProvider extends BaseDataProvider
             ],
             [
                 [
-                    'schedule_id' => 0,
                     'service_id' => 0,
                     'email' => 'a',
                     'phone_number' => 'a',
@@ -80,9 +75,6 @@ class ReservationCreateDataProvider extends BaseDataProvider
                     'verification_handler' => 'a',
                 ],
                 [
-                    'schedule_id' => [
-                        'Schedule does not exist',
-                    ],
                     'service_id' => [
                         'Service does not exist',
                     ],

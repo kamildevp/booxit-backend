@@ -25,13 +25,10 @@ use App\Tests\Feature\UserReservation\DataProvider\UserReservationListDataProvid
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
-use App\Tests\Utils\Trait\EmailConfirmationUtils;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 class UserReservationControllerTest extends BaseWebTestCase
 {
-    use EmailConfirmationUtils;
-
     protected InMemoryTransport $mailerTransport;
     protected ServiceRepository $serviceRepository;
     protected ScheduleRepository $scheduleRepository;

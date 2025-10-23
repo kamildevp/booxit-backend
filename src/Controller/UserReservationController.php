@@ -47,7 +47,7 @@ class UserReservationController extends AbstractController
         dataModel: Reservation::class,
         dataModelGroups: ReservationNormalizerGroup::USER_RESERVATIONS
     )]
-    #[ConflictResponseDoc('Reservation time slot in not available.')]
+    #[ConflictResponseDoc('Reservation time slot is not available.')]
     #[ValidationErrorResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess]

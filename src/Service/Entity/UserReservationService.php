@@ -34,7 +34,6 @@ class UserReservationService
             $user->getEmail(),
             $dto->phoneNumber,
             $dto->startDateTime,
-            $dto->verificationHandler
         ));
         $this->reservationService->validateReservationAvailability($reservation);
 

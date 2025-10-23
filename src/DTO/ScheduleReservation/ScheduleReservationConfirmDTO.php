@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Reservation;
+namespace App\DTO\ScheduleReservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\EmailConfirmation\Trait\VerificationHandlerFieldDTO;
 
-class ReservationConfirmDTO extends AbstractDTO 
+class ScheduleReservationConfirmDTO extends AbstractDTO 
 {
     use VerificationHandlerFieldDTO;
 

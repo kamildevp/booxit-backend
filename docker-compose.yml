@@ -92,3 +92,24 @@ services:
     networks:
       - default
 
+  php-scheduler-consumer:
+    build:
+      context: ./docker/php
+      target: app_consumer
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www
+      - ./docker/php/scheduler_consumer:/etc/supervisor/
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-rabbit}:${RABBITMQ_PASS:-pass}@rabbitmq:5672
+    entrypoint: ""
+    command: "supervisord"
+    depends_on: 
+      rabbitmq:
+        condition: service_healthy
+      php:
+        condition: service_healthy
+    networks:
+      - default
+

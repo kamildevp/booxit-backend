@@ -10,6 +10,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
+use DateTime;
 
 /**
  * @extends ServiceEntityRepository<RefreshToken>
@@ -62,6 +63,17 @@ class RefreshTokenRepository extends BaseRepository
             ->andWhere('rt.id NOT IN (:excluded_ids)')
             ->setParameter('user', $user)
             ->setParameter('excluded_ids', $excludedIds);
+
+        $qb->getQuery()->execute();
+    }
+
+    public function removeExpiredRefreshTokens(): void
+    {
+        $now = new DateTime();
+        $qb = $this->createQueryBuilder('rt')
+            ->delete()
+            ->where('rt.expiresAt < :now')
+            ->setParameter('now', $now);
 
         $qb->getQuery()->execute();
     }

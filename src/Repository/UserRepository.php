@@ -9,6 +9,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
+use DateTime;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -69,6 +70,23 @@ class UserRepository extends BaseRepository implements PasswordUpgraderInterface
             ->setParameter('id', $user->getId())
             ->getQuery()
             ->execute();
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+    }
+
+    public function removeExpiredUserAccounts(): void
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $now = new DateTime();
+        $this->createQueryBuilder('u')
+            ->delete()
+            ->where('u.expiryDate IS NOT NULL')
+            ->andWhere('u.expiryDate < :now')
+            ->andWhere('u.verified = :verified')
+            ->setParameter('now', $now)
+            ->setParameter('verified', false)
+            ->getQuery()
+            ->execute();
+        
         $this->getEntityManager()->getFilters()->enable('softdeleteable');
     }
 }

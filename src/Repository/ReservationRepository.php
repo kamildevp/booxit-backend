@@ -12,6 +12,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
+use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 
@@ -108,4 +109,17 @@ class ReservationRepository extends BaseRepository
         return $qb->getQuery()->getOneOrNullResult();
     }
 
+    public function removeExpiredReservations(): void
+    {
+        $now = new DateTime();
+        $qb = $this->createQueryBuilder('r')
+            ->delete()
+            ->where('r.expiryDate IS NOT NULL')
+            ->andWhere('r.expiryDate < :now')
+            ->andWhere('r.verified = :verified')
+            ->setParameter('now', $now)
+            ->setParameter('verified', false);
+
+        $qb->getQuery()->execute();
+    }
 }

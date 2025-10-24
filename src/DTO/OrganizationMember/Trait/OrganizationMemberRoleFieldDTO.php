@@ -9,11 +9,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 trait OrganizationMemberRoleFieldDTO
 {
-    #[Assert\Choice(callback: 'getAllowedRoles', message: 'Parameter must be one of valid roles: {{ choices }}')]
+    #[Assert\Choice(callback: [OrganizationRole::class, 'values'], message: 'Parameter must be one of valid roles: {{ choices }}')]
     public readonly string $role; 
-
-    public static function getAllowedRoles(): array
-    {
-        return OrganizationRole::values();
-    }
 }

@@ -31,14 +31,6 @@ class OrganizationNotFoundDataProvider extends BaseDataProvider
                 '/api/organizations/1000/banner',
                 'GET',
             ],
-            [
-                '/api/organizations/1000/schedules',
-                'GET',
-            ],
-            [
-                '/api/organizations/1000/services',
-                'GET',
-            ],
         ];
     }
 }

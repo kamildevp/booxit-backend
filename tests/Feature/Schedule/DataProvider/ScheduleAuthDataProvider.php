@@ -11,23 +11,21 @@ class ScheduleAuthDataProvider extends BaseDataProvider
     public static function protectedPaths()
     {
         return [
-            ['/api/schedules', 'POST'],
-            ['/api/schedules/{schedule}', 'PATCH'],
-            ['/api/schedules/{schedule}', 'DELETE'],
+            ['/api/organizations/{organization}/schedules', 'POST'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'PATCH'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'DELETE'],
         ];
     }
 
     public static function privilegesOnlyPaths()
     {
         return [
-            ['/api/schedules', 'POST', 'user1@example.com'],
-            ['/api/schedules', 'POST', 'user1@example.com', ['organization_id' => 0]],
-            ['/api/schedules', 'POST', 'user1@example.com', ['organization_id' => '{organization}']],
-            ['/api/schedules', 'POST', 'om-user1@example.com', ['organization_id' => '{organization}']],
-            ['/api/schedules/{schedule}', 'PATCH', 'user1@example.com'],
-            ['/api/schedules/{schedule}', 'DELETE', 'user1@example.com'],
-            ['/api/schedules/{schedule}', 'PATCH', 'om-user1@example.com'],
-            ['/api/schedules/{schedule}', 'DELETE', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/schedules', 'POST', 'user1@example.com'],
+            ['/api/organizations/{organization}/schedules', 'POST', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'PATCH', 'user1@example.com'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'PATCH', 'om-user1@example.com'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'DELETE', 'user1@example.com'],
+            ['/api/organizations/{organization}/schedules/{schedule}', 'DELETE', 'om-user1@example.com'],
         ];
     }
 }

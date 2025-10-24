@@ -14,12 +14,13 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Schedule\ScheduleCreateDTO;
 use App\DTO\Schedule\ScheduleListQueryDTO;
 use App\DTO\Schedule\SchedulePatchDTO;
+use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Repository\ScheduleRepository;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
-use App\Service\Auth\AccessRule\ScheduleManagementPrivilegesRule;
+use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[ServerErrorResponseDoc]
 #[OA\Tag('Schedule')]
@@ -46,15 +48,17 @@ class ScheduleController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedules', name: 'schedule_new', methods: ['POST'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/schedules', name: 'schedule_new', methods: ['POST'], requirements: ['organization' => '\d+'])]
     public function create(
+        Organization $organization,
         #[MapRequestPayload] ScheduleCreateDTO $dto,
         EntitySerializerInterface $entitySerializer,
         ScheduleRepository $scheduleRepository,   
     ): ResourceCreatedResponse
     {
         $schedule = $entitySerializer->parseToEntity($dto, Schedule::class);
+        $schedule->setOrganization($organization);
         $scheduleRepository->save($schedule, true);
         $responseData = $entitySerializer->normalize($schedule, ScheduleNormalizerGroup::PRIVATE->normalizationGroups());
         
@@ -71,10 +75,13 @@ class ScheduleController extends AbstractController
         dataModelGroups: ScheduleNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('Schedule not found')]
-    #[Route('schedules/{schedule}', name: 'schedule_get', methods: ['GET'], requirements: ['schedule' => '\d+'])]
-    public function get(Schedule $schedule, EntitySerializerInterface $entitySerializer): SuccessResponse
+    #[Route('organizations/{organization}/schedules/{schedule}', name: 'schedule_get', methods: ['GET'], requirements: ['organization' => '\d+', 'schedule' => '\d+'])]
+    public function get(
+        #[MapEntity(mapping:['schedule' => 'id', 'organization' => 'organization'])]Schedule $schedule, 
+        EntitySerializerInterface $entitySerializer
+    ): SuccessResponse
     {
-        $responseData = $entitySerializer->normalize($schedule, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
+        $responseData = $entitySerializer->normalize($schedule, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
 
         return new SuccessResponse($responseData);
     }
@@ -92,10 +99,10 @@ class ScheduleController extends AbstractController
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedules/{schedule}', name: 'schedule_patch', methods: ['PATCH'], requirements: ['schedule' => '\d+'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/schedules/{schedule}', name: 'schedule_patch', methods: ['PATCH'], requirements: ['organization' => '\d+', 'schedule' => '\d+'])]
     public function patch(
-        Schedule $schedule, 
+        #[MapEntity(mapping:['schedule' => 'id', 'organization' => 'organization'])]Schedule $schedule, 
         EntitySerializerInterface $entitySerializer, 
         ScheduleRepository $scheduleRepository,
         #[MapRequestPayload] SchedulePatchDTO $dto,
@@ -116,10 +123,10 @@ class ScheduleController extends AbstractController
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule removed successfully'])]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ScheduleManagementPrivilegesRule::class)]
-    #[Route('schedules/{schedule}', name: 'schedule_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+'])]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/schedules/{schedule}', name: 'schedule_delete', methods: ['DELETE'], requirements: ['organization' => '\d+', 'schedule' => '\d+'])]
     public function delete(        
-        Schedule $schedule, 
+        #[MapEntity(mapping:['schedule' => 'id', 'organization' => 'organization'])]Schedule $schedule, 
         ScheduleRepository $scheduleRepository
     ): SuccessResponse
     {
@@ -130,23 +137,28 @@ class ScheduleController extends AbstractController
 
     #[OA\Get(
         summary: 'List schedules',
-        description: 'Retrieves a paginated list of existing schedules with their public information.'
+        description: 'Retrieves a paginated list of schedules for specified organization'
     )]
     #[PaginatorResponseDoc(
-        description: 'Paginated users list', 
+        description: 'Paginated list of schedules', 
         dataModel: Schedule::class,
-        dataModelGroups: ScheduleNormalizerGroup::PUBLIC
+        dataModelGroups: ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES
     )]
+    #[NotFoundResponseDoc('Organization not found')]
     #[ValidationErrorResponseDoc]
-    #[Route('schedules', name: 'schedule_list', methods: ['GET'])]
+    #[Route('organizations/{organization}/schedules', name: 'schedule_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
     public function list(
-        ScheduleRepository $scheduleRepository, 
+        Organization $organization,
         EntitySerializerInterface $entitySerializer, 
+        ScheduleRepository $scheduleRepository, 
         #[MapQueryString] ScheduleListQueryDTO $queryDTO = new ScheduleListQueryDTO,
     ): SuccessResponse
     {
-        $paginationResult = $scheduleRepository->paginate($queryDTO);
-        $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
+        $paginationResult = $scheduleRepository->paginateRelatedTo(
+            $queryDTO, 
+            ['organization' => $organization]
+        );
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
 
         return new SuccessResponse($result);
     }

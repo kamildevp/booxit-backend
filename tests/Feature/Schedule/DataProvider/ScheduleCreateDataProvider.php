@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Schedule\DataProvider;
 
-use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class ScheduleCreateDataProvider extends BaseDataProvider 
@@ -21,9 +20,6 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test Schedule',
                     'description' => 'test',
-                    'organization' => [
-                        'name' => OrganizationAdminFixtures::ORGANIZATION_NAME
-                    ]
                 ]
             ]
         ];

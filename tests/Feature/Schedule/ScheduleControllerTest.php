@@ -9,15 +9,12 @@ use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
 use App\DataFixtures\Test\ScheduleService\ScheduleServiceFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleSortingFixtures;
-use App\DataFixtures\Test\ScheduleService\ScheduleServiceSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\Enum\BlameableColumns;
 use App\Enum\Schedule\ScheduleNormalizerGroup;
 use App\Enum\TimestampsColumns;
-use App\Repository\OrganizationMemberRepository;
 use App\Repository\OrganizationRepository;
 use App\Repository\ScheduleRepository;
-use App\Repository\ServiceRepository;
 use App\Repository\UserRepository;
 use App\Response\ForbiddenResponse;
 use App\Tests\Utils\Attribute\Fixtures;
@@ -34,8 +31,6 @@ class ScheduleControllerTest extends BaseWebTestCase
     protected ScheduleRepository $scheduleRepository;
     protected OrganizationRepository $organizationRepository;
     protected UserRepository $userRepository;
-    protected OrganizationMemberRepository $organizationMemberRepository;
-    protected ServiceRepository $serviceRepository;
 
     protected function setUp(): void
     {
@@ -43,8 +38,6 @@ class ScheduleControllerTest extends BaseWebTestCase
         $this->organizationRepository = $this->container->get(OrganizationRepository::class);
         $this->scheduleRepository = $this->container->get(ScheduleRepository::class);
         $this->userRepository = $this->container->get(UserRepository::class);
-        $this->organizationMemberRepository = $this->container->get(OrganizationMemberRepository::class);
-        $this->serviceRepository = $this->container->get(ServiceRepository::class);
     }
 
     #[Fixtures([OrganizationAdminFixtures::class])]
@@ -52,10 +45,8 @@ class ScheduleControllerTest extends BaseWebTestCase
     public function testCreate(array $params, array $expectedResponseData): void
     {
         $organizationId = $this->organizationRepository->findOneBy([])->getId();
-        $params['organization_id'] = $organizationId;
-        $expectedResponseData['organization']['id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/schedules', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', "/api/organizations/$organizationId/schedules", $params);
         $this->assertIsInt($responseData['id']);
         $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedResponseData, $responseData, array_keys($expectedResponseData));
     }
@@ -65,18 +56,18 @@ class ScheduleControllerTest extends BaseWebTestCase
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
         $organizationId = $this->organizationRepository->findOneBy([])->getId();
-        $params['organization_id'] = $organizationId;
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'POST', '/api/schedules', $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'POST', "/api/organizations/$organizationId/schedules", $params, $expectedErrors);
     }
 
     #[Fixtures([ScheduleFixtures::class])]
     public function testGet(): void
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
-        $expectedResponseData = $this->normalize($schedule, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
         $scheduleId = $schedule->getId();
-        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/schedules/$scheduleId");
+        $organizationId = $schedule->getOrganization()->getId();
+        $expectedResponseData = $this->normalize($schedule, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'GET', "/api/organizations/$organizationId/schedules/$scheduleId");
 
         $this->assertEquals($expectedResponseData, $responseData);
     }
@@ -86,10 +77,12 @@ class ScheduleControllerTest extends BaseWebTestCase
     public function testPatch(array $params, array $expectedFieldValues): void
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
+        $scheduleId = $schedule->getId();
+        $organizationId = $schedule->getOrganization()->getId();
         $normalizedSchedule = $this->normalize($schedule, ScheduleNormalizerGroup::PRIVATE->normalizationGroups());
         $expectedResponseData = array_merge($normalizedSchedule, $expectedFieldValues);
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', '/api/schedules/'.$schedule->getId(), $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'PATCH', "/api/organizations/$organizationId/schedules/$scheduleId", $params);
 
         $this->assertArrayIsEqualToArrayIgnoringListOfKeys($expectedResponseData, $responseData, [TimestampsColumns::UPDATED_AT->value, BlameableColumns::UPDATED_BY->value]);
     }
@@ -99,16 +92,20 @@ class ScheduleControllerTest extends BaseWebTestCase
     public function testPatchValidation(array $params, array $expectedErrors): void
     {
         $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
+        $scheduleId = $schedule->getId();
+        $organizationId = $schedule->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $this->assertPathValidation($this->client, 'PATCH', '/api/schedules/'.$schedule->getId(), $params, $expectedErrors);
+        $this->assertPathValidation($this->client, 'PATCH', "/api/organizations/$organizationId/schedules/$scheduleId", $params, $expectedErrors);
     }
 
     #[Fixtures([ScheduleFixtures::class])]
     public function testDelete(): void
     {
-        $schedule = $this->scheduleRepository->findOneBy(['name' => 'Test Schedule 1']);
+        $schedule = $this->scheduleRepository->findOneBy([]);
+        $scheduleId = $schedule->getId();
+        $organizationId = $schedule->getOrganization()->getId();
         $this->client->loginUser($this->user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', '/api/schedules/'.$schedule->getId());
+        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', "/api/organizations/$organizationId/schedules/$scheduleId");
 
         $this->assertEquals('Schedule removed successfully', $responseData['message']);
     }
@@ -117,7 +114,8 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'listDataCases')]
     public function testList(int $page, int $perPage, int $total): void
     {
-        $path = '/api/schedules?' . http_build_query([
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query([
             'page' => $page,
             'per_page' => $perPage,
         ]);
@@ -125,7 +123,7 @@ class ScheduleControllerTest extends BaseWebTestCase
 
         $offset = ($page - 1) * $perPage;
         $items = $this->scheduleRepository->findBy([], ['id' => 'ASC'], $perPage, $offset);
-        $formattedItems = $this->normalize($items, ScheduleNormalizerGroup::PUBLIC->normalizationGroups());
+        $formattedItems = $this->normalize($items, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
 
         $this->assertPaginatorResponse($responseData, $page, $perPage, $total, $formattedItems);
     }
@@ -134,7 +132,8 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'filtersDataCases')]
     public function testListFilters(array $filters, array $expectedItemData): void
     {
-        $path = '/api/schedules?' . http_build_query(['filters' => $filters]);
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query(['filters' => $filters]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
@@ -145,7 +144,8 @@ class ScheduleControllerTest extends BaseWebTestCase
     #[DataProviderExternal(ScheduleListDataProvider::class, 'sortingDataCases')]
     public function testListSorting(string $sorting, array $orderedItems): void
     {
-        $path = '/api/schedules?' . http_build_query(['order' => $sorting]);
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query(['order' => $sorting]);
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertGreaterThanOrEqual(count($orderedItems), count($responseData['items']));
@@ -154,19 +154,21 @@ class ScheduleControllerTest extends BaseWebTestCase
         }
     }
 
+    #[Fixtures([ScheduleFixtures::class])]
     #[DataProviderExternal(ScheduleListDataProvider::class, 'validationDataCases')]
     public function testListValidation(array $params, array $expectedErrors): void
     {
-        $path = '/api/schedules?' . http_build_query($params);
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $path = "/api/organizations/$organizationId/schedules?" . http_build_query($params);
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
-    #[Fixtures([ScheduleServiceSortingFixtures::class])]
+    #[Fixtures([ScheduleFixtures::class])]
     #[DataProviderExternal(ScheduleNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
     {
-        $schedule = $this->scheduleRepository->findOneBy([]);
-        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $path = str_replace('{organization}', (string)$organizationId, $path);
 
         $this->client->loginUser($this->user, 'api');
         $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 404);
@@ -178,27 +180,27 @@ class ScheduleControllerTest extends BaseWebTestCase
     public function testAuthRequirementForProtectedPaths(string $path, string $method): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]);
-        $service = $this->serviceRepository->findOneBy([]);
-        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
-        $path = str_replace('{service}', (string)($service->getId()), $path);
-
+        $scheduleId = $schedule->getId();
+        $organizationId = $schedule->getOrganization()->getId();
+        $path = str_replace('{organization}', (string)$organizationId, $path);
+        $path = str_replace('{schedule}', (string)$scheduleId, $path);
+        
         $this->assertPathIsProtected($path, $method);
     }
 
-    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ScheduleServiceFixtures::class])]
+    #[Fixtures([UserFixtures::class, OrganizationMemberFixtures::class, ScheduleFixtures::class])]
     #[DataProviderExternal(ScheduleAuthDataProvider::class, 'privilegesOnlyPaths')]
-    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail, array $parameters = []): void
+    public function testPrivilegesRequirementForProtectedPaths(string $path, string $method, string $userEmail): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]);
-        $service = $this->serviceRepository->findOneBy([]);
-        $path = str_replace('{schedule}', (string)($schedule->getId()), $path);
-        $path = str_replace('{service}', (string)($service->getId()), $path);
+        $scheduleId = $schedule->getId();
+        $organizationId = $schedule->getOrganization()->getId();
+        $path = str_replace('{organization}', (string)$organizationId, $path);
+        $path = str_replace('{schedule}', (string)$scheduleId, $path);
         $user = $this->userRepository->findOneBy(['email' => $userEmail]);
-        $organization = $schedule->getOrganization();
-        $parameters = array_map(fn($val) => $val == '{organization}' ? $organization->getId() : $val, $parameters);
 
         $this->client->loginUser($user, 'api');
-        $responseData = $this->getFailureResponseData($this->client, $method, $path, $parameters, expectedCode: 403);
+        $responseData = $this->getFailureResponseData($this->client, $method, $path, expectedCode: 403);
         $this->assertEquals(ForbiddenResponse::RESPONSE_MESSAGE, $responseData['message']);
     }
 }

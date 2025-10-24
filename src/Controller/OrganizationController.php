@@ -16,18 +16,11 @@ use App\Documentation\Response\ValidationErrorResponseDoc;
 use App\DTO\Organization\OrganizationCreateDTO;
 use App\DTO\Organization\OrganizationListQueryDTO;
 use App\DTO\Organization\OrganizationPatchDTO;
-use App\DTO\Schedule\ScheduleListQueryDTO;
-use App\DTO\Service\ServiceListQueryDTO;
 use App\Entity\Organization;
-use App\Entity\Schedule;
 use App\Enum\File\UploadType;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Organization\OrganizationRole;
-use App\Enum\Schedule\ScheduleNormalizerGroup;
-use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\OrganizationRepository;
-use App\Repository\ScheduleRepository;
-use App\Repository\ServiceRepository;
 use App\Response\NotFoundResponse;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
@@ -216,33 +209,5 @@ class OrganizationController extends AbstractController
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE);
 
         return $response;
-    }
-
-    #[OA\Get(
-        summary: 'List organization schedules',
-        description: 'Retrieves a paginated list of specified organization’s schedules'
-    )]
-    #[PaginatorResponseDoc(
-        description: 'Paginated list of schedules', 
-        dataModel: Schedule::class,
-        dataModelGroups: ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES
-    )]
-    #[NotFoundResponseDoc('Organization not found')]
-    #[ValidationErrorResponseDoc]
-    #[Route('organizations/{organization}/schedules', name: 'organization_schedule_list', methods: ['GET'], requirements: ['organization' => '\d+'])]
-    public function listOrganizationSchedules(
-        Organization $organization,
-        EntitySerializerInterface $entitySerializer, 
-        ScheduleRepository $scheduleRepository, 
-        #[MapQueryString] ScheduleListQueryDTO $queryDTO = new ScheduleListQueryDTO,
-    ): SuccessResponse
-    {
-        $paginationResult = $scheduleRepository->paginateRelatedTo(
-            $queryDTO, 
-            ['organization' => $organization]
-        );
-        $result = $entitySerializer->normalizePaginationResult($paginationResult, ScheduleNormalizerGroup::ORGANIZATION_SCHEDULES->normalizationGroups());
-
-        return new SuccessResponse($result);
     }
 }

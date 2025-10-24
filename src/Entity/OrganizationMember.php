@@ -34,7 +34,7 @@ class OrganizationMember
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $appUser = null;
 
-    #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class)]
+    #[ORM\OneToMany(mappedBy: 'organizationMember', targetEntity: ScheduleAssignment::class, cascade: ['remove'])]
     private Collection $scheduleAssignments;
 
     #[Groups([OrganizationMemberNormalizerGroup::BASE_INFO->value])]

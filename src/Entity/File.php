@@ -42,6 +42,7 @@ class File
     private ?string $type = null;
 
     #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
     private ?User $uploadedBy = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]

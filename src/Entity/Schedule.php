@@ -44,10 +44,10 @@ class Schedule
     #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules', fetch: 'EXTRA_LAZY')]
     private Collection $services;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: ScheduleAssignment::class, orphanRemoval: true, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: ScheduleAssignment::class, orphanRemoval: true, cascade: ['remove'])]
     private Collection $assignments;
 
-    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: Reservation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: Reservation::class, cascade: ['remove'])]
     private Collection $reservations;
 
     #[ORM\OneToMany(mappedBy: 'schedule', targetEntity: WeekdayTimeWindow::class, cascade: ['persist', 'remove'], orphanRemoval: true)]

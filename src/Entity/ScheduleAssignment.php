@@ -20,12 +20,12 @@ class ScheduleAssignment
 
     #[Groups([ScheduleAssignmentNormalizerGroup::SCHEDULE->value])]
     #[ORM\ManyToOne(inversedBy: 'assignments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Schedule $schedule = null;
 
     #[Groups([ScheduleAssignmentNormalizerGroup::ORGANIZATION_MEMBER->value])]
     #[ORM\ManyToOne(inversedBy: 'scheduleAssignments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?OrganizationMember $organizationMember = null;
 
     #[Groups([ScheduleAssignmentNormalizerGroup::BASE_INFO->value])]

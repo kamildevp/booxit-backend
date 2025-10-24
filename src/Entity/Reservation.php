@@ -50,7 +50,7 @@ class Reservation
 
     #[Groups([ReservationNormalizerGroup::SERVICE->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
-    #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Service $service = null;
 
     #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
@@ -93,7 +93,7 @@ class Reservation
     #[ORM\JoinTable(name: 'reservation_email_confirmation')]
     #[ORM\JoinColumn(name: 'reservation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'email_confirmation_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
-    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class)]
+    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class, cascade: ['remove'])]
     private Collection $emailConfirmations;
 
     public function __construct()

@@ -44,9 +44,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     private ?string $plainPassword = null;
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     private ?string $password = null;
 
@@ -54,7 +51,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [UserRole::REGULAR->value];
 
-    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class)]
+    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, cascade: ['remove'])]
     private Collection $emailConfirmations;
 
     #[Groups([UserNormalizerGroup::DETAILS->value])]
@@ -67,7 +64,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
-    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $refreshTokens;
 
     #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class, fetch: 'EXTRA_LAZY')]

@@ -15,7 +15,7 @@ class CustomTimeWindow
     private ?string $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'customTimeWindows')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Schedule $schedule = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]

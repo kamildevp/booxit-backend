@@ -37,18 +37,19 @@ class Organization
     private ?string $description = null;
 
     #[ORM\OneToOne(cascade: ['remove'])]
+    #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
     private ?File $bannerFile = null;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
     private Collection $members;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
     private Collection $services;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
     private Collection $schedules;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Reservation::class)]
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Reservation::class, cascade: ['remove'])]
     private Collection $reservations;
 
     public function __construct()

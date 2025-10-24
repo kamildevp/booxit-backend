@@ -17,7 +17,7 @@ class WeekdayTimeWindow
     private ?string $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'weekdayTimeWindows')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Schedule $schedule = null;
 
     #[ORM\Column(length: 255)]

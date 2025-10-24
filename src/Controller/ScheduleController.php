@@ -37,7 +37,7 @@ class ScheduleController extends AbstractController
     #[OA\Post(
         summary: 'Create a new schedule',
         description: 'Creates a new schedule for specified organization.
-        </br></br>**Important:** This action can only be performed by organization admin.'
+        </br></br>**Important:** This action can only be performed by organization administrator.'
     )]
     #[SuccessResponseDoc(
         statusCode: 201,
@@ -89,7 +89,7 @@ class ScheduleController extends AbstractController
     #[OA\Patch(
         summary: 'Update schedule',
         description: 'Updates schedule data.
-        </br>**Important:** This action can only be performed by organization admin.'
+        </br>**Important:** This action can only be performed by organization administrator.'
     )]
     #[SuccessResponseDoc(
         description: 'Updated Schedule Data',
@@ -118,7 +118,7 @@ class ScheduleController extends AbstractController
     #[OA\Delete(
         summary: 'Delete schedule',
         description: 'Deletes the specified schedule.
-        </br>**Important:** This action can only be performed by organization admin.'
+        </br>**Important:** This action can only be performed by organization administrator.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule removed successfully'])]
     #[ForbiddenResponseDoc]

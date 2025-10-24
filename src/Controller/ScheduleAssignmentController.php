@@ -115,7 +115,7 @@ class ScheduleAssignmentController extends AbstractController
         dataModelGroups: ScheduleAssignmentNormalizerGroup::PUBLIC
     )]
     #[NotFoundResponseDoc('ScheduleAssignment not found')]
-    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_get', methods: ['GET'], requirements: ['scheduleAssignment' => '\d+'])]
+    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_get', methods: ['GET'], requirements: ['schedule' => '\d+', 'scheduleAssignment' => '\d+'])]
     public function get(
         #[MapEntity(mapping:['schedule' => 'schedule', 'scheduleAssignment' => 'id'])] ScheduleAssignment $scheduleAssignment, 
         EntitySerializerInterface $entitySerializer
@@ -138,7 +138,7 @@ class ScheduleAssignmentController extends AbstractController
     )]
     #[NotFoundResponseDoc('ScheduleAssignment not found')]
     #[ValidationErrorResponseDoc]
-    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_patch', methods: ['PATCH'], requirements: ['scheduleAssignment' => '\d+'])]
+    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_patch', methods: ['PATCH'], requirements: ['schedule' => '\d+', 'scheduleAssignment' => '\d+'])]
     public function patch(
         #[MapEntity(mapping:['schedule' => 'schedule', 'scheduleAssignment' => 'id'])] ScheduleAssignment $scheduleAssignment,
         #[MapRequestPayload] ScheduleAssignmentPatchDTO $dto,
@@ -160,7 +160,7 @@ class ScheduleAssignmentController extends AbstractController
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule assignment removed successfully'])]
     #[NotFoundResponseDoc('ScheduleAssignment not found')]
-    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_remove', methods: ['DELETE'], requirements: ['scheduleAssignment' => '\d+'])]
+    #[Route('schedules/{schedule}/assignments/{scheduleAssignment}', name: 'schedule_assignment_remove', methods: ['DELETE'], requirements: ['schedule' => '\d+', 'scheduleAssignment' => '\d+'])]
     public function remove(
         #[MapEntity(mapping:['schedule' => 'schedule', 'scheduleAssignment' => 'id'])] ScheduleAssignment $scheduleAssignment,
         ScheduleAssignmentRepository $scheduleAssignmentRepository,

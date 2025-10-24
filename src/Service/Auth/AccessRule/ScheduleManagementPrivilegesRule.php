@@ -9,7 +9,6 @@ use App\Enum\Organization\OrganizationRole;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\UnauthorizedException;
 use App\Repository\OrganizationMemberRepository;
-use App\Repository\OrganizationRepository;
 use App\Repository\ScheduleRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -17,7 +16,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class ScheduleManagementPrivilegesRule implements AccessRuleInterface
 {
     public function __construct(
-        protected OrganizationRepository $organizationRepository,
         protected OrganizationMemberRepository $organizationMemberRepository,
         protected ScheduleRepository $scheduleRepository
     )
@@ -31,11 +29,8 @@ class ScheduleManagementPrivilegesRule implements AccessRuleInterface
             throw new UnauthorizedException;
         }
 
-        $requestContent = json_decode($request->getContent(), true) ?? [];
-        $organizationId = $requestContent['organization_id'] ?? null;
         $scheduleId = $request->attributes->get('schedule');
         $organization = !is_null($scheduleId) ? $this->scheduleRepository->findOrFail($scheduleId)->getOrganization() : null;
-        $organization = !$organization && is_int($organizationId) ? $this->organizationRepository->find($organizationId) : $organization;
 
         $actionMember = $organization ? $this->organizationMemberRepository->findOneBy([
             'organization' => $organization,

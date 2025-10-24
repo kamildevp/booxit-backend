@@ -9,7 +9,6 @@ use App\Enum\Organization\OrganizationRole;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\UnauthorizedException;
 use App\Repository\OrganizationMemberRepository;
-use App\Repository\OrganizationRepository;
 use App\Repository\ScheduleAssignmentRepository;
 use App\Repository\ScheduleRepository;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +17,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class ScheduleReadPrivilegesRule implements AccessRuleInterface
 {
     public function __construct(
-        protected OrganizationRepository $organizationRepository,
         protected OrganizationMemberRepository $organizationMemberRepository,
         protected ScheduleRepository $scheduleRepository,
         protected ScheduleAssignmentRepository $scheduleAssignmentRepository

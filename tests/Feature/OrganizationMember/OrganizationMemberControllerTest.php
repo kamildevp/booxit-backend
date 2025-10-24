@@ -48,7 +48,7 @@ class OrganizationMemberControllerTest extends BaseWebTestCase
 
     #[Fixtures([OrganizationFixtures::class, UserFixtures::class])]
     #[DataProviderExternal(OrganizationMemberCreateDataProvider::class, 'validDataCases')]
-    public function testAddMember(array $params, array $expectedResponseData): void
+    public function testCreateMember(array $params, array $expectedResponseData): void
     {
         $this->client->loginUser($this->user, 'api');
         $organization = $this->organizationRepository->findOneBy([]);

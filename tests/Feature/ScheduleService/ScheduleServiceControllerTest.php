@@ -22,10 +22,10 @@ use App\Response\ForbiddenResponse;
 use App\Tests\Utils\Attribute\Fixtures;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use App\Tests\Utils\BaseWebTestCase;
-use App\Tests\Feature\Schedule\DataProvider\ScheduleNotFoundDataProvider;
 use App\Tests\Feature\ScheduleService\DataProvider\ScheduleServiceAddDataProvider as DataProviderScheduleServiceAddDataProvider;
 use App\Tests\Feature\ScheduleService\DataProvider\ScheduleServiceAuthDataProvider;
 use App\Tests\Feature\ScheduleService\DataProvider\ScheduleServiceGetAvailabilityDataProvider;
+use App\Tests\Feature\ScheduleService\DataProvider\ScheduleServiceNotFoundDataProvider;
 use App\Tests\Feature\Service\DataProvider\ServiceListDataProvider;
 
 class ScheduleServiceControllerTest extends BaseWebTestCase
@@ -201,7 +201,7 @@ class ScheduleServiceControllerTest extends BaseWebTestCase
     }
 
     #[Fixtures([ScheduleServiceSortingFixtures::class])]
-    #[DataProviderExternal(ScheduleNotFoundDataProvider::class, 'dataCases')]
+    #[DataProviderExternal(ScheduleServiceNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void
     {
         $schedule = $this->scheduleRepository->findOneBy([]);

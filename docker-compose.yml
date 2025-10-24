@@ -1,13 +1,9 @@
-version: "3.8"
-
 networks:
   default: 
-    name: ${DEFAULT_NETWORK_NAME:-booxit-backend-network}
   web-server-network:
 
 services:
   php:
-    hostname: ${PHP_CONTAINER_HOSTNAME:-booxit-backend-php}
     build:
       context: ./docker/php
       target: app_base
@@ -17,18 +13,25 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/var/www
+      - /var/www/.git
     environment:
+      UID: ${UID:-1000}
       DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-booxit-rabbit}:${RABBITMQ_PASS:-pass}@${RABBIT_CONTAINER_HOSTNAME:-booxit-backend-rabbitmq}:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-rabbit}:${RABBITMQ_PASS:-pass}@rabbitmq:5672
+    healthcheck:
+      test: "cgi-fcgi -bind -connect localhost:9000 >/dev/null 2>&1 || exit 1"
+      interval: 10s
+      timeout: 3s
+      retries: 3
     networks:
       - default
       - web-server-network
 
   nginx:
-    hostname: ${NGINX_CONTAINER_HOSTNAME:-booxit-backend-nginx}
     image: nginx:1.29.1-alpine
     depends_on:
-      - php
+      php:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       - ./docker/nginx:/etc/nginx/conf.d
@@ -37,7 +40,6 @@ services:
       - web-server-network
 
   database:
-    hostname: ${DB_CONTAINER_HOSTNAME:-booxit-backend-db}
     image: postgres:${POSTGRES_VERSION:-15}-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
@@ -49,15 +51,15 @@ services:
       - default
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
       retries: 3
 
   rabbitmq:
-    hostname: ${RABBIT_CONTAINER_HOSTNAME:-booxit-backend-rabbitmq}
     image: rabbitmq:4.0.7-management
+    restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-booxit-rabbit}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-rabbit}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-pass}
     volumes:
       - ./docker/rabbitmq:/etc/rabbitmq
@@ -70,7 +72,6 @@ services:
       retries: 10
   
   php-queue-consumer:
-    hostname: ${PHP_QUEUE_CONSUMER_CONTAINER_HOSTNAME:-booxit-backend-php-queue-consumer}
     build:
       context: ./docker/php
       target: app_consumer
@@ -80,10 +81,13 @@ services:
       - ./docker/php/consumer:/etc/supervisor/
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-booxit-rabbit}:${RABBITMQ_PASS:-pass}@${RABBIT_CONTAINER_HOSTNAME:-booxit-backend-rabbitmq}:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-rabbit}:${RABBITMQ_PASS:-pass}@rabbitmq:5672
+    entrypoint: ""
     command: "supervisord"
     depends_on: 
       rabbitmq:
+        condition: service_healthy
+      php:
         condition: service_healthy
     networks:
       - default

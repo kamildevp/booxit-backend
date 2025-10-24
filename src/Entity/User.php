@@ -244,16 +244,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getOrganizations(): Collection
-    {
-        $organizations = new ArrayCollection([]);
-        foreach($this->organizationAssignments as $assignment){
-            $organizations->add($assignment->getOrganization());
-        }
-
-        return $organizations;
-    }
-
     public function getExpiryDate(): ?\DateTimeInterface
     {
         return $this->expiryDate;

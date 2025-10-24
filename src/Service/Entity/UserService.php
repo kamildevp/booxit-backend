@@ -21,12 +21,12 @@ use App\DTO\User\UserVerifyEmailDTO;
 use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Enum\EmailType;
 use App\Exceptions\ConflictException;
-use App\Exceptions\InvalidActionException;
 use App\Message\AccountActivationMessage;
 use App\Message\EmailConfirmationMessage;
 use App\Repository\OrganizationMemberRepository;
 use App\Service\EmailConfirmation\EmailConfirmationHandlerInterface;
 use DateTime;
+use InvalidArgumentException;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class UserService
@@ -111,7 +111,7 @@ class UserService
             !is_null($refreshToken) && 
             $refreshToken->getAppUser()->getId() != $user->getId()
         ){
-            throw new InvalidActionException('User does not match provided refresh token');
+            throw new InvalidArgumentException('User does not match provided refresh token');
         }
 
         $user->setPassword($this->passwordHasher->hashPassword($user, $password));

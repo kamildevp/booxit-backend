@@ -17,7 +17,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
-abstract class BaseRepository extends ServiceEntityRepository
+abstract class BaseRepository extends ServiceEntityRepository implements RepositoryUtilsInterface
 {
     const DEFAULT_ENTRIES_PER_PAGE = 20; 
     const MAX_ENTRIES_PER_PAGE = 100;
@@ -140,10 +140,13 @@ abstract class BaseRepository extends ServiceEntityRepository
 
         return $this->paginate($queryDTO, $joinRelations, $qb);
     }
-    
-    public function flush(): void
-    {
-        $this->getEntityManager()->flush();
-    }
 
+    public function findWithRelations(int $id, array $joinRelations = [])
+    {
+        $qb = $this->createQueryBuilder(self::QB_IDENTIFIER);
+        $this->joinRelations($qb, $joinRelations);
+        $qb->andWhere(self::QB_IDENTIFIER.'id = :eid')->setParameter('eid', $id);
+
+        return $qb->getQuery()->getResult();
+    }
 }

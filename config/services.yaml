@@ -6,7 +6,6 @@
 parameters:
     timezone: '%env(APP_TIMEZONE)%'
     storage_directory: '%kernel.project_dir%/%env(STORAGE_DIRECTORY)%'
-    organization_banner_directory: 'organization/banner'
     defaultRefreshTokenTTL: 259200
     
 services:
@@ -55,27 +54,6 @@ services:
         tags:
             - { name: nelmio_api_doc.swagger.processor, priority: -20 }
 
-    App\Service\SetterHelper\Task\:
-        resource: '../src/Service/SetterHelper/Task/'
-        public: true
-
-    App\Service\GetterHelper\CustomAccessRule\:
-        resource: '../src/Service/GetterHelper/CustomAccessRule/'
-        public: true
-
-    App\Service\GetterHelper\CustomFormat\:
-        resource: '../src/Service/GetterHelper/CustomFormat/'
-        public: true
-
-    App\Service\SetterHelper\SetterHelper:
-        shared: false
-
-    App\Service\GetterHelper\GetterHelper:
-        shared: false
-
-    App\Service\SetterHelper\SetterHelperInterface: '@App\Service\SetterHelper\SetterHelper'
-    App\Service\GetterHelper\GetterHelperInterface: '@App\Service\GetterHelper\GetterHelper'
-    App\Service\EntityHandler\EntityHandlerInterface: '@App\Service\EntityHandler\EntityHandler'
     App\Service\EntitySerializer\EntitySerializerInterface: '@App\Service\EntitySerializer\EntitySerializer'
     App\Service\EmailConfirmation\EmailConfirmationHandlerInterface: 
         class: 'App\Service\EmailConfirmation\EmailConfirmationHandler'

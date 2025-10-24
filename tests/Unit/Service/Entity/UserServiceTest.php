@@ -16,7 +16,6 @@ use App\Enum\EmailConfirmation\EmailConfirmationStatus;
 use App\Enum\EmailConfirmation\EmailConfirmationType;
 use App\Enum\EmailType;
 use App\Exceptions\ConflictException;
-use App\Exceptions\InvalidActionException;
 use App\Exceptions\VerifyEmailConfirmationException;
 use App\Message\AccountActivationMessage;
 use App\Message\EmailConfirmationMessage;
@@ -30,6 +29,7 @@ use App\Service\Entity\UserService;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use DateTime;
 use DateTimeInterface;
+use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
@@ -216,7 +216,7 @@ class UserServiceTest extends TestCase
         $refreshTokenMock = $this->createMock(RefreshToken::class);
         $refreshTokenMock->method('getAppUser')->willReturn($refreshTokenUserMock);
 
-        $this->expectException(InvalidActionException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $this->userService->changeUserPassword($userMock, 'new-pass', true, $refreshTokenMock);
     }

@@ -7,9 +7,7 @@ namespace App\EventSubscriber;
 use App\Exceptions\ConflictException;
 use App\Exceptions\EntityNotFoundException;
 use App\Exceptions\ForbiddenException;
-use App\Exceptions\InvalidRequestException;
 use App\Exceptions\MailingHelperException;
-use App\Exceptions\RequestValidationException;
 use App\Exceptions\UnauthorizedException;
 use App\Kernel;
 use App\Response\BadRequestResponse;
@@ -22,7 +20,6 @@ use App\Response\NotFoundResponse;
 use App\Response\ServerErrorResponse;
 use App\Response\UnauthorizedResponse;
 use App\Response\UnsupportedMediaTypeResponse;
-use App\Response\ValidationErrorResponse;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -38,9 +35,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
         'default' => ServerErrorResponse::class,
         UnauthorizedException::class => UnauthorizedResponse::class,
         ForbiddenException::class => ForbiddenResponse::class,
-        InvalidRequestException::class => BadRequestResponse::class,
         MailingHelperException::class => ServerErrorResponse::class,
-        RequestValidationException::class => ValidationErrorResponse::class,
         EntityNotFoundException::class => NotFoundResponse::class,
         NotFoundHttpException::class => NotFoundResponse::class,
         HttpException::class => HttpErrorResponse::class,

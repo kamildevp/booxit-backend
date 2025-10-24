@@ -42,39 +42,4 @@ class OrganizationRepository extends BaseRepository
             $this->getEntityManager()->flush();
         }
     }
-
-//    /**
-//     * @return Organization[] Returns an array of Organization objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('o.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Organization
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
-
-    public function findByPartialName(string $name, int $maxResults = 100){
-        $query = $this->createQueryBuilder('o')
-                    ->where('LOWER(o.name) LIKE LOWER(:name)')
-                    ->setParameter('name', '%' . $name . '%')
-                    ->setMaxResults($maxResults)
-                    ->getQuery();
-        
-        return $query->getResult();
-    }
 }

@@ -60,41 +60,6 @@ class UserRepository extends BaseRepository implements PasswordUpgraderInterface
         $this->save($user, true);
     }
 
-//    /**
-//     * @return User[] Returns an array of User objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?User
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
-
-    public function findByPartialIdentifier(string $identifier, int $maxResults = 100){
-        $query = $this->createQueryBuilder('u')
-                    ->where('LOWER(u.name) LIKE LOWER(:identifier) OR LOWER(u.email) LIKE LOWER(:identifier)')
-                    ->setParameter('identifier', '%' . $identifier . '%')
-                    ->setMaxResults($maxResults)
-                    ->getQuery();
-        
-        return $query->getResult();
-    }
-
     public function hardDelete(User $user): void
     {
         $this->getEntityManager()->getFilters()->disable('softdeleteable');

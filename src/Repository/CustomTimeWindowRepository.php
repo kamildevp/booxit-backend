@@ -21,31 +21,6 @@ class CustomTimeWindowRepository extends BaseRepository
         parent::__construct($registry, $filtersBuilder, $orderBuilder, CustomTimeWindow::class);
     }
 
-    //    /**
-    //     * @return CustomTimeWindow[] Returns an array of CustomTimeWindow objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('d.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?CustomTimeWindow
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
-
     public function save(CustomTimeWindow $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);

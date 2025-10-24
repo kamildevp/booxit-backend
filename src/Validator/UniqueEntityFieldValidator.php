@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Validator;
 
-use App\Repository\RepositoryUtilsInterface;
+use App\Repository\BaseRepository;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -46,10 +46,9 @@ class UniqueEntityFieldValidator extends ConstraintValidator
 
         
         $repository = $this->entityManager->getRepository($constraint->entityClass);
-        if(!$repository instanceof RepositoryUtilsInterface){
-            throw new InvalidArgumentException("Provided entity class repository must implement " . RepositoryUtilsInterface::class);
+        if(!$repository instanceof BaseRepository){
+            throw new InvalidArgumentException("Unsupported entity repository class");
         }
-
 
         $excludeBy = $this->mapExcludeByParams($constraint->ignore);
         $matchingEntity = $repository->findOneByFieldValue($constraint->fieldName, $value, $excludeBy);

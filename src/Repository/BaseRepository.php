@@ -17,6 +17,10 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @template T of object
+ * @template-extends ServiceEntityRepository<T>
+ */
 abstract class BaseRepository extends ServiceEntityRepository
 {
     const DEFAULT_ENTRIES_PER_PAGE = 20; 
@@ -34,7 +38,11 @@ abstract class BaseRepository extends ServiceEntityRepository
         parent::__construct($registry, $entityClass);
     }
 
-    public function findOrFail($id, $lockMode = null, $lockVersion = null): object
+    /**
+     * @return T
+     * @throws EntityNotFoundException
+     */
+    public function findOrFail($id, $lockMode = null, $lockVersion = null)
     {
         $entity = $this->find($id, $lockMode, $lockVersion);
         if(empty($entity)){
@@ -46,16 +54,16 @@ abstract class BaseRepository extends ServiceEntityRepository
 
     public function paginate(ListQueryDTOInterface $queryDTO, array $joinRelations = [], ?QueryBuilder $qb = null): PaginationResult
     {
-        $qb = $qb ?? $this->createQueryBuilder(self::QB_IDENTIFIER);
+        $qb = $qb ?? $this->createQueryBuilder(static::QB_IDENTIFIER);
         $relationMap = $this->joinRelations($qb, $joinRelations);
 
         if(isset($queryDTO->filters) && $queryDTO->filters instanceof FiltersDTOInterface){
-            $this->applyFilters($qb, $this->getEntityName(), $queryDTO->filters, self::QB_IDENTIFIER, $relationMap);
+            $this->applyFilters($qb, $this->getEntityName(), $queryDTO->filters, static::QB_IDENTIFIER, $relationMap);
         }
 
         $this->applyOrder($qb, $queryDTO, $relationMap);
         
-        $paginationBuilder = new PaginationBuilder(self::MAX_ENTRIES_PER_PAGE);
+        $paginationBuilder = new PaginationBuilder(static::MAX_ENTRIES_PER_PAGE);
         return $paginationBuilder->paginate($qb, $queryDTO);
     }
 
@@ -102,17 +110,17 @@ abstract class BaseRepository extends ServiceEntityRepository
 
     private function applyOrder(QueryBuilder $qb, OrderDTOInterface $orderDTO, array $relationMap): void
     {
-        $this->orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, self::DEFAULT_ORDER_MAP, $relationMap);
+        $this->orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, static::DEFAULT_ORDER_MAP, $relationMap);
     }
 
     public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [])
     {
-        $qb = $this->createQueryBuilder(self::QB_IDENTIFIER);
-        $qb->where(self::QB_IDENTIFIER.".$fieldName = :value")->setParameter('value', $value);
+        $qb = $this->createQueryBuilder(static::QB_IDENTIFIER);
+        $qb->where(static::QB_IDENTIFIER.".$fieldName = :value")->setParameter('value', $value);
 
         $loopIndx = 0;
         foreach($excludeBy as $column => $columnValue){
-            $qb->andWhere(self::QB_IDENTIFIER.".$column NOT IN (:exval$loopIndx)")->setParameter("exval$loopIndx", $columnValue);
+            $qb->andWhere(static::QB_IDENTIFIER.".$column NOT IN (:exval$loopIndx)")->setParameter("exval$loopIndx", $columnValue);
             $loopIndx++;
         }
 
@@ -121,20 +129,20 @@ abstract class BaseRepository extends ServiceEntityRepository
 
     public function paginateRelatedTo(ListQueryDTOInterface $queryDTO, array $relatedTo, array $joinRelations = []): PaginationResult
     {
-        $qb = $this->createQueryBuilder(self::QB_IDENTIFIER);
+        $qb = $this->createQueryBuilder(static::QB_IDENTIFIER);
         $relationIndx = 0;
         foreach($relatedTo as $relation => $relatedEntity){
             $isCollection = $this->getEntityManager()->getClassMetadata($this->getEntityName())->isCollectionValuedAssociation($relation);
             if($isCollection){
                 $qbIdentifier = "cr$relationIndx";
                 $qbParameter = "crp$relationIndx";
-                $qb->innerJoin(self::QB_IDENTIFIER.".$relation", $qbIdentifier)
+                $qb->innerJoin(static::QB_IDENTIFIER.".$relation", $qbIdentifier)
                     ->andWhere("$qbIdentifier = :$qbParameter")
                     ->setParameter($qbParameter, $relatedEntity);
                 $relationIndx++;
             }
             else{
-                $qb->andWhere(self::QB_IDENTIFIER.".$relation = :relatedTo")->setParameter('relatedTo', $relatedEntity);
+                $qb->andWhere(static::QB_IDENTIFIER.".$relation = :relatedTo")->setParameter('relatedTo', $relatedEntity);
             }
         }
 

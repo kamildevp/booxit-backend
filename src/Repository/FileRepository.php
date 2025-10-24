@@ -11,7 +11,7 @@ use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
 
 /**
- * @extends ServiceEntityRepository<File>
+ * @extends BaseRepository<File>
  */
 class FileRepository extends BaseRepository
 {

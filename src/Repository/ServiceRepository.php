@@ -11,7 +11,7 @@ use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
 
 /**
- * @extends ServiceEntityRepository<Service>
+ * @extends BaseRepository<Service>
  *
  * @method Service|null find($id, $lockMode = null, $lockVersion = null)
  * @method Service|null findOneBy(array $criteria, array $orderBy = null)

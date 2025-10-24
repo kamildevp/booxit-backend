@@ -13,7 +13,7 @@ use App\Repository\Order\OrderBuilder;
 use DateTime;
 
 /**
- * @extends ServiceEntityRepository<RefreshToken>
+ * @extends BaseRepository<RefreshToken>
  *
  * @method RefreshToken|null find($id, $lockMode = null, $lockVersion = null)
  * @method RefreshToken|null findOneBy(array $criteria, array $orderBy = null)

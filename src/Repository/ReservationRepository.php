@@ -17,7 +17,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 
 /**
- * @extends ServiceEntityRepository<Reservation>
+ * @extends BaseRepository<Reservation>
  *
  * @method Reservation|null find($id, $lockMode = null, $lockVersion = null)
  * @method Reservation|null findOneBy(array $criteria, array $orderBy = null)

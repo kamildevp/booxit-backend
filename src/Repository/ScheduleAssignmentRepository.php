@@ -11,7 +11,7 @@ use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
 
 /**
- * @extends ServiceEntityRepository<ScheduleAssignment>
+ * @extends BaseRepository<ScheduleAssignment>
  *
  * @method ScheduleAssignment|null find($id, $lockMode = null, $lockVersion = null)
  * @method ScheduleAssignment|null findOneBy(array $criteria, array $orderBy = null)

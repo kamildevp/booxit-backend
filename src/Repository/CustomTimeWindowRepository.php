@@ -14,7 +14,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<CustomTimeWindow>
+ * @extends BaseRepository<CustomTimeWindow>
  */
 class CustomTimeWindowRepository extends BaseRepository
 {

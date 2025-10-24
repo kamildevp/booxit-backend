@@ -14,7 +14,7 @@ use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
 
 /**
- * @extends ServiceEntityRepository<EmailConfirmation>
+ * @extends BaseRepository<EmailConfirmation>
  *
  * @method EmailConfirmation|null find($id, $lockMode = null, $lockVersion = null)
  * @method EmailConfirmation|null findOneBy(array $criteria, array $orderBy = null)

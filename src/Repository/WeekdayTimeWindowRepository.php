@@ -11,7 +11,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<WeekdayTimeWindow>
+ * @extends BaseRepository<WeekdayTimeWindow>
  */
 class WeekdayTimeWindowRepository extends BaseRepository
 {

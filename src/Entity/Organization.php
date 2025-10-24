@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Entity\Trait\Blameable;
@@ -87,21 +89,6 @@ class Organization
         $this->description = $description;
 
         return $this;
-    }
-
-    public function getMembersCount(): ?string
-    {
-        return $this->members->count();
-    }
-
-    public function getServicesCount(): ?string
-    {
-        return $this->services->count();
-    }
-
-    public function getSchedulesCount(): ?string
-    {
-        return $this->schedules->count();
     }
 
     /**

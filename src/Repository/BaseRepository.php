@@ -113,8 +113,12 @@ abstract class BaseRepository extends ServiceEntityRepository
         $this->orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, static::DEFAULT_ORDER_MAP, $relationMap);
     }
 
-    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [])
+    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [], bool $disableSoftDeletedFilter = false)
     {
+        if($disableSoftDeletedFilter){
+            $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        }
+        
         $qb = $this->createQueryBuilder(static::QB_IDENTIFIER);
         $qb->where(static::QB_IDENTIFIER.".$fieldName = :value")->setParameter('value', $value);
 
@@ -124,7 +128,13 @@ abstract class BaseRepository extends ServiceEntityRepository
             $loopIndx++;
         }
 
-        return $qb->getQuery()->getOneOrNullResult();
+        $result = $qb->getQuery()->getOneOrNullResult();
+
+        if(!$this->getEntityManager()->getFilters()->isEnabled('softdeleteable')){
+            $this->getEntityManager()->getFilters()->enable('softdeleteable');
+        }
+        
+        return $result;
     }
 
     public function paginateRelatedTo(ListQueryDTOInterface $queryDTO, array $relatedTo, array $joinRelations = []): PaginationResult

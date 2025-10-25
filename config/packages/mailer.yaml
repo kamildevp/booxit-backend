@@ -2,6 +2,6 @@ framework:
     mailer:
         dsn: '%env(MAILER_DSN)%'
         envelope:
-            sender: 'booxit@support.com'
+            sender: '%env(MAILER_SENDER)%'
         headers:
-            From: 'Booxit <booxit@support.com>'
+            From: '%env(MAILER_FROM)%'

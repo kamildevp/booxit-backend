@@ -5,8 +5,8 @@ imports:
 nelmio_api_doc:
     documentation:
         info:
-            title: My App
-            description: This is an awesome app!
+            title: Booxit
+            description: API Documentation
             version: 1.0.0
         security:
             - Bearer: []

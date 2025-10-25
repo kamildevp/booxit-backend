@@ -1,13 +1,52 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Account Activation</title>
-    </head>
-    <body>
-        <h1>Activate your account</h1>
-        <p>
-            <a href="{{ url }}">Click here to activate your account</a>
-            (this link is valid until {{ expiration_date|date('F jS') }})
-        </p>
-    </body>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Account Activation</title>
+</head>
+
+<body
+  style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f4f4f4; font-size: 1rem; border-radius: 1rem">
+  <div style="border-radius: 1rem;overflow: hidden">
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background-color: #6a0dad; color: #ffffff; padding: 1.25rem 0;">
+      <tr>
+        <td align="center">
+          <img src="{{ email.image('@images/logo.png') }}" alt="Logo" width="180" height="65" style="display:block;">
+        </td>
+      </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding: 2.5rem 1.25rem;">
+          <table cellpadding="0" cellspacing="0"
+            style="background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.3125rem rgba(0,0,0,0.1); padding: 2.5rem; max-width: 30rem">
+            <tr>
+              <td style="text-align: center;">
+                <h1 style="color: #333333;">Activate Your Account</h1>
+                <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
+                  Please activate your account by clicking the button below.<br>
+                  <strong style="font-size: 0.875rem;">
+                    (This link will expire on {{ expiration_date|date("F jS H:i") }})
+                  </strong>
+                </p>
+                <a href="{{ url }}"
+                  style="display: inline-block; margin-top: 1.25rem; padding: 0.75rem 1.5rem; background-color: #6a0dad; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 0.3125rem;">
+                  Activate Account
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 1.875rem; font-size: 0.75rem; color: #888888; text-align: center;">
+                If you did not sign up, you can safely ignore this email.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+
 </html>

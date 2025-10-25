@@ -487,7 +487,7 @@ class ReservationServiceTest extends TestCase
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
-            'duration' => $service->getDuration()->format('%h:%ih'),
+            'duration' => $service->getDuration()->format('%H:%I h'),
         ];
     }
 
@@ -506,7 +506,7 @@ class ReservationServiceTest extends TestCase
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
-            'duration' => $service->getDuration()->format('%h:%ih'),
+            'duration' => $service->getDuration()->format('%H:%I h'),
         ];
     }
 
@@ -523,7 +523,7 @@ class ReservationServiceTest extends TestCase
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
-            'duration' => $service->getDuration()->format('%h:%ih'),
+            'duration' => $service->getDuration()->format('%H:%I h'),
         ];
     }
 

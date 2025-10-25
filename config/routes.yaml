@@ -13,3 +13,10 @@ api_auth_login:
 api_auth_refresh:
     path: /api/auth/refresh
     methods: POST
+
+home_redirect:
+    path: /
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
+    defaults:
+        path: /api/doc
+        permanent: true

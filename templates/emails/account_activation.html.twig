@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Account Activation</title>
+  <title>{{ 'email.account_activation.subject'|trans }}</title>
 </head>
 
 <body
@@ -24,22 +24,22 @@
             style="background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.3125rem rgba(0,0,0,0.1); padding: 2.5rem; max-width: 30rem">
             <tr>
               <td style="text-align: center;">
-                <h1 style="color: #333333;">Activate Your Account</h1>
+                <h1 style="color: #333333;">{{ 'email.account_activation.heading'|trans }}</h1>
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
-                  Please activate your account by clicking the button below.<br>
-                  <strong style="font-size: 0.875rem;">
-                    (This link will expire on {{ expiration_date|date("F jS H:i") }})
-                  </strong>
+                  {{ 'email.account_activation.message'|trans }}<br>
+                  <p style="color: #555555; font-size: 0.875rem; line-height: 1.4; margin-top: 0.5rem;">
+                    {{ 'email.account_activation.auto_remove_warning'|trans({'%date%': expiration_date|date("d.m.Y H:i")}) }}
+                  </p>
                 </p>
                 <a href="{{ url }}"
                   style="display: inline-block; margin-top: 1.25rem; padding: 0.75rem 1.5rem; background-color: #6a0dad; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 0.3125rem;">
-                  Activate Account
+                  {{ 'email.account_activation.button'|trans }}
                 </a>
               </td>
             </tr>
             <tr>
               <td style="padding-top: 1.875rem; font-size: 0.75rem; color: #888888; text-align: center;">
-                If you did not sign up, you can safely ignore this email.
+                {{ 'email.account_activation.footer'|trans }}
               </td>
             </tr>
           </table>

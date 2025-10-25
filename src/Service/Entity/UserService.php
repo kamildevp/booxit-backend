@@ -72,7 +72,8 @@ class UserService
             [
                 'expiration_date' => $emailConfirmation->getExpiryDate(),
                 'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
-            ]
+            ],
+            $user->getLanguagePreference()
         ));
 
         return $user;
@@ -97,7 +98,8 @@ class UserService
                 [
                     'expiration_date' => $emailConfirmation->getExpiryDate(),
                     'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
-                ]
+                ],
+                $user->getLanguagePreference()
             ));
         }
 
@@ -174,7 +176,8 @@ class UserService
                 [
                     'expiration_date' => $emailConfirmation->getExpiryDate(),
                     'url' => $this->emailConfirmationHandler->generateSignedUrl($emailConfirmation)
-                ]
+                ],
+                $user->getLanguagePreference()
             ));
         }
     }

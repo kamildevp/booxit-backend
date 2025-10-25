@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\ScheduleReservation\DataProvider;
 
 use App\Enum\Reservation\ReservationStatus;
+use App\Enum\TranslationsLocale;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
@@ -24,6 +25,7 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     'phone_number' => '+48213721372',
                     'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => 'user@example.com',
@@ -32,6 +34,7 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
                     'estimated_price' => '20.50',
                     'status' => ReservationStatus::PENDING->value,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ]
             ]
         ];
@@ -47,6 +50,7 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     'phone_number' => '',
                     'start_date_time' => '',
                     'verification_handler' => '',
+                    'language_preference' => '',
                 ],
                 [
                     'service_id' => [
@@ -63,7 +67,10 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'This value should not be blank.'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -73,6 +80,7 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     'phone_number' => 'a',
                     'start_date_time' => 'a',
                     'verification_handler' => 'a',
+                    'language_preference' => 'a',
                 ],
                 [
                     'service_id' => [
@@ -89,7 +97,10 @@ class ScheduleReservationCreateDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'Invalid verification handler'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
         ];

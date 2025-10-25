@@ -165,10 +165,11 @@ class ReservationServiceTest extends TestCase
         $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
         $dto = new ReservationUrlCancelDTO(1, $startDateTime->getTimestamp(), 'type', 'token', 'signature');
         $email = 'user@example.com';
+        $languagePreference = 'en';
         $organizationMock = $this->prepareOrganizationMock();
         $serviceMock = $this->prepareServiceMock();
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
         $reservationMock->method('getStatus')->willReturn(ReservationStatus::CONFIRMED->value);
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
         $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
@@ -199,7 +200,8 @@ class ReservationServiceTest extends TestCase
                 $arg instanceof EmailMessage &&
                 $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
                 $arg->getEmail() == $email && 
-                $arg->getTemplateParams() == $templateData
+                $arg->getTemplateParams() == $templateData &&
+                $arg->getLocale() == $languagePreference
             ))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
@@ -330,13 +332,14 @@ class ReservationServiceTest extends TestCase
     {
         $email = 'user@example.com';
         $verificationHandler = 'test';
+        $languagePreference = 'en';
         $expiryDate = new DateTimeImmutable('+ 30 minutes');
         $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
         $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
         $organizationMock = $this->prepareOrganizationMock();
         $serviceMock = $this->prepareServiceMock();
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime, $expiryDate);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime, $languagePreference, $expiryDate);
         $verificationEmailConfirmationMock = $this->prepareEmailConfirmationMock(123, EmailConfirmationType::RESERVATION_VERIFICATION, $expiryDate);
         $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
         $templateData = $this->prepareReservationVerificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock, $expiryDate);
@@ -390,7 +393,8 @@ class ReservationServiceTest extends TestCase
                 $arg->getReservationId() == $reservationMock->getId() &&
                 $arg->getEmailType() == EmailType::RESERVATION_VERIFICATION->value && 
                 $arg->getEmail() == $email && 
-                $arg->getTemplateParams() == $templateData
+                $arg->getTemplateParams() == $templateData && 
+                $arg->getLocale() == $languagePreference
             ))
             ->willReturn(new Envelope($this->createMock(ReservationVerificationMessage::class)));
 
@@ -402,12 +406,13 @@ class ReservationServiceTest extends TestCase
         $emailType = EmailType::RESERVATION_UPDATED_NOTIFICATION;
         $email = 'user@example.com';
         $verificationHandler = 'test';
+        $languagePreference = 'en';
         $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
         $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
         $organizationMock = $this->prepareOrganizationMock();
         $serviceMock = $this->prepareServiceMock();
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
         $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
         $templateData = $this->prepareReservationNotificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
 
@@ -437,7 +442,8 @@ class ReservationServiceTest extends TestCase
                 $arg->getEmailConfirmationId() == $cancellationEmailConfirmationMock->getId() &&
                 $arg->getEmailType() == $emailType->value && 
                 $arg->getEmail() == $email && 
-                $arg->getTemplateParams() == $templateData
+                $arg->getTemplateParams() == $templateData && 
+                $arg->getLocale() == $languagePreference
             ))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
@@ -447,12 +453,13 @@ class ReservationServiceTest extends TestCase
     public function testSendReservationCancelledNotification()
     {
         $email = 'user@example.com';
+        $languagePreference = 'en';
         $startDateTime = new DateTimeImmutable('2025-10-20 10:00');
         $endDateTime = new DateTimeImmutable('2025-10-20 11:00');
         $organizationMock = $this->prepareOrganizationMock();
         $serviceMock = $this->prepareServiceMock();
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
-        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime);
+        $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
         $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
 
         $this->messageBusMock
@@ -462,7 +469,8 @@ class ReservationServiceTest extends TestCase
                 $arg instanceof EmailMessage &&
                 $arg->getEmailType() == EmailType::RESERVATION_CANCELLED_NOTIFICATION->value && 
                 $arg->getEmail() == $email && 
-                $arg->getTemplateParams() == $templateData
+                $arg->getTemplateParams() == $templateData &&
+                $arg->getLocale() == $languagePreference
             ))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
@@ -533,6 +541,7 @@ class ReservationServiceTest extends TestCase
         string $userEmail,
         DateTimeImmutable $startDateTime,
         DateTimeImmutable $endDateTime,
+        string $languagePreference = 'en',
         ?DateTimeInterface $expiryDate = null,
     ): Reservation&MockObject
     {
@@ -547,6 +556,7 @@ class ReservationServiceTest extends TestCase
         $reservationMock->method('getEmail')->willReturn($userEmail);
         $reservationMock->method('getEstimatedPrice')->willReturn($serviceMock->getEstimatedPrice());
         $reservationMock->method('getExpiryDate')->willReturn($expiryDate);
+        $reservationMock->method('getLanguagePreference')->willReturn($languagePreference);
 
         return $reservationMock;
     }

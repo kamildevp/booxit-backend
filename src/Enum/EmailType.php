@@ -22,14 +22,14 @@ enum EmailType: string
     public function getSubject(): string
     {
         return match($this){
-            self::ACCOUNT_ACTIVATION => 'Account activation',
-            self::EMAIL_VERIFICATION => 'Email Verification',
-            self::PASSWORD_RESET => 'Password Reset',
-            self::RESERVATION_VERIFICATION => 'Reservation Verification',
-            self::RESERVATION_SUMMARY => 'Reservation Summary',
-            self::RESERVATION_CONFIRMATION => 'Reservation Confirmation',
-            self::RESERVATION_UPDATED_NOTIFICATION => 'Reservation Updated',
-            self::RESERVATION_CANCELLED_NOTIFICATION => 'Reservation Cancelled',
+            self::ACCOUNT_ACTIVATION => 'account_activation.subject',
+            self::EMAIL_VERIFICATION => 'email_verification.subject',
+            self::PASSWORD_RESET => 'password_reset.subject',
+            self::RESERVATION_VERIFICATION => 'reservation_verification.subject',
+            self::RESERVATION_SUMMARY => 'reservation_summary.subject',
+            self::RESERVATION_CONFIRMATION => 'reservation_confirmed.subject',
+            self::RESERVATION_UPDATED_NOTIFICATION => 'reservation_updated.subject',
+            self::RESERVATION_CANCELLED_NOTIFICATION => 'reservation_cancelled.subject',
         };
     }
 

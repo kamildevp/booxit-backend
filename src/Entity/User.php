@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Entity\Trait\Timestampable;
+use App\Enum\TranslationsLocale;
 use App\Enum\User\UserNormalizerGroup;
 use App\Enum\User\UserRole;
 use App\Repository\Filter\EntityFilter\FieldContains;
@@ -69,6 +70,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class, fetch: 'EXTRA_LAZY')]
     private Collection $reservations;
+
+    #[Groups([UserNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private string $languagePreference = TranslationsLocale::EN->value;
 
     public function __construct()
     {
@@ -334,6 +339,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $reservation->setReservedBy(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLanguagePreference(): string
+    {
+        return $this->languagePreference;
+    }
+
+    public function setLanguagePreference(string $languagePreference): static
+    {
+        $this->languagePreference = $languagePreference;
 
         return $this;
     }

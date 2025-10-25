@@ -37,7 +37,8 @@ class ScheduleReservationService
             $dto->serviceId,
             $dto->email,
             $dto->phoneNumber,
-            $dto->startDateTime
+            $dto->startDateTime,
+            $dto->languagePreference,
         ));
         $this->reservationService->validateReservationAvailability($reservation);
         

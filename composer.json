@@ -38,10 +38,12 @@
         "symfony/scheduler": "6.4.*",
         "symfony/security-bundle": "6.4.*",
         "symfony/serializer": "6.4.*",
+        "symfony/translation": "6.4.*",
         "symfony/twig-bundle": "6.4.*",
         "symfony/validator": "6.4.*",
         "symfony/yaml": "6.4.*",
         "twig/extra-bundle": "^2.12|^3.0",
+        "twig/intl-extra": "^3.21",
         "twig/twig": "^2.12|^3.0"
     },
     "config": {

@@ -9,7 +9,8 @@ class EmailMessage
     public function __construct(
         protected string $emailType,
         protected string $email,
-        protected array $templateParams
+        protected array $templateParams,
+        protected string $locale = 'en'
     ) 
     {
 
@@ -28,5 +29,10 @@ class EmailMessage
     public function getTemplateParams(): array
     {
         return $this->templateParams;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
     }
 }

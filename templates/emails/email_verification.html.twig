@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Email Verification</title>
+  <title>{{ 'email.email_verification.subject'|trans }}</title>
 </head>
 
 <body
@@ -24,22 +24,22 @@
             style="background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.3125rem rgba(0,0,0,0.1); padding: 2.5rem; max-width: 30rem;">
             <tr>
               <td style="text-align: center;">
-                <h1 style="color: #333333;">Verify Your Email Address</h1>
+                <h1 style="color: #333333;">{{ 'email.email_verification.heading'|trans }}</h1>
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
-                  Please verify your email address by clicking the button below.<br>
+                  {{ 'email.email_verification.message'|trans }}<br>
                   <strong style="font-size: 0.875rem;">
-                    (This link is valid until {{ expiration_date|date('F jS H:i') }})
+                    {{ 'email.email_verification.expiration'|trans({'%date%': expiration_date|date("d.m.Y H:i")}) }}
                   </strong>
                 </p>
                 <a href="{{ url }}"
                   style="display: inline-block; margin-top: 1.25rem; padding: 0.75rem 1.5rem; background-color: #6a0dad; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 0.3125rem;">
-                  Verify Email
+                  {{ 'email.email_verification.button'|trans }}
                 </a>
               </td>
             </tr>
             <tr>
               <td style="padding-top: 1.875rem; font-size: 0.75rem; color: #888888; text-align: center;">
-                If you did not request this verification, you can safely ignore this email.
+                {{ 'email.email_verification.footer'|trans }}
               </td>
             </tr>
           </table>

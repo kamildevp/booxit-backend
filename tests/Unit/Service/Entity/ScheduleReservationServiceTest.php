@@ -49,7 +49,7 @@ class ScheduleReservationServiceTest extends TestCase
 
     public function testCreateScheduleReservationSuccess(): void
     {
-        $dto = new ScheduleReservationCreateDTO(2, 'user@example.com', '+48213721372', '2025-10-20T10:00+00:00', 'test');
+        $dto = new ScheduleReservationCreateDTO(2, 'user@example.com', '+48213721372', '2025-10-20T10:00+00:00', 'test', 'en');
         $scheduleId = 1;
         $scheduleMock = $this->createMock(Schedule::class);
         $scheduleMock->method('getId')->willReturn($scheduleId);
@@ -62,7 +62,8 @@ class ScheduleReservationServiceTest extends TestCase
                 $dto->serviceId,
                 $dto->email,
                 $dto->phoneNumber,
-                $dto->startDateTime
+                $dto->startDateTime,
+                $dto->languagePreference
             ))
             ->willReturn($reservationMock);
 
@@ -89,7 +90,7 @@ class ScheduleReservationServiceTest extends TestCase
 
     public function testCreateReservationThrowsConflictWhenUnavailableTimeSlot(): void
     {
-        $dto = new ScheduleReservationCreateDTO(2, 'user@example.com', '+48213721372', '2025-10-20T10:00+00:00', 'test');
+        $dto = new ScheduleReservationCreateDTO(2, 'user@example.com', '+48213721372', '2025-10-20T10:00+00:00', 'test', 'en');
         $scheduleId = 1;
         $scheduleMock = $this->createMock(Schedule::class);
         $scheduleMock->method('getId')->willReturn($scheduleId);
@@ -102,7 +103,8 @@ class ScheduleReservationServiceTest extends TestCase
                 $dto->serviceId,
                 $dto->email,
                 $dto->phoneNumber,
-                $dto->startDateTime
+                $dto->startDateTime,
+                $dto->languagePreference
             ))
             ->willReturn($reservationMock);
 
@@ -127,7 +129,7 @@ class ScheduleReservationServiceTest extends TestCase
 
     public function testCreateCustomReservation(): void
     {
-        $dto = new ScheduleReservationCreateCustomDTO(2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value);
+        $dto = new ScheduleReservationCreateCustomDTO(2, '+48213721372', 'user@example.com', '25.50', '2025-10-20T10:00+00:00', '2025-10-20T11:00+00:00', ReservationStatus::CONFIRMED->value, 'en');
         $ref = 'ref';
         $organizationMock = $this->createMock(Organization::class);
         $scheduleMock = $this->createMock(Schedule::class);

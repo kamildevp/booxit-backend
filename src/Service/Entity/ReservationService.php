@@ -146,7 +146,8 @@ class ReservationService
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),
                 'duration' => $reservation->getService()->getDuration()->format('%H:%I h'),
-            ]
+            ],
+            $reservation->getLanguagePreference(),
         ));
     }
 
@@ -168,7 +169,8 @@ class ReservationService
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),
                 'duration' => $reservation->getService()->getDuration()->format('%H:%I h'),
-            ]
+            ],
+            $reservation->getLanguagePreference(),
         ));
     }
 
@@ -184,7 +186,8 @@ class ReservationService
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),
                 'duration' => $reservation->getService()->getDuration()->format('%H:%I h'),
-            ]
+            ],
+            $reservation->getLanguagePreference(),
         ));
     }
 

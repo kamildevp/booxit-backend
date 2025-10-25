@@ -79,10 +79,11 @@ class UserServiceTest extends TestCase
 
     public function testCreateUser(): void
     {
-        $dto = new UserCreateDTO('test', 'test@example.com', 'handler', 'pass');
+        $dto = new UserCreateDTO('test', 'test@example.com', 'handler', 'pass', 'en');
         $userId = 1;
         $userMock = $this->createMock(User::class);
         $userMock->method('getId')->willReturn($userId);
+        $userMock->method('getLanguagePreference')->willReturn($dto->languagePreference);
         $hashedPasswordMock = 'hashed-pass';
         $signedUrl = 'url';
         $emailConfirmationId = 1;
@@ -127,7 +128,8 @@ class UserServiceTest extends TestCase
                     $arg->getUserId() == $userId &&
                     $arg->getEmailType() == EmailType::ACCOUNT_ACTIVATION->value &&
                     $arg->getEmail() == $dto->email &&
-                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate] &&
+                    $arg->getLocale() == $dto->languagePreference;
             }))
             ->willReturn(new Envelope($this->createMock(AccountActivationMessage::class)));
 
@@ -138,7 +140,7 @@ class UserServiceTest extends TestCase
 
     public function testPatchUser(): void
     {
-        $dto = new UserPatchDTO('new test', 'user@example.com', 'handler');
+        $dto = new UserPatchDTO('new test', 'user@example.com', 'handler', 'en');
         $userMock = $this->createMock(User::class);
 
         $userMock->method('getEmail')->willReturn('user@example.com');
@@ -163,9 +165,10 @@ class UserServiceTest extends TestCase
 
     public function testPatchUserTriggersEmailConfirmationIfChanged(): void
     {
-        $dto = new UserPatchDTO('test', 'new@example.com', 'handler');
+        $dto = new UserPatchDTO('test', 'new@example.com', 'handler', 'en');
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn('old@example.com');
+        $userMock->method('getLanguagePreference')->willReturn($dto->languagePreference);
         $signedUrl = 'url';
         $emailConfirmationId = 1;
         $expiryDate = new DateTime();
@@ -199,7 +202,8 @@ class UserServiceTest extends TestCase
                     $arg->getEmailConfirmationId() == $emailConfirmationId &&
                     $arg->getEmailType() == EmailType::EMAIL_VERIFICATION->value &&
                     $arg->getEmail() == $dto->email &&
-                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate] &&
+                    $arg->getLocale() == $dto->languagePreference;
             }))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 
@@ -300,6 +304,7 @@ class UserServiceTest extends TestCase
         $dto = new UserResetPasswordRequestDTO('reset@example.com', 'handler');
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn($dto->email);
+        $userMock->method('getLanguagePreference')->willReturn('en');
         $signedUrl = 'url';
         $emailConfirmationId = 1;
         $expiryDate = new DateTime();
@@ -332,7 +337,8 @@ class UserServiceTest extends TestCase
                     $arg->getEmailConfirmationId() == $emailConfirmationId &&
                     $arg->getEmailType() == EmailType::PASSWORD_RESET->value &&
                     $arg->getEmail() == $dto->email &&
-                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate];
+                    $arg->getTemplateParams() == ['url' => $signedUrl, 'expiration_date' => $expiryDate] && 
+                    $arg->getLocale() == 'en';
             }))
             ->willReturn(new Envelope($this->createMock(EmailConfirmationMessage::class)));
 

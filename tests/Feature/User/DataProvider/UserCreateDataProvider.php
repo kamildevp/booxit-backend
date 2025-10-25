@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\User\DataProvider;
 
+use App\Enum\TranslationsLocale;
 use App\Enum\User\UserRole;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
@@ -19,12 +20,14 @@ class UserCreateDataProvider extends BaseDataProvider
                     'email' => 'user@example.com',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'name' => 'Test User',
                     'email' => 'user@example.com',
                     'verified' => false,
                     'roles' => [UserRole::REGULAR->value, 'ROLE_USER'],
+                    'language_preference' => TranslationsLocale::EN->value,
                 ]
             ]
         ];
@@ -39,6 +42,7 @@ class UserCreateDataProvider extends BaseDataProvider
                     'email' => '',
                     'password' => '',
                     'verification_handler' => '',
+                    'language_preference' => '',
                 ],
                 [
                     'name' => [
@@ -52,7 +56,10 @@ class UserCreateDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'This value should not be blank.'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -61,6 +68,7 @@ class UserCreateDataProvider extends BaseDataProvider
                     'email' => 'user',
                     'password' => 'pass',
                     'verification_handler' => 'invalid',
+                    'language_preference' => 'a',
                 ],
                 [
                     'email' => [
@@ -71,7 +79,10 @@ class UserCreateDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'Invalid verification handler'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -80,6 +91,7 @@ class UserCreateDataProvider extends BaseDataProvider
                     'email' => 'user@example.com',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'name' => [
@@ -93,6 +105,7 @@ class UserCreateDataProvider extends BaseDataProvider
                     'email' => 'user1@example.com',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => [

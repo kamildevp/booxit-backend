@@ -12,10 +12,11 @@ class ReservationVerificationMessage extends EmailMessage
         private int $reservationId,
         string $emailType,
         string $email,
-        array $templateParams
+        array $templateParams,
+        string $locale = 'en',
     ) 
     {
-        parent::__construct($emailType, $email, $templateParams);
+        parent::__construct($emailType, $email, $templateParams, $locale);
     }
 
     public function getVerificationEmailConfirmationId(): int

@@ -34,6 +34,7 @@ class UserReservationService
             $user->getEmail(),
             $dto->phoneNumber,
             $dto->startDateTime,
+            $user->getLanguagePreference(),
         ));
         $this->reservationService->validateReservationAvailability($reservation);
 

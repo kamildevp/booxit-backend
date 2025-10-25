@@ -6,6 +6,7 @@ namespace App\DTO\ScheduleReservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;
+use App\DTO\Trait\LanguagePreferenceFieldDTO;
 use App\Entity\Service;
 use App\Enum\Reservation\ReservationStatus;
 use App\Validator\Constraints as CustomAssert;
@@ -18,6 +19,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class ScheduleReservationCreateCustomDTO extends AbstractDTO 
 {
+    use LanguagePreferenceFieldDTO;
+
     public function __construct(
         #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{route:schedule}'])]
         #[EntityReference(Service::class, 'service')]
@@ -39,9 +42,10 @@ class ScheduleReservationCreateCustomDTO extends AbstractDTO
         public readonly string $endDateTime,
         #[Assert\Choice(callback: [ReservationStatus::class, 'values'], message: 'Parameter must be one of valid statuses: {{ choices }}')]
         public readonly string $status,
+        string $languagePreference,
     )
     {
-
+        $this->languagePreference = $languagePreference;
     }
 
     #[Assert\Callback]

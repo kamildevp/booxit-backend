@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Enum\TranslationsLocale;
 use App\Repository\Filter\EntityFilter\DateTimeFieldValue;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Filter\EntityFilter\FieldInSet;
@@ -97,6 +98,10 @@ class Reservation
     #[ORM\InverseJoinColumn(name: 'email_confirmation_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
     #[ORM\ManyToMany(targetEntity: EmailConfirmation::class, cascade: ['remove'])]
     private Collection $emailConfirmations;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private string $languagePreference = TranslationsLocale::EN->value;
 
     public function __construct()
     {
@@ -338,6 +343,18 @@ class Reservation
             'type' => new BaseFieldOrder('type'),
             'status' => new BaseFieldOrder('status'),
         ]);
+    }
+
+    public function getLanguagePreference(): string
+    {
+        return $this->languagePreference;
+    }
+
+    public function setLanguagePreference(string $languagePreference): static
+    {
+        $this->languagePreference = $languagePreference;
+
+        return $this;
     }
 
 }

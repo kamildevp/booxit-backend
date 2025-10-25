@@ -7,6 +7,7 @@ namespace App\DTO\ScheduleReservation;
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;
 use App\DTO\EmailConfirmation\Trait\VerificationHandlerFieldDTO;
+use App\DTO\Trait\LanguagePreferenceFieldDTO;
 use App\Entity\Service;
 use App\Validator\Constraints as CustomAssert;
 use App\Validator\Constraints\Compound as Compound;
@@ -14,7 +15,7 @@ use OpenApi\Attributes as OA;
 
 class ScheduleReservationCreateDTO extends AbstractDTO 
 {
-    use VerificationHandlerFieldDTO;
+    use VerificationHandlerFieldDTO, LanguagePreferenceFieldDTO;
 
     public function __construct(
         #[CustomAssert\EntityExists(Service::class, relatedTo: ['schedules' => '{route:schedule}'])]
@@ -29,9 +30,11 @@ class ScheduleReservationCreateDTO extends AbstractDTO
         #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]
         public readonly string $startDateTime,
-        string $verificationHandler
+        string $verificationHandler,
+        string $languagePreference,
     )
     {
         $this->verificationHandler = $verificationHandler;
+        $this->languagePreference = $languagePreference;
     }
 }

@@ -10,10 +10,11 @@ class EmailConfirmationMessage extends EmailMessage
         private int $emailConfirmationId,
         string $emailType,
         string $email,
-        array $templateParams
+        array $templateParams,
+        string $locale = 'en',
     ) 
     {
-        parent::__construct($emailType, $email, $templateParams);
+        parent::__construct($emailType, $email, $templateParams, $locale);
     }
 
     public function getEmailConfirmationId(): int

@@ -6,6 +6,7 @@ namespace App\DTO\Reservation;
 
 use App\DTO\AbstractDTO;
 use App\DTO\Attribute\EntityReference;
+use App\DTO\Trait\LanguagePreferenceFieldDTO;
 use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Validator\Constraints as CustomAssert;
@@ -14,6 +15,8 @@ use OpenApi\Attributes as OA;
 
 class ReservationCreateDTO extends AbstractDTO 
 {
+    use LanguagePreferenceFieldDTO;
+
     public function __construct(
         #[CustomAssert\EntityExists(Schedule::class)]
         #[EntityReference(Schedule::class, 'schedule')]
@@ -30,8 +33,9 @@ class ReservationCreateDTO extends AbstractDTO
         #[OA\Property(format: 'date-time')]
         #[Compound\DateTimeStringRequirements]
         public readonly string $startDateTime,
+        string $languagePreference,
     )
     {
-
+        $this->languagePreference = $languagePreference;
     }
 }

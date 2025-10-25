@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\ScheduleReservation\DataProvider;
 
 use App\Enum\Reservation\ReservationStatus;
+use App\Enum\TranslationsLocale;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
@@ -26,6 +27,7 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
                     'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
                     'status' => ReservationStatus::CONFIRMED->value,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => 'user@example.com',
@@ -34,6 +36,7 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
                     'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
                     'status' => ReservationStatus::CONFIRMED->value,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
             ],
         ];
@@ -51,6 +54,7 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     'start_date_time' => '',
                     'end_date_time' => '',
                     'status' => '',
+                    'language_preference' => '',
                 ],
                 [
                     'service_id' => [
@@ -74,6 +78,9 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     'status' => [
                         'Parameter must be one of valid statuses: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())),
                     ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -87,6 +94,7 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     'status' => 'a',
                     'notify_customer' => true,
                     'verification_handler' => 'a',
+                    'language_preference' => 'a',
                 ],
                 [
                     'service_id' => [
@@ -109,6 +117,9 @@ class ScheduleReservationCreateCustomDataProvider extends BaseDataProvider
                     ],
                     'status' => [
                         'Parameter must be one of valid statuses: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ReservationStatus::values())),
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
                     ],
                 ]
             ],

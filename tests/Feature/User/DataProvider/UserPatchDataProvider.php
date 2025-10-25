@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Feature\User\DataProvider;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
+use App\Enum\TranslationsLocale;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class UserPatchDataProvider extends BaseDataProvider 
@@ -16,7 +17,8 @@ class UserPatchDataProvider extends BaseDataProvider
                 [
                     'name' => 'New Test User',
                     'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
-                    'verification_handler' => self::VERIFICATION_HANDLER
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'name' => 'New Test User',
@@ -27,7 +29,8 @@ class UserPatchDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test User',
                     'email' => 'newuser@example.com',
-                    'verification_handler' => self::VERIFICATION_HANDLER
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
@@ -39,12 +42,25 @@ class UserPatchDataProvider extends BaseDataProvider
                     'name' => VerifiedUserFixtures::VERIFIED_USER_NAME,
                     'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
                 ],
                 false
-            ]
+            ],
+            [
+                [
+                    'name' => 'Test User',
+                    'email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL,
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::PL->value,
+                ],
+                [
+                    'language_preference' => TranslationsLocale::PL->value,
+                ],
+                false
+            ],
         ];
     }
 
@@ -56,6 +72,7 @@ class UserPatchDataProvider extends BaseDataProvider
                     'name' => '',
                     'email' => '',
                     'verification_handler' => '',
+                    'language_preference' => '',
                 ],
                 [
                     'name' => [
@@ -66,7 +83,10 @@ class UserPatchDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'This value should not be blank.'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -74,6 +94,7 @@ class UserPatchDataProvider extends BaseDataProvider
                     'name' => 'Test Name',
                     'email' => 'user',
                     'verification_handler' => 'invalid',
+                    'language_preference' => 'a',
                 ],
                 [
                     'email' => [
@@ -81,7 +102,10 @@ class UserPatchDataProvider extends BaseDataProvider
                     ],
                     'verification_handler' => [
                         'Invalid verification handler'
-                    ]
+                    ],
+                    'language_preference' => [
+                        'Parameter must be one of valid locales: '.implode(', ', array_map(fn($val) => '"'.$val.'"', TranslationsLocale::values())),
+                    ],
                 ]
             ],
             [
@@ -89,6 +113,7 @@ class UserPatchDataProvider extends BaseDataProvider
                     'name' => 'long nameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
                     'email' => 'verifieduser@example.com',
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'name' => [
@@ -101,6 +126,7 @@ class UserPatchDataProvider extends BaseDataProvider
                     'name' => 'New Test User',
                     'email' => 'user1@example.com',
                     'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
                 ],
                 [
                     'email' => [

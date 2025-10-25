@@ -40,8 +40,10 @@ class UserReservationServiceTest extends TestCase
     {
         $dto = new UserReservationCreateDTO(1, 2, '+48213721372', '2025-10-20T10:00+00:00', 'test');
         $userEmail = 'user@example.com';
+        $languagePreference = 'en';
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn($userEmail);
+        $userMock->method('getLanguagePreference')->willReturn($languagePreference);
         $reservationMock = $this->createMock(Reservation::class);
 
         $reservationMock->expects($this->once())->method('setVerified')->with(true);
@@ -55,6 +57,7 @@ class UserReservationServiceTest extends TestCase
                 $userEmail,
                 $dto->phoneNumber,
                 $dto->startDateTime,
+                $languagePreference
             ))
             ->willReturn($reservationMock);
 
@@ -81,8 +84,10 @@ class UserReservationServiceTest extends TestCase
     {
         $dto = new UserReservationCreateDTO(1, 2, '+48213721372', '2025-10-20T10:00+00:00', 'test');
         $userEmail = 'user@example.com';
+        $languagePreference = 'en';
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn($userEmail);
+        $userMock->method('getLanguagePreference')->willReturn($languagePreference);
         $reservationMock = $this->createMock(Reservation::class);
 
         $reservationMock->expects($this->never())->method('setVerified');
@@ -96,6 +101,7 @@ class UserReservationServiceTest extends TestCase
                 $userEmail,
                 $dto->phoneNumber,
                 $dto->startDateTime,
+                $languagePreference
             ))
             ->willReturn($reservationMock);
 

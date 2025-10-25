@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Reservation Confirmed</title>
+  <title>{{ 'email.reservation_confirmed.subject'|trans }}</title>
 </head>
 
 <body
@@ -24,54 +24,53 @@
             style="background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.3125rem rgba(0,0,0,0.1); padding: 2rem;">
             <tr>
               <td style="text-align: center;">
-                <h1 style="color: #333333;">Your Reservation is Confirmed 🎉</h1>
+                <h1 style="color: #333333;">{{ 'email.reservation_confirmed.heading'|trans }}</h1>
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
-                  Your reservation has been confirmed.
-                  <br>
-                  Below is a complete overview of your booking with all the key details.
+                  {{ 'email.reservation_confirmed.message_line1'|trans }}<br>
+                  {{ 'email.reservation_confirmed.message_line2'|trans }}
                 </p>
               </td>
             </tr>
             <tr>
               <td style="padding-top: 2rem; text-align: left;">
                 <h2 style="text-align: center; color: #333333; margin-bottom: 1.5rem; font-size: 1.5rem;">
-                  Reservation Details
+                  {{ 'email.reservation_confirmed.details_title'|trans }}
                 </h2>
                 <table cellpadding="0" cellspacing="0" width="100%"
                   style="font-size: 1rem; color: #555555; line-height: 1.6;">
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">📌 Reference</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.reference'|trans }}</strong></div>
                       <div style="text-align: right;">{{ reference }}</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">🏢 Organization</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.organization'|trans }}</strong></div>
                       <div style="text-align: right;">{{ organization_name }}</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">🛎 Service</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.service'|trans }}</strong></div>
                       <div style="text-align: right;">{{ service_name }}</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">📅 Date & Time</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.date_time'|trans }}</strong></div>
                       <div style="text-align: right;">{{ start_date_time|date('d-m-Y H:i') }}</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">💰 Estimated Price</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.estimated_price'|trans }}</strong></div>
                       <div style="text-align: right;">{{ estimated_price }} PLN</div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
-                      <div><strong style="color: #333;">⏱ Duration</strong></div>
+                      <div><strong style="color: #333;">{{ 'email.reservation_confirmed.duration'|trans }}</strong></div>
                       <div style="text-align: right;">{{ duration }}</div>
                     </td>
                   </tr>
@@ -80,16 +79,16 @@
             </tr>
             <tr>
               <td style="padding-top: 2rem; text-align: center;">
-                <h1 style="color: #333333;">Need to Cancel?</h1>
+                <h1 style="color: #333333;">{{ 'email.reservation_confirmed.cancel_heading'|trans }}</h1>
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
-                  If you no longer wish to keep this reservation, you can cancel by clicking the button below.<br>
+                  {{ 'email.reservation_confirmed.cancel_message'|trans }}<br>
                   <strong style="font-size: 0.875rem;">
-                    (This link will expire on {{ cancellation_expiration_date|date("F jS H:i") }})
+                    {{ 'email.reservation_confirmed.cancel_expiration'|trans({'%date%': cancellation_expiration_date|date("d.m.Y H:i")}) }}
                   </strong>
                 </p>
                 <a href="{{ cancellation_url }}"
                   style="display: inline-block; margin-top: 1.25rem; padding: 0.75rem 1.5rem; background-color: #6a0dad; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 0.3125rem;">
-                  Cancel Reservation
+                  {{ 'email.reservation_confirmed.cancel_button'|trans }}
                 </a>
               </td>
             </tr>

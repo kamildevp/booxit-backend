@@ -26,7 +26,7 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
             ],
             [
                 [
-                    'role' => OrganizationRole::ADMIN->value
+                    'role' => [OrganizationRole::ADMIN->value]
                 ],
                 [
                     'role' => OrganizationRole::ADMIN->value
@@ -65,7 +65,8 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                     'filters' => [
                         'organization' => [
                             'name' => '',
-                        ]
+                        ],
+                        'role' => ['a'],
                     ]
                 ],
                 [
@@ -74,7 +75,10 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                             'name' => [
                                 'Parameter must be at least 1 characters long'
                             ],
-                        ]
+                        ],
+                        'role' => [
+                            'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())).'.'
+                        ],
                     ]
                 ]
             ],
@@ -93,20 +97,6 @@ class UserOrganizationMembershipListDataProvider extends ListDataProvider
                                 'Parameter cannot be longer than 50 characters'
                             ]
                         ]
-                    ]
-                ]
-            ],
-            [
-                [
-                    'filters' => [
-                        'role' => 'a',
-                    ]
-                ],
-                [
-                    'filters' => [
-                        'role' => [
-                            'Parameter must be one of valid roles: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())),
-                        ],
                     ]
                 ]
             ],

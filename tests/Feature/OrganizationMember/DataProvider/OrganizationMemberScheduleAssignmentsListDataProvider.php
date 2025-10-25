@@ -26,7 +26,7 @@ class OrganizationMemberScheduleAssignmentsListDataProvider extends ListDataProv
             ],
             [
                 [
-                    'access_type' => ScheduleAccessType::READ->value
+                    'access_type' => [ScheduleAccessType::READ->value]
                 ],
                 [
                     'access_type' => ScheduleAccessType::READ->value
@@ -66,7 +66,7 @@ class OrganizationMemberScheduleAssignmentsListDataProvider extends ListDataProv
                         'schedule' => [
                             'name' => '',
                         ],
-                        'access_type' => 'a',
+                        'access_type' => ['a'],
                     ]
                 ],
                 [
@@ -77,7 +77,7 @@ class OrganizationMemberScheduleAssignmentsListDataProvider extends ListDataProv
                             ],
                         ],
                         'access_type' => [
-                            'Parameter must be one of valid access types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())),
+                            'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())).'.'
                         ],
                     ]
                 ]

@@ -25,14 +25,14 @@ class ScheduleAssignmentListDataProvider extends ListDataProvider
                     'organization_member' => [
                         'app_user' => [
                             'name' => 'Sorted A'
-                        ]
+                        ],
                     ]
                 ],
             ],
             [
                 [
                     'organization_member' => [
-                        'role' => OrganizationRole::ADMIN->value
+                        'role' => [OrganizationRole::ADMIN->value]
                     ]
                 ],
                 [
@@ -43,7 +43,7 @@ class ScheduleAssignmentListDataProvider extends ListDataProvider
             ],
             [
                 [
-                    'access_type' => ScheduleAccessType::READ->value
+                    'access_type' => [ScheduleAccessType::READ->value]
                 ],
                 [
                     'access_type' => ScheduleAccessType::READ->value
@@ -92,9 +92,9 @@ class ScheduleAssignmentListDataProvider extends ListDataProvider
                             'app_user' => [
                                 'name' => '',
                             ],
-                            'role' => 'a'
+                            'role' => ['a']
                         ],
-                        'access_type' => 'a',
+                        'access_type' => ['a'],
                     ]
                 ],
                 [
@@ -106,11 +106,12 @@ class ScheduleAssignmentListDataProvider extends ListDataProvider
                                 ],
                             ],
                             'role' => [
-                                'Parameter must be one of valid roles: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())),
+                                'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', OrganizationRole::values())).'.'
                             ],
+
                         ],
                         'access_type' => [
-                            'Parameter must be one of valid access types: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())),
+                            'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ScheduleAccessType::values())).'.'
                         ],
                     ]
                 ]

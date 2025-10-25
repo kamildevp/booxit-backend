@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\OrganizationMember\OrganizationMemberNormalizerGroup;
-use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Filter\EntityFilter\FieldInSet;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationMemberRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -123,7 +123,7 @@ class OrganizationMember
     public static function getFilterDefs(): array
     {
         return [
-            'role' => new FieldValue('role', '='),
+            'role' => new FieldInSet('role'),
         ];
     }
 

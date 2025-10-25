@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\ScheduleAssignment\ScheduleAssignmentNormalizerGroup;
-use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Filter\EntityFilter\FieldInSet;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ScheduleAssignmentRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -78,7 +78,7 @@ class ScheduleAssignment
     public static function getFilterDefs(): array
     {
         return [
-            'accessType' => new FieldValue('accessType', '='),
+            'accessType' => new FieldInSet('accessType'),
         ];
     }
 

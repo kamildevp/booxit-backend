@@ -22,6 +22,7 @@ class OrganizationMemberFixtures extends Fixture implements DependentFixtureInte
             $user = new User();
             $user->setName('Test User ' . $i);
             $user->setEmail("om-user{$i}@example.com");
+            $user->setUsername("om_user{$i}");
             $user->setPassword('dummypass');
             $user->setVerified(true);
             $manager->persist($user);

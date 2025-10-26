@@ -13,6 +13,7 @@ class VerifiedUserFixtures extends Fixture
 {
     const VERIFIED_USER_REFERENCE = 'verified-user';
     const VERIFIED_USER_EMAIL = 'verifieduser@example.com';
+    const VERIFIED_USER_USERNAME = 'verified_user';
     const VERIFIED_USER_NAME = 'Test User';
     const VERIFIED_USER_PASSWORD = 'password123';
 
@@ -26,6 +27,7 @@ class VerifiedUserFixtures extends Fixture
         $user = new User();
         $user->setName(self::VERIFIED_USER_NAME);
         $user->setEmail(self::VERIFIED_USER_EMAIL);
+        $user->setUsername(self::VERIFIED_USER_USERNAME);
         $user->setPassword($this->hasher->hashPassword($user, self::VERIFIED_USER_PASSWORD));
         $user->setVerified(true);
         $manager->persist($user);

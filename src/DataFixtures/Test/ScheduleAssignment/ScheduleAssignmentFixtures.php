@@ -34,6 +34,7 @@ class ScheduleAssignmentFixtures extends Fixture implements DependentFixtureInte
             $user = new User();
             $user->setName('Test User ' . $i);
             $user->setEmail("sa-user{$i}@example.com");
+            $user->setUsername("sa_user{$i}");
             $user->setPassword('hashed_pass');
             $user->setVerified(true);
             $manager->persist($user);

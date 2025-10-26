@@ -18,6 +18,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test User',
                     'email' => 'user@example.com',
+                    'username' => 'username',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
                     'language_preference' => TranslationsLocale::EN->value,
@@ -25,6 +26,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test User',
                     'email' => 'user@example.com',
+                    'username' => 'username',
                     'verified' => false,
                     'roles' => [UserRole::REGULAR->value, 'ROLE_USER'],
                     'language_preference' => TranslationsLocale::EN->value,
@@ -40,6 +42,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => '',
                     'email' => '',
+                    'username' => '',
                     'password' => '',
                     'verification_handler' => '',
                     'language_preference' => '',
@@ -49,6 +52,9 @@ class UserCreateDataProvider extends BaseDataProvider
                         'Parameter must be at least 6 characters long',
                     ],
                     'email' => [
+                        'This value should not be blank.',
+                    ],
+                    'username' => [
                         'This value should not be blank.',
                     ],
                     'password' => [
@@ -66,6 +72,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test Name',
                     'email' => 'user',
+                    'username' => 'a*',
                     'password' => 'pass',
                     'verification_handler' => 'invalid',
                     'language_preference' => 'a',
@@ -73,6 +80,9 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'email' => [
                         'Parameter is not a valid email',
+                    ],
+                    'username' => [
+                        'Username length must be from 4 to 20 characters, can contain letters,numbers, special characters(_) and must have at least one letter.',
                     ],
                     'password' => [
                         'Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit',
@@ -89,6 +99,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'long nameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
                     'email' => 'user@example.com',
+                    'username' => 'username',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
                     'language_preference' => TranslationsLocale::EN->value,
@@ -103,6 +114,7 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'New Test User',
                     'email' => 'user1@example.com',
+                    'username' => 'user1',
                     'password' => 'password123',
                     'verification_handler' => self::VERIFICATION_HANDLER,
                     'language_preference' => TranslationsLocale::EN->value,
@@ -110,6 +122,9 @@ class UserCreateDataProvider extends BaseDataProvider
                 [
                     'email' => [
                         'User with provided email already exists',
+                    ],
+                    'username' => [
+                        'User with provided username already exists',
                     ],
                 ]
             ],

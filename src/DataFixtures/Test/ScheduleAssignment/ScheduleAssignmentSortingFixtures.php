@@ -42,6 +42,7 @@ class ScheduleAssignmentSortingFixtures extends Fixture implements DependentFixt
             $user = new User();
             $user->setName($item['organization_member.app_user.name']);
             $user->setEmail("sa-user{$i}@example.com");
+            $user->setUsername("sa_user{$i}");
             $user->setPassword('hashed_pass');
             $user->setVerified(true);
             $manager->persist($user);

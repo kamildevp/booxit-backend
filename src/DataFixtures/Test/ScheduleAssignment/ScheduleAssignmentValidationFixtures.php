@@ -29,6 +29,7 @@ class ScheduleAssignmentValidationFixtures extends Fixture implements DependentF
         $user = new User();
         $user->setName(self::USER_NAME);
         $user->setEmail(self::USER_EMAIL);
+        $user->setUsername("sa_conflict_user");
         $user->setPassword('hashed_pass');
         $user->setVerified(true);
         $manager->persist($user);

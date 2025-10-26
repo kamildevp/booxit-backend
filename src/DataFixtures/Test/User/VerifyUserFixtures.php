@@ -25,6 +25,7 @@ class VerifyUserFixtures extends Fixture
         $user = new User();
         $user->setName('Unverified Test User');
         $user->setEmail('unverfieduser@example.com');
+        $user->setUsername('vu_user');
         $user->setPassword($this->hasher->hashPassword($user, 'password123'));
         $user->setVerified(false);
         $manager->persist($user);

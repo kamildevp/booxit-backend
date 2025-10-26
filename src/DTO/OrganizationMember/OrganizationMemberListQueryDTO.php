@@ -32,6 +32,6 @@ class OrganizationMemberListQueryDTO extends AbstractDTO implements ListQueryDTO
     #[Ignore]
     public static function getOrderableColumns(): array
     {
-        return ['app_user.name', 'role'];
+        return ['app_user.name', 'app_user.username', 'role'];
     }
 }

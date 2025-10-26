@@ -12,13 +12,14 @@ class UserListFiltersDTO extends UserBaseListFiltersDTO
 
     public function __construct(
         ?string $name = null,
+        ?string $username = null,
         ?string $createdFrom = null,
         ?string $createdTo = null,
         ?string $updatedFrom = null,
         ?string $updatedTo = null,
     )
     {
-        parent::__construct($name);
+        parent::__construct($name, $username);
         $this->createdFrom = $createdFrom;
         $this->createdTo = $createdTo;
         $this->updatedFrom = $updatedFrom;

@@ -157,6 +157,11 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => 'sort_b_user@example.com'],
                 [$columnName => 'sort_c_user@example.com'],
             ],
+            'username' => [
+                [$columnName => 'Sorted_A'],
+                [$columnName => 'Sorted_B'],
+                [$columnName => 'Sorted_C'],
+            ],
             'boolean' => [
                 [$columnName => false],
                 [$columnName => false],

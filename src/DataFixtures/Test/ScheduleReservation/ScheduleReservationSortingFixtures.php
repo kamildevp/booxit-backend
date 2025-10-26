@@ -59,6 +59,7 @@ class ScheduleReservationSortingFixtures extends Fixture implements DependentFix
             $user = new User();
             $user->setName($item['user_name']);
             $user->setEmail("user{$i}@example.com");
+            $user->setUsername("user{$i}");
             $user->setPassword('dummy');
             $user->setVerified(true);
             $manager->persist($user);

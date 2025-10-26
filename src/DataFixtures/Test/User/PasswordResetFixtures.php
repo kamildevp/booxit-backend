@@ -25,6 +25,7 @@ class PasswordResetFixtures extends Fixture
         $user = new User();
         $user->setName('Test User');
         $user->setEmail('user-pass-reset@example.com');
+        $user->setUsername("user_pass_reset");
         $user->setPassword($this->hasher->hashPassword($user, 'password123'));
         $user->setVerified(true);
         $manager->persist($user);

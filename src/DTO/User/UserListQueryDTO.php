@@ -33,6 +33,6 @@ class UserListQueryDTO extends AbstractDTO implements ListQueryDTOInterface
     #[Ignore]
     public static function getOrderableColumns(): array
     {
-        return array_merge(TimestampsColumns::values(), ['name']);
+        return array_merge(TimestampsColumns::values(), ['name', 'username']);
     }
 }

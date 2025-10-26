@@ -19,6 +19,14 @@ class UserListDataProvider extends ListDataProvider
                     'name' => 'Sorted A'
                 ],
             ],
+            [
+                [
+                    'username' => 'A'
+                ],
+                [
+                    'username' => 'Sorted_A'
+                ],
+            ],
         ], parent::getTimestampsFiltersDataCases());
     }
 
@@ -33,6 +41,14 @@ class UserListDataProvider extends ListDataProvider
                 '-name',
                 parent::getSortedColumnValueSequence('name', 'string', 'desc')
             ],
+            [
+                'username',
+                parent::getSortedColumnValueSequence('username', 'username')
+            ],
+            [
+                '-username',
+                parent::getSortedColumnValueSequence('username', 'username', 'desc')
+            ],
         ], parent::getTimestampsSortingDataCases());
     }
 
@@ -46,11 +62,15 @@ class UserListDataProvider extends ListDataProvider
                     [
                         'filters' => [
                             'name' => '',
+                            'username' => '',
                         ]
                     ],
                     [
                         'filters' => [
                             'name' => [
+                                'Parameter must be at least 1 characters long'
+                            ],
+                            'username' => [
                                 'Parameter must be at least 1 characters long'
                             ],
                         ]
@@ -60,11 +80,15 @@ class UserListDataProvider extends ListDataProvider
                     [
                         'filters' => [
                             'name' => str_repeat('a', 55),
+                            'username' => str_repeat('a', 55),
                         ]
                     ],
                     [
                         'filters' => [
                             'name' => [
+                                'Parameter cannot be longer than 50 characters'
+                            ],
+                            'username' => [
                                 'Parameter cannot be longer than 50 characters'
                             ]
                         ]

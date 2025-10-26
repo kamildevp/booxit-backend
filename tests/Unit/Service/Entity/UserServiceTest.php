@@ -79,7 +79,7 @@ class UserServiceTest extends TestCase
 
     public function testCreateUser(): void
     {
-        $dto = new UserCreateDTO('test', 'test@example.com', 'handler', 'pass', 'en');
+        $dto = new UserCreateDTO('test', 'test@example.com', 'username', 'handler', 'pass', 'en');
         $userId = 1;
         $userMock = $this->createMock(User::class);
         $userMock->method('getId')->willReturn($userId);
@@ -140,7 +140,7 @@ class UserServiceTest extends TestCase
 
     public function testPatchUser(): void
     {
-        $dto = new UserPatchDTO('new test', 'user@example.com', 'handler', 'en');
+        $dto = new UserPatchDTO('new test', 'user@example.com', 'username', 'handler', 'en');
         $userMock = $this->createMock(User::class);
 
         $userMock->method('getEmail')->willReturn('user@example.com');
@@ -165,7 +165,7 @@ class UserServiceTest extends TestCase
 
     public function testPatchUserTriggersEmailConfirmationIfChanged(): void
     {
-        $dto = new UserPatchDTO('test', 'new@example.com', 'handler', 'en');
+        $dto = new UserPatchDTO('test', 'new@example.com', 'username', 'handler', 'en');
         $userMock = $this->createMock(User::class);
         $userMock->method('getEmail')->willReturn('old@example.com');
         $userMock->method('getLanguagePreference')->willReturn($dto->languagePreference);

@@ -142,14 +142,16 @@ class UserService
         {
             return false;
         }
-
+        
+        $this->userRepository->switchVerifiableFilter(false);
         $user = $emailConfirmation->getCreator();
         $user->setEmail($emailConfirmation->getEmail());
         $user->setVerified(true);
         $user->setExpiryDate(null);
         $emailConfirmation->setStatus(EmailConfirmationStatus::COMPLETED->value);
         $this->emailConfirmationRepository->save($emailConfirmation, true);
-
+        $this->userRepository->switchVerifiableFilter(true);
+        
         return true;
     }
 

@@ -76,6 +76,7 @@ class UserRepository extends BaseRepository implements PasswordUpgraderInterface
     public function removeExpiredUserAccounts(): void
     {
         $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $this->getEntityManager()->getFilters()->disable('verifiable');
         $now = new DateTime();
         $this->createQueryBuilder('u')
             ->delete()
@@ -88,5 +89,6 @@ class UserRepository extends BaseRepository implements PasswordUpgraderInterface
             ->execute();
         
         $this->getEntityManager()->getFilters()->enable('softdeleteable');
+        $this->getEntityManager()->getFilters()->enable('verifiable');
     }
 }

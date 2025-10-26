@@ -28,7 +28,7 @@ class UserFixtures extends Fixture
             $user->setPassword(
                 $this->hasher->hashPassword($user, 'password123')
             );
-            $user->setVerified((bool) random_int(0, 1));
+            $user->setVerified(true);
 
             $manager->persist($user);
             $this->addReference(self::USER_REFERENCE.$i, $user);

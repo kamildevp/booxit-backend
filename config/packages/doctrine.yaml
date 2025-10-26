@@ -21,6 +21,9 @@ doctrine:
             softdeleteable:
                 class: Gedmo\SoftDeleteable\Filter\SoftDeleteableFilter
                 enabled: true
+            verifiable:
+                class: App\Repository\ORM\Filter\VerifiableFilter
+                enabled: true
 
 when@test:
     doctrine:

@@ -27,7 +27,6 @@ class UserCreateDataProvider extends BaseDataProvider
                     'name' => 'Test User',
                     'email' => 'user@example.com',
                     'username' => 'username',
-                    'verified' => false,
                     'roles' => [UserRole::REGULAR->value, 'ROLE_USER'],
                     'language_preference' => TranslationsLocale::EN->value,
                 ]

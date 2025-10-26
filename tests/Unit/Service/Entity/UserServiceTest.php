@@ -287,6 +287,17 @@ class UserServiceTest extends TestCase
             $dto->type
         )->willReturn($emailConfirmationMock);
 
+        $callNr = 0;
+        $this->userRepositoryMock->expects($this->exactly(2))
+            ->method('switchVerifiableFilter')
+            ->with($this->callback(function($arg) use (&$callNr){
+                $callNr++;
+                return match($callNr){
+                    1 => $arg === false,
+                    2 => $arg === true,
+                };
+            }));
+
         $userMock->expects($this->once())->method('setEmail')->with($emailMock);
         $userMock->expects($this->once())->method('setVerified')->with(true);
         $userMock->expects($this->once())->method('setExpiryDate')->with(null);

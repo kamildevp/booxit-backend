@@ -26,7 +26,6 @@ class UserSortingFixtures extends Fixture
             'name' => 'string',
             'email' => 'email',
             'username' => 'username',
-            'verified' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ]);
@@ -45,7 +44,7 @@ class UserSortingFixtures extends Fixture
             $user->setPassword(
                 $this->hasher->hashPassword($user, 'password123')
             );
-            $user->setVerified($item['verified']);
+            $user->setVerified(true);
             $user->setCreatedAt(new DateTimeImmutable($item['created_at']));
             $user->setUpdatedAt(new DateTimeImmutable($item['updated_at']));
 

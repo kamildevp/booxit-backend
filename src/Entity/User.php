@@ -10,6 +10,7 @@ use App\Enum\User\UserNormalizerGroup;
 use App\Enum\User\UserRole;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
+use App\Repository\ORM\Attribute\Verifiable;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,6 +22,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
+#[Verifiable]
 #[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -58,7 +60,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, cascade: ['remove'])]
     private Collection $emailConfirmations;
 
-    #[Groups([UserNormalizerGroup::DETAILS->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 

@@ -164,4 +164,13 @@ abstract class BaseRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
+    public function switchVerifiableFilter(bool $enable): void
+    {
+        if(!$enable){
+            $this->getEntityManager()->getFilters()->disable('verifiable');
+        }
+        else{
+            $this->getEntityManager()->getFilters()->enable('verifiable');
+        }
+    }
 }

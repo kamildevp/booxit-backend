@@ -8,6 +8,7 @@ use App\Enum\Organization\OrganizationRole;
 use App\Enum\Reservation\ReservationStatus;
 use App\Enum\Reservation\ReservationType;
 use App\Enum\Schedule\ScheduleAccessType;
+use App\Enum\Service\ServiceCategory;
 
 class ListDataProvider extends BaseDataProvider 
 {    
@@ -201,6 +202,11 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => ReservationStatus::CONFIRMED->value],
                 [$columnName => ReservationStatus::CUSTOMER_CANCELLED->value],
                 [$columnName => ReservationStatus::PENDING->value],
+            ],
+            'service_category' => [
+                [$columnName => ServiceCategory::AUTOMOTIVE->value],
+                [$columnName => ServiceCategory::BUSINESS->value],
+                [$columnName => ServiceCategory::FINANCE->value],
             ],
         ];
 

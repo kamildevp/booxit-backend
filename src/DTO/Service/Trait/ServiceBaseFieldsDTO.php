@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTO\Service\Trait;
 
+use App\Enum\Service\ServiceCategory;
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\Constraints\Compound as Compound;
 use App\Validator\Constraints as CustomAssert;
 use OpenApi\Attributes as OA; 
@@ -12,6 +14,9 @@ trait ServiceBaseFieldsDTO
 {
     #[Compound\NameRequirements]
     public readonly string $name;
+
+    #[Assert\Choice(callback: [ServiceCategory::class, 'values'], message: 'Parameter must be one of valid categories: {{ choices }}')]
+    public readonly string $category; 
 
     #[Compound\DescriptionRequirements]
     public readonly string $description; 

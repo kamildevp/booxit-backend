@@ -9,6 +9,7 @@ use App\Entity\Trait\Timestampable;
 use App\Enum\Service\ServiceNormalizerGroup;
 use App\Repository\Filter\EntityFilter\DateIntervalFieldValue;
 use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\FieldInSet;
 use App\Repository\Filter\EntityFilter\FieldValue;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ServiceRepository;
@@ -43,6 +44,10 @@ class Service
     #[Groups([ServiceNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
+
+    #[Groups([ServiceNormalizerGroup::BASE_INFO->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $category = null;
 
     #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -95,6 +100,18 @@ class Service
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(string $category): static
+    {
+        $this->category = $category;
 
         return $this;
     }
@@ -195,6 +212,7 @@ class Service
     {
         return array_merge(self::getTimestampsFilterDefs(), [
             'name' => new FieldContains('name'),
+            'category' => new FieldInSet('category'),
             'durationFrom' => new DateIntervalFieldValue('duration', '>='),
             'durationTo' => new DateIntervalFieldValue('duration', '<='),
             'estimatedPriceFrom' => new FieldValue('estimatedPrice', '>='),
@@ -207,6 +225,7 @@ class Service
         return array_merge(self::getTimestampsOrderDefs(), [
             'id' => new BaseFieldOrder('id'),
             'name' => new BaseFieldOrder('name'),
+            'category' => new BaseFieldOrder('category'),
             'duration' => new BaseFieldOrder('duration'),
             'estimated_price' => new BaseFieldOrder('estimatedPrice'),
         ]);

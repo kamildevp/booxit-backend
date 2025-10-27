@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Service\DataProvider;
 
+use App\Enum\Service\ServiceCategory;
 use App\Tests\Utils\DataProvider\ListDataProvider;
 
 class ServiceListDataProvider extends ListDataProvider 
@@ -17,6 +18,14 @@ class ServiceListDataProvider extends ListDataProvider
                 ],
                 [
                     'name' => 'Sorted A'
+                ],
+            ],
+            [
+                [
+                    'category' => [ServiceCategory::AUTOMOTIVE->value],
+                ],
+                [
+                    'category' => ServiceCategory::AUTOMOTIVE->value,
                 ],
             ],
             [
@@ -66,6 +75,14 @@ class ServiceListDataProvider extends ListDataProvider
                 parent::getSortedColumnValueSequence('name', 'string', 'desc')
             ],
             [
+                'category',
+                parent::getSortedColumnValueSequence('category', 'service_category')
+            ],
+            [
+                '-category',
+                parent::getSortedColumnValueSequence('category', 'service_category', 'desc')
+            ],
+            [
                 'duration',
                 parent::getSortedColumnValueSequence('duration', 'dateinterval')
             ],
@@ -94,6 +111,7 @@ class ServiceListDataProvider extends ListDataProvider
                     [
                         'filters' => [
                             'name' => '',
+                            'category' => ['a'],
                             'duration_from' => '',
                             'duration_to' => '',
                             'estimated_price_from' => '',
@@ -104,6 +122,9 @@ class ServiceListDataProvider extends ListDataProvider
                         'filters' => [
                             'name' => [
                                 'Parameter must be at least 1 characters long'
+                            ],
+                            'category' => [
+                                'One or more of the given values is invalid, allowed values: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ServiceCategory::values())).'.'
                             ],
                             'duration_from' => [
                                 'This value should not be blank.'

@@ -9,6 +9,7 @@ use App\Entity\OrganizationMember;
 use App\Entity\Service;
 use App\Entity\User;
 use App\Enum\Organization\OrganizationRole;
+use App\Enum\Service\ServiceCategory;
 use DateInterval;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -44,6 +45,7 @@ class ScheduleServiceAddValidationFixtures extends Fixture
         $service = new Service();
         $service->setOrganization($organization);
         $service->setName(self::SERVICE_NAME);
+        $service->setCategory(ServiceCategory::BARBER->value);
         $service->setDescription('test');
         $service->setDuration(new DateInterval('PT1H'));
         $service->setEstimatedPrice('20.50');

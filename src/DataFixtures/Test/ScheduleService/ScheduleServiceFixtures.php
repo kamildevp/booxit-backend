@@ -9,6 +9,7 @@ use App\DataFixtures\Test\ScheduleAssignment\ScheduleAssignmentFixtures;
 use App\Entity\Organization;
 use App\Entity\Schedule;
 use App\Entity\Service;
+use App\Enum\Service\ServiceCategory;
 use DateInterval;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -27,6 +28,7 @@ class ScheduleServiceFixtures extends Fixture implements DependentFixtureInterfa
             $service = new Service();
             $service->setOrganization($organization);
             $service->setName('Test Service ' . $i);
+            $service->setCategory(ServiceCategory::BARBER->value);
             $service->setDescription('test');
             $service->setDuration(new DateInterval($i%2 == 0 ? 'PT1H' : 'PT30M'));
             $service->setEstimatedPrice('20.50');

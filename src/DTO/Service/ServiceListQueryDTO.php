@@ -33,6 +33,6 @@ class ServiceListQueryDTO extends AbstractDTO implements ListQueryDTOInterface
     #[Ignore]
     public static function getOrderableColumns(): array
     {
-        return array_merge(TimestampsColumns::values(), ['name', 'duration', 'estimated_price']);
+        return array_merge(TimestampsColumns::values(), ['name', 'category', 'duration', 'estimated_price']);
     }
 }

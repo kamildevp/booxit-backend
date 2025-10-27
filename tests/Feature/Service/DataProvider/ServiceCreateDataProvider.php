@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Feature\Service\DataProvider;
 
-use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
+use App\Enum\Service\ServiceCategory;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 
 class ServiceCreateDataProvider extends BaseDataProvider 
@@ -16,12 +16,14 @@ class ServiceCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => 'Test Service',
+                    'category' => ServiceCategory::OTHER->value,
                     'description' => 'test',
                     'duration' => 'PT01H30M',
-                    'estimated_price' => '15.5'
+                    'estimated_price' => '15.5',
                 ],
                 [
                     'name' => 'Test Service',
+                    'category' => ServiceCategory::OTHER->value,
                     'description' => 'test',
                     'duration' => 'P0Y0M0DT1H30M',
                     'estimated_price' => '15.5',
@@ -36,6 +38,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => '',
+                    'category' => '',
                     'description' => '',
                     'duration' => '',
                     'estimated_price' => ''
@@ -43,6 +46,9 @@ class ServiceCreateDataProvider extends BaseDataProvider
                 [
                     'name' => [
                         'Parameter must be at least 6 characters long',
+                    ],
+                    'category' => [
+                        'Parameter must be one of valid categories: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ServiceCategory::values())),
                     ],
                     'duration' => [
                         'This value should not be blank.'
@@ -55,6 +61,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => str_repeat('a', 51),
+                    'category' => 'a',
                     'description' => str_repeat('a', 2001),
                     'duration' => 'a',
                     'estimated_price' => 'a'
@@ -62,6 +69,9 @@ class ServiceCreateDataProvider extends BaseDataProvider
                 [
                     'name' => [
                         'Parameter cannot be longer than 50 characters',
+                    ],
+                    'category' => [
+                        'Parameter must be one of valid categories: '.implode(', ', array_map(fn($val) => '"'.$val.'"', ServiceCategory::values())),
                     ],
                     'description' => [
                         'Parameter cannot be longer than 2000 characters',
@@ -77,6 +87,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => 'Test Service',
+                    'category' => ServiceCategory::OTHER->value,
                     'description' => 'test',
                     'duration' => 'PT1M',
                     'estimated_price' => str_repeat('1', 11),
@@ -93,6 +104,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
             [
                 [
                     'name' => 'Test Service',
+                    'category' => ServiceCategory::OTHER->value,
                     'description' => 'test',
                     'duration' => 'P1DT1M',
                     'estimated_price' => '25.25',

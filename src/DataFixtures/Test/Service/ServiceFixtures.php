@@ -6,7 +6,8 @@ namespace App\DataFixtures\Test\Service;
 
 use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\Entity\Organization;
-use App\Entity\Service;;
+use App\Entity\Service;
+use App\Enum\Service\ServiceCategory;
 use DateInterval;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -22,6 +23,7 @@ class ServiceFixtures extends Fixture implements DependentFixtureInterface
             $service = new Service();
             $service->setOrganization($this->getReference(OrganizationAdminFixtures::ORGANIZATION_REFERENCE, Organization::class));
             $service->setName('Test Service ' . $i);
+            $service->setCategory(ServiceCategory::BARBER->value);
             $service->setDescription('test');
             $service->setDuration(new DateInterval('PT30M'));
             $service->setEstimatedPrice('16.70');

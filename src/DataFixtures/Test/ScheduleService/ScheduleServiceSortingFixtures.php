@@ -21,6 +21,7 @@ class ScheduleServiceSortingFixtures extends Fixture implements DependentFixture
     {
         $sortedData = ListDataProvider::getSortedColumnsValuesSequence([
             'name' => 'string',
+            'category' => 'service_category',
             'duration' => 'dateinterval',
             'estimated_price' => 'decimal',
             'created_at' => 'datetime',
@@ -44,6 +45,7 @@ class ScheduleServiceSortingFixtures extends Fixture implements DependentFixture
             $service = new Service();
             $service->setOrganization($organization);
             $service->setName($item['name']);
+            $service->setCategory($item['category']);
             $service->setDescription('test');
             $service->setDuration(new DateInterval($item['duration']));
             $service->setEstimatedPrice($item['estimated_price']);

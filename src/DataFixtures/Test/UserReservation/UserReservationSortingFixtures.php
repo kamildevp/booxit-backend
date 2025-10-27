@@ -11,6 +11,7 @@ use App\Entity\Schedule;
 use App\Entity\Service;
 use App\Entity\User;
 use App\Enum\Reservation\ReservationType;
+use App\Enum\Service\ServiceCategory;
 use App\Tests\Utils\DataProvider\ListDataProvider;
 use DateInterval;
 use DateTimeImmutable;
@@ -52,6 +53,7 @@ class UserReservationSortingFixtures extends Fixture implements DependentFixture
             $service = new Service();
             $service->setOrganization($organization);
             $service->setName($item['service_name']);
+            $service->setCategory(ServiceCategory::BARBER->value);
             $service->setDescription("test");
             $service->setEstimatedPrice('25.50');
             $service->setDuration(new DateInterval('PT1H'));

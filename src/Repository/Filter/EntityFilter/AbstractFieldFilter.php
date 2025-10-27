@@ -13,7 +13,7 @@ abstract class AbstractFieldFilter implements EntityFilterInterface
     protected string $qbIdentifier = 'e';
     protected DenormalizerInterface&NormalizerInterface $normalizer;
 
-    public function __construct(protected $propertyName)
+    public function __construct(protected string $propertyName)
     {
         
     }

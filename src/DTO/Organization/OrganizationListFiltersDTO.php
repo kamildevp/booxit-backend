@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\DTO\Organization;
 
 use App\DTO\Trait\TimestampsFiltersFieldsDTO;
+use App\Enum\Service\ServiceCategory;
+use App\Validator\Constraints\Compound as Compound;
 
 class OrganizationListFiltersDTO extends OrganizationBaseListFiltersDTO
 {
@@ -12,6 +14,8 @@ class OrganizationListFiltersDTO extends OrganizationBaseListFiltersDTO
 
     public function __construct(
         ?string $name = null,
+        #[Compound\EnumSetRequirements(ServiceCategory::class)] 
+        public readonly ?array $serviceCategory = null,
         ?string $createdFrom = null,
         ?string $createdTo = null,
         ?string $updatedFrom = null,

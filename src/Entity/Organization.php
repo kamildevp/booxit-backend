@@ -8,6 +8,7 @@ use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\RelatedFieldInSet;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -218,6 +219,7 @@ class Organization
     {
         return array_merge(self::getTimestampsFilterDefs(), [
             'name' => new FieldContains('name'),
+            'serviceCategory' => new RelatedFieldInSet('services', 'category'),
         ]);
     }
 

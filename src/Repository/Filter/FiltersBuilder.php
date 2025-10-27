@@ -36,7 +36,7 @@ class FiltersBuilder
 
             $filter->setQbIdentifier($qbIdentifier);
             $filter->setNormalizer($this->normalizer);
-            $filter->apply($qb, $filterValue, "filterParam$filterIndx");
+            $filter->apply($qb, $filterValue, "{$qbIdentifier}filterParam$filterIndx");
             $filterIndx++;
         }
     }

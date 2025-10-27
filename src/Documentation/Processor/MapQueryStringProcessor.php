@@ -56,7 +56,7 @@ final class MapQueryStringProcessor
     }
 
 
-    private function addSchemaAsSeparatedParameters(Analysis $analysis, Schema $schemaModel, OA\Operation $operation, string $parameterPrefix = '')
+    private function addSchemaAsSeparatedParameters(Analysis $analysis, Schema $schemaModel, OA\Operation $operation, string $parameterPrefix = '', bool $parentRequired = true)
     {
         if (Generator::UNDEFINED === $schemaModel->properties) {
             return;
@@ -70,6 +70,7 @@ final class MapQueryStringProcessor
             $propertyVars = get_object_vars($property);
             unset($propertyVars['property']);
             $schema = new OA\Schema($propertyVars);
+            $required = $parentRequired && is_array($schemaModel->required) && in_array($property->property, $schemaModel->required, true);
 
             if($schema->type != Generator::UNDEFINED){
                 $description = $this->replaceDescriptionPlaceholders($schema->description);
@@ -81,7 +82,7 @@ final class MapQueryStringProcessor
                 $operationParameter->deprecated = $schema->deprecated;
                 $operationParameter->example = $schema->example;
 
-                if (\is_array($schemaModel->required) && \in_array($property->property, $schemaModel->required, true)) {
+                if ($required) {
                     Util::modifyAnnotationValue($operationParameter, 'required', true);
                 } else {
                     Util::modifyAnnotationValue($operationParameter, 'required', false);
@@ -95,7 +96,7 @@ final class MapQueryStringProcessor
             $modelName = str_replace(OA\Components::SCHEMA_REF, '', $ref);
             $refSchema = Util::getSchema($analysis->openapi, $modelName);
 
-            $this->addSchemaAsSeparatedParameters($analysis, $refSchema, $operation, $name);
+            $this->addSchemaAsSeparatedParameters($analysis, $refSchema, $operation, $name, $required);
         }
     }
 

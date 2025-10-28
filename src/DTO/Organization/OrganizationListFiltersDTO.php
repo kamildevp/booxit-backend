@@ -9,6 +9,7 @@ use App\DTO\Trait\TimestampsFiltersFieldsDTO;
 use App\Enum\Service\ServiceCategory;
 use App\Validator\Constraints\Compound as Compound;
 use Symfony\Component\Validator\Constraints as Assert;
+use OpenApi\Attributes as OA;
 
 class OrganizationListFiltersDTO extends OrganizationBaseListFiltersDTO
 {
@@ -18,6 +19,7 @@ class OrganizationListFiltersDTO extends OrganizationBaseListFiltersDTO
         ?string $name = null,
         #[Assert\Valid]
         public readonly ?AddressFiltersDTO $address = null,
+        #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
         #[Compound\EnumSetRequirements(ServiceCategory::class)] 
         public readonly ?array $serviceCategory = null,
         ?string $createdFrom = null,

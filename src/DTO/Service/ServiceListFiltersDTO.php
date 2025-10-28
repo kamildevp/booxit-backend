@@ -8,6 +8,7 @@ use App\DTO\ListFiltersDTO;
 use App\DTO\Trait\TimestampsFiltersFieldsDTO;
 use App\Enum\Service\ServiceCategory;
 use App\Validator\Constraints\Compound as Compound;
+use OpenApi\Attributes as OA;
 
 class ServiceListFiltersDTO extends ListFiltersDTO 
 {
@@ -24,6 +25,7 @@ class ServiceListFiltersDTO extends ListFiltersDTO
         public readonly ?string $estimatedPriceFrom = null,
         #[Compound\DecimalRequirements(true)] 
         public readonly ?string $estimatedPriceTo = null,
+        #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
         #[Compound\EnumSetRequirements(ServiceCategory::class)] 
         public readonly ?array $category = null,
         ?string $createdFrom = null,

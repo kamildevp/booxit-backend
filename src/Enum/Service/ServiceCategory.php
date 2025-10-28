@@ -34,5 +34,6 @@ enum ServiceCategory: string
     case LEGAL = 'Legal';
     case BUSINESS = 'Business';
     case PET_CARE = 'Pet Care';
+    case TECH_SUPPORT = 'Tech support';
     case OTHER = 'Other';
 }

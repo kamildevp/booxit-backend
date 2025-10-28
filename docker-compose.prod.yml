@@ -1,0 +1,13 @@
+services:
+  nginx:
+    networks:
+      - proxy
+
+  database:
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: proxy
+    external: true

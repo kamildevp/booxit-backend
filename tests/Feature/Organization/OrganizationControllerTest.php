@@ -132,7 +132,9 @@ class OrganizationControllerTest extends BaseWebTestCase
         $responseData = $this->getSuccessfulResponseData($this->client, 'GET', $path);
 
         $this->assertCount(1, $responseData['items']);
-        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($expectedItemData, $responseData['items'][0], array_keys($expectedItemData));
+        $dotExpectedItemData = array_dot($expectedItemData);
+        $dotResponseItemData = array_dot($responseData['items'][0]);
+        $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($dotExpectedItemData, $dotResponseItemData, array_keys($dotExpectedItemData));
     }
 
     #[Fixtures([OrganizationSortingFixtures::class])]

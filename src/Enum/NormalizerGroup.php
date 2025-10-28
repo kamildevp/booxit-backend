@@ -11,6 +11,7 @@ enum NormalizerGroup: string implements NormalizerGroupInterface
 {
     case TIMESTAMP = 'timestamp';
     case AUTHOR_INFO = 'author_info';
+    case ADDRESS = 'address';
     
     public function normalizationGroups(): array
     {

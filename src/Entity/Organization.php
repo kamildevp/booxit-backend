@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Entity\Embeddable\Address;
 use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Repository\Filter\EntityFilter\EmbeddedFieldFilter;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Filter\EntityFilter\RelatedFieldInSet;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
@@ -38,6 +40,10 @@ class Organization
     #[Groups([OrganizationNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    #[Groups([OrganizationNormalizerGroup::ADDRESS->value])]
+    #[ORM\Embedded(class: Address::class)]
+    private Address $address;
 
     #[ORM\OneToOne(cascade: ['remove'])]
     #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
@@ -90,6 +96,17 @@ class Organization
         $this->description = $description;
 
         return $this;
+    }
+
+    public function getAddress(): Address 
+    { 
+        return $this->address; 
+    }
+
+    public function setAddress(Address $address): self 
+    { 
+        $this->address = $address; 
+        return $this; 
     }
 
     /**
@@ -219,6 +236,7 @@ class Organization
     {
         return array_merge(self::getTimestampsFilterDefs(), [
             'name' => new FieldContains('name'),
+            'address' => new EmbeddedFieldFilter('address', Address::class),
             'serviceCategory' => new RelatedFieldInSet('services', 'category'),
         ]);
     }

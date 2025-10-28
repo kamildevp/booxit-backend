@@ -56,6 +56,7 @@ class BaseWebTestCase extends WebTestCase
         $this->fs = new Filesystem();
 
         $this->loadFixtures();
+        $this->installExtensions();
 
         $userRepository = $this->container->get(UserRepository::class);
         $this->user = $userRepository->findOneBy(['email' => VerifiedUserFixtures::VERIFIED_USER_EMAIL]) ?? new User();
@@ -80,5 +81,11 @@ class BaseWebTestCase extends WebTestCase
         }
 
         $this->dbTool->loadFixtures([VerifiedUserFixtures::class, ...($fixturesAttribute->fixtures ?? [])]);
+    }
+
+    protected function installExtensions(): void
+    {
+        $conn = $this->entityManager->getConnection();
+        $conn->executeStatement('CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE');
     }
 }

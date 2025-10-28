@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Filter\EntityFilter;
 
+use App\Repository\Filter\FiltersBuilder;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -12,6 +13,7 @@ abstract class AbstractFieldFilter implements EntityFilterInterface
 {
     protected string $qbIdentifier = 'e';
     protected DenormalizerInterface&NormalizerInterface $normalizer;
+    protected FiltersBuilder $filtersBuilder;
 
     public function __construct(protected string $propertyName)
     {
@@ -32,6 +34,12 @@ abstract class AbstractFieldFilter implements EntityFilterInterface
     public function setNormalizer(DenormalizerInterface&NormalizerInterface $normalizer): static
     {
         $this->normalizer = $normalizer;
+        return $this;
+    }
+
+    public function setFiltersBuilder(FiltersBuilder $filtersBuilder): static
+    {
+        $this->filtersBuilder = $filtersBuilder;
         return $this;
     }
 

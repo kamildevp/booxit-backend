@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataFixtures\Test\Organization;
 
 use App\DataFixtures\Test\Global\VerifiedUserFixtures;
+use App\Entity\Embeddable\Address;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\Service;
@@ -21,6 +22,13 @@ class OrganizationSortingFixtures extends Fixture
     {
         $sortedData = ListDataProvider::getSortedColumnsValuesSequence([
             'name' => 'string',
+            'address_street' => 'string',
+            'address_city' => 'string',
+            'address_region' => 'string',
+            'address_postal_code' => 'postal_code',
+            'address_country' => 'string',
+            'address_latitude' => 'latitude',
+            'address_longitude' => 'longitude',
             'service_category' => 'service_category',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -36,6 +44,17 @@ class OrganizationSortingFixtures extends Fixture
         foreach($data as $i => $item){
             $organization = new Organization();
             $organization->setName($item['name']);
+            $address = new Address();
+            $address->setStreet($item['address_street']);
+            $address->setCity($item['address_city']);
+            $address->setRegion($item['address_region']);
+            $address->setPostalCode($item['address_postal_code']);
+            $address->setCountry($item['address_country']);
+            $address->setPlaceId('TestPlaceId');
+            $address->setFormattedAddress('Test address');
+            $address->setLatitude($item['address_latitude']);
+            $address->setLongitude($item['address_longitude']);
+            $organization->setAddress($address);
             $organization->setCreatedAt(new DateTimeImmutable($item['created_at']));
             $organization->setUpdatedAt(new DateTimeImmutable($item['updated_at']));
             $manager->persist($organization);

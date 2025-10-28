@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataFixtures\Test\UserReservation;
 
 use App\DataFixtures\Test\User\UserFixtures;
+use App\Entity\Embeddable\Address;
 use App\Entity\Organization;
 use App\Entity\Reservation;
 use App\Entity\Schedule;
@@ -48,6 +49,17 @@ class UserReservationSortingFixtures extends Fixture implements DependentFixture
             $organization = new Organization();
             $organization->setName($item['organization_name']);
             $organization->setDescription("test");
+            $address = new Address();
+            $address->setStreet('Test street');
+            $address->setCity('Test city');
+            $address->setRegion('Test region');
+            $address->setPostalCode('30-126');
+            $address->setCountry('Test country');
+            $address->setPlaceId('TestPlaceId');
+            $address->setFormattedAddress('Test address');
+            $address->setLatitude(50);
+            $address->setLongitude(19);
+            $organization->setAddress($address);
             $manager->persist($organization);
 
             $service = new Service();

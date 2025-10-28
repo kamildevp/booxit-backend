@@ -19,14 +19,16 @@ enum OrganizationNormalizerGroup: string implements NormalizerGroupInterface
     case BASE_INFO = 'organization-base_info';
     case DETAILS = 'organization-details';
     case SENSITIVE = 'organization-sensitive';
+    case ADDRESS = 'organization-address';
     case TIMESTAMP = Organization::class.NormalizerGroup::TIMESTAMP->value;
     case AUTHOR_INFO = Organization::class.NormalizerGroup::AUTHOR_INFO->value;
 
     protected function appendGroups(): array
     {
         return match($this){
-            self::PUBLIC => [self::BASE_INFO->value, self::DETAILS->value, self::TIMESTAMP->value],
+            self::PUBLIC => [self::BASE_INFO->value, self::DETAILS->value, self::TIMESTAMP->value, ...self::ADDRESS->normalizationGroups()],
             self::PRIVATE => [self::SENSITIVE->value, ...self::PUBLIC->normalizationGroups()],
+            self::ADDRESS => [NormalizerGroup::ADDRESS->value],
             self::AUTHOR_INFO => NormalizerGroup::AUTHOR_INFO->normalizationGroups(),
             default => []
         };

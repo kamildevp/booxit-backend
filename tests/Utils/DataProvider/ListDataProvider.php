@@ -208,6 +208,21 @@ class ListDataProvider extends BaseDataProvider
                 [$columnName => ServiceCategory::BUSINESS->value],
                 [$columnName => ServiceCategory::FINANCE->value],
             ],
+            'postal_code' => [
+                [$columnName => '30-125'],
+                [$columnName => '30-126'],
+                [$columnName => '30-127'],
+            ],
+            'latitude' => [
+                [$columnName => 50.06],
+                [$columnName => 50.07],
+                [$columnName => 50.08],
+            ],
+            'longitude' => [
+                [$columnName => 19.93],
+                [$columnName => 19.98],
+                [$columnName => 20.05],
+            ],
         ];
 
         $values = array_key_exists($type, $data) ? $data[$type] : null;

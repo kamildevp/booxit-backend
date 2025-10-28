@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\Organization;
 
+use App\Entity\Embeddable\Address;
 use App\Entity\File;
 use App\Entity\Organization;
 use App\Enum\File\UploadType;
@@ -28,6 +29,18 @@ class OrganizationBannerFixtures extends Fixture
         $organization = new Organization();
         $organization->setName('Test Organization');
         $organization->setDescription('test');
+        
+        $address = new Address();
+        $address->setStreet('Test street');
+        $address->setCity('Test city');
+        $address->setRegion('Test region');
+        $address->setPostalCode('30-126');
+        $address->setCountry('Test country');
+        $address->setPlaceId('TestPlaceId');
+        $address->setFormattedAddress('Test address');
+        $address->setLatitude(50);
+        $address->setLongitude(19);
+        $organization->setAddress($address);
 
         $banner = new File();
         $banner->setPath($this->containerBag->get('kernel.project_dir').self::BANNER_FILE_PATH);

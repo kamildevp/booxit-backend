@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Test\OrganizationMember;
 
+use App\Entity\Embeddable\Address;
 use App\Entity\Organization;
 use App\Entity\OrganizationMember;
 use App\Entity\User;
@@ -28,6 +29,17 @@ class OrganizationMemberSortingFixtures extends Fixture
         ];
 
         $organization = new Organization();
+        $address = new Address();
+        $address->setStreet('Test street');
+        $address->setCity('Test city');
+        $address->setRegion('Test region');
+        $address->setPostalCode('30-126');
+        $address->setCountry('Test country');
+        $address->setPlaceId('TestPlaceId');
+        $address->setFormattedAddress('Test address');
+        $address->setLatitude(50);
+        $address->setLongitude(19);
+        $organization->setAddress($address);
         $organization->setName('Test Organization');
         $manager->persist($organization);
 

@@ -24,6 +24,11 @@ doctrine:
             verifiable:
                 class: App\Repository\ORM\Filter\VerifiableFilter
                 enabled: true
+        dql:
+            numeric_functions:
+                EARTH_POINT: App\Repository\ORM\Functions\EarthPoint
+                EARTH_BOX_CONTAINS: App\Repository\ORM\Functions\EarthBoxContains
+                EARTH_DISTANCE: App\Repository\ORM\Functions\EarthDistance
 
 when@test:
     doctrine:

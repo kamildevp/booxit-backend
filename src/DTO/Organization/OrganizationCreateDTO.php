@@ -5,15 +5,24 @@ declare(strict_types=1);
 namespace App\DTO\Organization;
 
 use App\DTO\AbstractDTO;
-use App\DTO\Organization\Trait\OrganizationBaseFieldsDTO;
+use App\DTO\AddressDTO;
+use App\Entity\Organization;
+use App\Validator\Constraints as CustomAssert;
+use App\Validator\Constraints\Compound as Compound;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class OrganizationCreateDTO extends AbstractDTO 
 {
-    use OrganizationBaseFieldsDTO;
-
-    public function __construct(string $name, string $description)
+    public function __construct(
+        #[CustomAssert\UniqueEntityField(Organization::class, 'name')]
+        #[Compound\NameRequirements]
+        public readonly string $name,
+        #[Compound\DescriptionRequirements]
+        public readonly string $description,
+        #[Assert\Valid]
+        public readonly AddressDTO $address,
+    )
     {
-        $this->name = $name;
-        $this->description = $description;
+
     }
 }

@@ -1,6 +1,4 @@
 ## Booxit Backend
-<img src=https://project-static-assets.s3.amazonaws.com/APISpreadsheets/APIMemes/BackendRestAPIFrontEndBike.jpeg height=300 width=400>
-<br>
 Dockerized back-end application built with Symfony Framework. Application purpose is to provide easy to use appointment planning and management platform, which handles reservation storage, free terms management, email notifications and does not require organization/service provider to be involved in reservation process.
  
 It provides users the ability to: 

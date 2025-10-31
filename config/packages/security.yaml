@@ -8,32 +8,38 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
+                property: id
+        login_user_provider:
+            entity:
+                class: App\Entity\User
                 property: email
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
+            provider: app_user_provider
             security: false
         
         login:
-            pattern: ^/api/login_check
+            pattern: ^/api/auth/login
             user_checker: App\Security\UserChecker
             stateless: true
+            provider: login_user_provider
             json_login:
-                check_path: /api/login_check
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                check_path: /api/auth/login
+                success_handler: App\Security\AuthenticationSuccessHandler
+                failure_handler: App\Security\AuthenticationFailureHandler
                 username_path: email
 
-
         refresh:
-            pattern: ^/api/token/refresh
+            pattern: ^/api/auth/refresh
             stateless: true
-            refresh_jwt:
-                check_path: /api/token/refresh
-
+            provider: app_user_provider
+            custom_authenticators:
+                - App\Security\RefreshTokenAuthenticator
         api:
             pattern:   ^/api
             stateless: true
+            provider: app_user_provider
             jwt: ~
 
         main:
@@ -49,9 +55,9 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
 
-    access_control:
-        - { path: ^/api/user/modify, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api, roles: PUBLIC_ACCESS }
+    # access_control:
+    #     - { path: ^/api/user/modify, roles: IS_AUTHENTICATED_FULLY }
+    #     - { path: ^/api, roles: PUBLIC_ACCESS }
         
 
 when@test:

@@ -1,462 +1,213 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
+use App\Documentation\Request\MediaTypeRequestDoc;
+use App\Documentation\Response\BinaryFileResponseDoc;
+use App\Documentation\Response\ForbiddenResponseDoc;
+use App\Documentation\Response\NotFoundResponseDoc;
+use App\Documentation\Response\PaginatorResponseDoc;
+use App\Documentation\Response\ServerErrorResponseDoc;
+use App\Documentation\Response\SuccessResponseDoc;
+use App\Documentation\Response\UnauthorizedResponseDoc;
+use App\Documentation\Response\ValidationErrorResponseDoc;
+use App\DTO\Organization\OrganizationCreateDTO;
+use App\DTO\Organization\OrganizationListQueryDTO;
+use App\DTO\Organization\OrganizationPatchDTO;
 use App\Entity\Organization;
-use App\Entity\OrganizationMember;
-use App\Entity\User;
-use App\Exceptions\InvalidRequestException;
-use App\Service\GetterHelper\GetterHelperInterface;
-use App\Service\SetterHelper\SetterHelperInterface;
-use Doctrine\ORM\EntityManagerInterface;
-use PDO;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use App\Enum\File\UploadType;
+use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Organization\OrganizationRole;
+use App\Repository\OrganizationRepository;
+use App\Response\NotFoundResponse;
+use App\Response\ResourceCreatedResponse;
+use App\Response\SuccessResponse;
+use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
+use App\Service\Auth\Attribute\RestrictedAccess;
+use App\Service\Entity\FileService;
+use App\Service\Entity\OrganizationMemberService;
+use App\Service\EntitySerializer\EntitySerializerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
-class OrganizationController extends AbstractApiController
+#[ServerErrorResponseDoc]
+#[OA\Tag('Organization')]
+class OrganizationController extends AbstractController
 {
-    #[Route('organization', name: 'organization_new', methods: ['POST'])]
-    public function new(
-        SetterHelperInterface $setterHelper,
-        ValidatorInterface $validator, 
-        EntityManagerInterface $entityManager, 
-        Request $request
-        ): JsonResponse
+    #[OA\Post(
+        summary: 'Create a new organization',
+        description: 'Creates a new organization. The user who creates the organization automatically becomes its administrator.
+        </br>**Important:** This action can only be performed by logged in user'
+    )]
+    #[SuccessResponseDoc(
+        statusCode: 201,
+        description: 'Created Organization',
+        dataModel: Organization::class,
+        dataModelGroups: OrganizationNormalizerGroup::PRIVATE
+    )]
+    #[ValidationErrorResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess]
+    #[Route('organizations', name: 'organization_new', methods: ['POST'])]
+    public function create(
+        #[MapRequestPayload] OrganizationCreateDTO $dto,
+        EntitySerializerInterface $entitySerializer,
+        OrganizationRepository $organizationRepository,   
+        OrganizationMemberService $organizationMemberService,
+    ): ResourceCreatedResponse
     {
-        $user = $this->getUser();
-
-        if(!($user instanceof User)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
-
-        $organization = new Organization();
-
-        try{
-            $setterHelper->updateObjectSettings($organization, $request->request->all(), ['Default']);
-            $validationErrors = $setterHelper->getValidationErrors();
-            
-            $violations = $validator->validate($organization, groups: $setterHelper->getValidationGroups());
-
-            foreach ($violations as $violation) {
-                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
-                $validationErrors[$requestParameterName] = $violation->getMessage();
-            }
-
-            if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
-            }
-
-            $setterHelper->runPostValidationTasks();
-
-        }
-        catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
-        }
-
-        $entityManager->persist($organization);
-        $entityManager->flush();
+        $organization = $entitySerializer->parseToEntity($dto, Organization::class);
+        $organizationRepository->save($organization, true);
+        $organizationMemberService->createOrganizationMember($organization, $this->getUser(), OrganizationRole::ADMIN);
+        $responseData = $entitySerializer->normalize($organization, OrganizationNormalizerGroup::PRIVATE->normalizationGroups());
         
-        $organizationMember = new OrganizationMember();
-        $organizationMember->setAppUser($user);
-        $organizationMember->setOrganization($organization);
-        $organizationMember->setRoles(['MEMBER', 'ADMIN']);
-        $entityManager->persist($organizationMember);
-        $entityManager->flush();
-
-        return $this->newApiResponse(data: ['message' => 'Organization created successfully'], code: 201);
+        return new ResourceCreatedResponse($responseData);
     }
 
-    #[Route('organization/{organizationId}', name: 'organization_get', methods: ['GET'])]
-    public function get(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $organizationId): JsonResponse
+    #[OA\Get(
+        summary: 'Get organization',
+        description: 'Returns the public data of the specified organization.'
+    )]
+    #[SuccessResponseDoc(
+        description: 'Requested Organization Data',
+        dataModel: Organization::class,
+        dataModelGroups: OrganizationNormalizerGroup::PUBLIC
+    )]
+    #[NotFoundResponseDoc('Organization not found')]
+    #[Route('organizations/{organization}', name: 'organization_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
+    public function get(Organization $organization, EntitySerializerInterface $entitySerializer): SuccessResponse
     {
-        $allowedDetails = ['members', 'services', 'schedules', 'admins'];
-        $details = $request->query->get('details');
-        $detailGroups = !is_null($details) ? explode(',', $details) : [];
-        if(!empty(array_diff($detailGroups, $allowedDetails))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['details' => 'Requested details are invalid']], code: 400);
-        }
+        $responseData = $entitySerializer->normalize($organization, OrganizationNormalizerGroup::PUBLIC->normalizationGroups());
 
-        $range = $request->query->get('range');
-        $detailGroups = array_map(fn($group) => 'organization-' . $group, $detailGroups);
-        $groups = array_merge(['organization'], $detailGroups);
+        return new SuccessResponse($responseData);
+    }
 
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
+    #[OA\Patch(
+        summary: 'Update organization',
+        description: 'Updates organization data.
+        </br>**Important:** This action can only be performed by the organization administrator.'
+    )]
+    #[SuccessResponseDoc(
+        description: 'Updated Organization Data',
+        dataModel: Organization::class,
+        dataModelGroups: OrganizationNormalizerGroup::PRIVATE
+    )]
+    #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}', name: 'organization_patch', methods: ['PATCH'], requirements: ['organization' => '\d+'])]
+    public function patch(
+        Organization $organization, 
+        EntitySerializerInterface $entitySerializer, 
+        OrganizationRepository $organizationRepository,
+        #[MapRequestPayload] OrganizationPatchDTO $dto,
+    ): SuccessResponse
+    {
+        $organization = $entitySerializer->parseToEntity($dto, $organization);
+        $organizationRepository->save($organization, true);
+        $responseData = $entitySerializer->normalize($organization, OrganizationNormalizerGroup::PRIVATE->normalizationGroups());
         
-        try{
-            $responseData = $getterHelper->get($organization, $groups, $range);
-        }
-        catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
-        }
-
-        return $this->newApiResponse(data: $responseData);
+        return new SuccessResponse($responseData);
     }
 
-    #[Route('organization/{organizationId}', name: 'organization_modify', methods: ['PATCH'])]
-    public function modify(
-        ValidatorInterface $validator, 
-        EntityManagerInterface $entityManager, 
-        SetterHelperInterface $setterHelper, 
-        Request $request, 
-        int $organizationId
-        ): JsonResponse
+    #[OA\Delete(
+        summary: 'Delete organization',
+        description: 'Deletes the specified organization.
+        </br>**Important:** This action can only be performed by the organization administrator. The organization is soft-deleted, meaning a new organization cannot be created with the same name.'
+    )]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Organization removed successfully'])]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}', name: 'organization_delete', methods: ['DELETE'], requirements: ['organization' => '\d+'])]
+    public function delete(        
+        Organization $organization, 
+        OrganizationRepository $organizationRepository
+    ): SuccessResponse
     {
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
-
-        if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
-        }
+        $organizationRepository->remove($organization, true);
         
-        try{
-            $setterHelper->updateObjectSettings($organization, $request->request->all(), [], ['Default']);
-            $validationErrors = $setterHelper->getValidationErrors();
-            
-            $violations = $validator->validate($organization, groups: $setterHelper->getValidationGroups());
-
-            foreach ($violations as $violation) {
-                $requestParameterName = $setterHelper->getPropertyRequestParameter($violation->getPropertyPath());
-                $validationErrors[$requestParameterName] = $violation->getMessage();
-            }            
-
-            if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
-            }
-
-            $setterHelper->runPostValidationTasks();
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
-        }
-
-        $entityManager->flush();
-
-        return $this->newApiResponse(data: ['message' => 'Organization settings modified successfully']);
+        return new SuccessResponse(['message' => 'Organization removed successfully']);
     }
 
-    #[Route('organization/{organizationId}', name: 'organization_delete', methods: ['DELETE'])]
-    public function delete(EntityManagerInterface $entityManager, int $organizationId): JsonResponse
+    #[OA\Get(
+        summary: 'List organizations',
+        description: 'Retrieves a paginated list of existing organizations with their public information.'
+    )]
+    #[PaginatorResponseDoc(
+        description: 'Paginated users list', 
+        dataModel: Organization::class,
+        dataModelGroups: OrganizationNormalizerGroup::PUBLIC
+    )]
+    #[ValidationErrorResponseDoc]
+    #[Route('organizations', name: 'organization_list', methods: ['GET'])]
+    public function list(
+        OrganizationRepository $organizationRepository, 
+        EntitySerializerInterface $entitySerializer, 
+        #[MapQueryString] OrganizationListQueryDTO $queryDTO = new OrganizationListQueryDTO,
+    ): SuccessResponse
     {
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+        $paginationResult = $organizationRepository->paginate($queryDTO);
+        $result = $entitySerializer->normalizePaginationResult($paginationResult, OrganizationNormalizerGroup::PUBLIC->normalizationGroups());
 
-        }
+        return new SuccessResponse($result);
+    }
 
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
+    #[OA\Put(
+        summary: 'Update organization banner',
+        description: 'Updates organization banner.
+        </br>**Important:** This action can only be performed by the organization administrator.'
+    )]
+    #[MediaTypeRequestDoc(UploadType::ORGANIZATION_BANNER)]
+    #[SuccessResponseDoc(dataExample: ['message' => 'Organization banner updated successfully'])]
+    #[ForbiddenResponseDoc]
+    #[UnauthorizedResponseDoc]
+    #[NotFoundResponseDoc('Organization not found')]
+    #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[Route('organizations/{organization}/banner', name: 'organization_banner_put', methods: ['PUT'], requirements: ['organization' => '\d+'])]
+    public function updateBanner(
+        Organization $organization,  
+        OrganizationRepository $organizationRepository,
+        FileService $fileService,
+        Request $request,
+    ): SuccessResponse
+    {
+        $content = $request->getContent();
+        $contentType = $request->headers->get('Content-Type');
 
-        if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
-        }
+        $banner = $fileService->uploadRawFile($content, $contentType, UploadType::ORGANIZATION_BANNER, $organization->getBannerFile());
+        $organization->setBannerFile($banner);
+        $organizationRepository->save($organization, true);
         
-        $entityManager->remove($organization);
-        $entityManager->flush();
-
-        return $this->newApiResponse(data: ['message' => 'Organization removed successfully']);
+        return new SuccessResponse(['message' => 'Organization banner updated successfully']);
     }
 
-    #[Route('organization/{organizationId}/members', name: 'organization_modifyMembers', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
-    public function modifyMembers(
-        EntityManagerInterface $entityManager, 
-        SetterHelperInterface $setterHelper,
-        Request $request, 
-        int $organizationId
-        ): JsonResponse
+    #[OA\Get(
+        summary: 'Get organization banner',
+        description: 'Returns banner of the specified organization.'
+    )]
+    #[BinaryFileResponseDoc(UploadType::ORGANIZATION_BANNER)]
+    #[NotFoundResponseDoc(messages: ['Organization not found', 'Organization banner not found'])]
+    #[Route('organizations/{organization}/banner', name: 'organization_banner_get', methods: ['GET'], requirements: ['organization' => '\d+'])]
+    public function getBanner(Organization $organization): NotFoundResponse|BinaryFileResponse
     {
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
+        $banner = $organization->getBannerFile();
+        if(!$banner){
+            return new NotFoundResponse('Organization banner not found');
         }
 
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
+        $response = new BinaryFileResponse($banner->getPath());
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE);
 
-        if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
-        }
-
-        try{
-            $modficationTypeMap = ['POST' => 'ADD', 'PATCH' => 'PATCH', 'PUT' => 'OVERWRITE', 'DELETE' => 'REMOVE'];
-
-            $parameters = $request->request->all();
-            $parameters['modificationType'] = $modficationTypeMap[$request->getMethod()];
-            $setterHelper->updateObjectSettings($organization, $parameters, ['members'], []);
-            $validationErrors = $setterHelper->getValidationErrors();
-
-            if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
-            }
-
-            $setterHelper->runPostValidationTasks();
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
-        }
-
-        $entityManager->flush();
-
-        $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
-
-        return $this->newApiResponse(data: ['message' => "Members {$actionType[$request->getMethod()]} successfully"]);
-    }
-
-    #[Route('organization/{organizationId}/services', name: 'organization_modifyServices', methods: ['POST', 'PATCH', 'PUT', 'DELETE'])]
-    public function modifyServices(
-        EntityManagerInterface $entityManager, 
-        SetterHelperInterface $setterHelper,
-        Request $request, 
-        int $organizationId
-        ): JsonResponse
-    {
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-                if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
-
-        if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
-        }
-
-        try{
-            $modficationTypeMap = ['POST' => 'ADD', 'PATCH' => 'PATCH', 'PUT' => 'OVERWRITE', 'DELETE' => 'REMOVE'];
-
-            $parameters = $request->request->all();
-            $parameters['modificationType'] = $modficationTypeMap[$request->getMethod()];
-            $setterHelper->updateObjectSettings($organization, $parameters, ['services'], []);
-
-            $validationErrors = $setterHelper->getValidationErrors();
-
-            if(count($validationErrors) > 0){
-                return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => $validationErrors], code: 400);
-            }
-
-            $setterHelper->runPostValidationTasks();
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $setterHelper->getRequestErrors()], code: 400);
-        }
-    
-        $entityManager->flush();
-
-        $actionType = ['POST' => 'added', 'PATCH' => 'modified', 'PUT' => 'overwritten', 'DELETE' => 'removed'];
-
-        return $this->newApiResponse(data: ['message' => "Services {$actionType[$request->getMethod()]} successfully"]);
-    }
-
-    #[Route('organization', name: 'organizations_get', methods: ['GET'])]
-    public function getOrganizations(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request): JsonResponse
-    {
-        $filter = $request->query->get('filter');
-        $range = $request->query->get('range');
-
-        $organizations = $entityManager->getRepository(Organization::class)->findByPartialName($filter ?? '');
-        
-        try{
-            $responseData = $getterHelper->getCollection($organizations, ['organizations'], $range);
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
-        }
-
-        return $this->newApiResponse(data: $responseData);
-    }
-
-    #[Route('organization/{organizationId}/members', name: 'organization_getMembers', methods: ['GET'])]
-    public function getMembers(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $organizationId): JsonResponse
-    {
-        $filter = $request->query->get('filter');
-        $range = $request->query->get('range');
-
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-        
-        if(is_null($filter)){
-            $members = $organization->getMembers();
-        }
-        else{
-            $members = $organization->getMembers()->filter(function($element) use ($filter){
-                $user = $element->getAppUser();
-                return str_contains(strtolower($user->getName()), strtolower($filter)) || str_contains(strtolower($user->getEmail()), strtolower($filter));
-            });
-        }
-
-        try{
-            $responseData = $getterHelper->getCollection($members, ['organization-members'], $range);
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
-        }
-
-        return $this->newApiResponse(data: $responseData);
-    }
-
-    #[Route('organization/{organizationId}/services', name: 'organization_getServices', methods: ['GET'])]
-    public function getServices(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $organizationId): JsonResponse
-    {
-        $filter = $request->query->get('filter');
-        $range = $request->query->get('range');
-
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-        
-        if(is_null($filter)){
-            $services = $organization->getServices();
-        }
-        else{
-            $services = $organization->getServices()->filter(function($element) use ($filter){
-                return str_contains(strtolower($element->getName()), strtolower($filter));
-            });
-        }
-
-        try{
-            $responseData = $getterHelper->getCollection($services, ['organization-services'], $range);
-        }
-        catch(InvalidRequestException){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
-        }
-
-        return $this->newApiResponse(data: $responseData);
-    }
-
-    #[Route('organization/{organizationId}/schedules', name: 'organization_getSchedules', methods: ['GET'])]
-    public function getSchedules(EntityManagerInterface $entityManager, GetterHelperInterface $getterHelper, Request $request, int $organizationId): JsonResponse
-    {
-        $filter = $request->query->get('filter');
-        $range = $request->query->get('range');
-
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-        
-        if(is_null($filter)){
-            $schedules = $organization->getSchedules();
-        }
-        else{
-            $schedules = $organization->getSchedules()->filter(function($element) use ($filter){
-                return str_contains(strtolower($element->getName()), strtolower($filter));
-            });
-        }
-
-        try{
-            $responseData = $getterHelper->getCollection($schedules, ['organization-schedules'], $range);
-        }
-        catch(InvalidRequestException $e){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => $getterHelper->getRequestErrors()], code: 400);
-        }
-
-        return $this->newApiResponse(data: $responseData);
-    }
-
-    #[Route('organization/{organizationId}/banner', name: 'organization_addBanner', methods: ['POST'])]
-    public function addBanner(EntityManagerInterface $entityManager, Request $request, int $organizationId): JsonResponse
-    {
-
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-
-        $currentUser = $this->getUser();
-        if(!$currentUser){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 401);
-        }
-
-        if(!($organization->hasMember($currentUser) && $organization->getMember($currentUser)->hasRoles(['ADMIN']))){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Access denied'], code: 403);
-        }
-
-        $bannerFile = $request->files->get('banner');
-        if(!$bannerFile){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Invalid request', 'errors' => ['banner' => 'File not found']], code: 400);
-        }
-
-        $allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
-        $mimeType = $bannerFile->getClientMimeType();
-        if(!in_array($mimeType, $allowedTypes)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => ['banner' => 'Invalid file type']], code: 400);
-        }
-
-        $maxSize = 10000000;
-        $bannerSize = $bannerFile->getSize();
-        if($bannerSize > $maxSize){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Validation error', 'errors' => ['banner' => 'Maximum file size is 10MB']], code: 400);
-        }
-
-        $fileName = uniqid() . '.' . $bannerFile->guessExtension();
-        $storagePath = $this->getParameter('storage_directory') . $this->getParameter('organization_banner_directory');
-
-        try{
-            $bannerFile->move(
-                $storagePath,
-                $fileName
-            );
-
-            $banner = $organization->getBanner();
-            if(!is_null($banner)){
-                (new Filesystem)->remove($this->getParameter('storage_directory') . $banner);
-            }
-        }
-        catch(FileException){
-            return $this->newApiResponse(status: 'error', data: ['message' => 'File system error'], code: 500);
-        }
-
-        $organization->setBanner($this->getParameter('organization_banner_directory') . '/' . $fileName);
-        $entityManager->flush();
-
-        return $this->newApiResponse(data: ['message' => 'Banner uploaded successfully']);
-    }
-
-    #[Route('organization/{organizationId}/banner', name: 'organization_getBanner', methods: ['GET'])]
-    public function getBanner(EntityManagerInterface $entityManager, int $organizationId): Response
-    {
-
-        $organization = $entityManager->getRepository(Organization::class)->find($organizationId);
-        if(!($organization instanceof Organization)){
-            return $this->newApiResponse(status: 'fail', data: ['message' => 'Organization not found'], code: 404);
-        }
-
-        $banner = $organization->getBanner();
-        if(!is_null($banner)){
-            try{
-                return new BinaryFileResponse($this->getParameter('storage_directory') . $banner);
-            }
-            catch (FileException){
-                return $this->newApiResponse(status: 'error', data: ['message' => 'File system error'], code: 500);
-            }
-        }
-        else{
-            return new Response();
-        }
+        return $response;
     }
 }

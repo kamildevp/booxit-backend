@@ -1,96 +1,128 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Reservation\ReservationNormalizerGroup;
+use App\Enum\TranslationsLocale;
+use App\Repository\Filter\EntityFilter\DateTimeFieldValue;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\FieldInSet;
+use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ReservationRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Reservation\ServiceTask;
-use App\Service\SetterHelper\Task\Reservation\TimeWindowTask;
-use App\Service\SetterHelper\Task\Reservation\ScheduleTask;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
-use App\Validator\Constraints as CustomAssert;
-use DateTime;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 
-#[Assert\GroupSequence(['basic','Reservation'])]
-#[CustomAssert\Reservation]
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 class Reservation
 {
+    use Timestampable, Blameable, SoftDeleteableEntity;
+
+    #[Groups([ReservationNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups([ReservationNormalizerGroup::BASE_INFO->value])]
+    #[ORM\Column(length: 255, unique: true)]
+    private ?string $reference = null;
+
+    #[Groups([ReservationNormalizerGroup::SCHEDULE->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Schedule $schedule = null;
 
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[Assert\Length(
-        max: 180,
-        maxMessage: 'Max length of email is 180 characters',
-        groups: ['Default','basic']
-    )]
-    #[Assert\Email(
-        message: 'Value is not a valid email.',
-        groups: ['Default','basic']
-    )]
+    #[Groups([ReservationNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[Assert\Regex(
-        pattern: '/^\d{6,20}$/',
-        message: 'Value is not valid phone number',
-        groups: ['Default','basic']
-    )]
+    #[Groups([ReservationNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 255)]
     private ?string $phoneNumber = null;
 
+    #[Groups([ReservationNormalizerGroup::SERVICE->value])]
     #[ORM\ManyToOne(inversedBy: 'reservations')]
-    #[ORM\JoinColumn(nullable: true, onDelete: "SET NULL")]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Service $service = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?TimeWindow $timeWindow = null;
-
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
     #[ORM\Column]
     private ?bool $verified = null;
 
-    #[ORM\Column]
-    private ?bool $confirmed = null;
-
-    #[Assert\NotBlank(groups: ['Default','basic'])]
-    #[CustomAssert\DateTimeFormat(format: Schedule::DATE_FORMAT,groups: ['Default','basic'])]
-    #[ORM\Column(length: 255)]
-    private ?string $date = null;
-
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
-    #[Getter(groups: ['schedule-reservations'])]
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $estimatedPrice = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $startDateTime = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $endDateTime = null;
+
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION_ONLY->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $type = null;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private ?string $status = null;
+
+    #[Groups([ReservationNormalizerGroup::ORGANIZATION->value])]
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Organization $organization = null;
+
+    #[Groups([ReservationNormalizerGroup::USER->value])]
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?User $reservedBy = null;
+
+    #[ORM\JoinTable(name: 'reservation_email_confirmation')]
+    #[ORM\JoinColumn(name: 'reservation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'email_confirmation_id', referencedColumnName: 'id', unique: true, onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: EmailConfirmation::class, cascade: ['remove'])]
+    private Collection $emailConfirmations;
+
+    #[Groups([ReservationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private string $languagePreference = TranslationsLocale::EN->value;
+
+    public function __construct()
+    {
+        $this->emailConfirmations = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups: ['reservation-organization'])]
     public function getOrganization(): ?Organization
     {
         return $this->schedule->getOrganization();
     }
 
-    #[Getter(groups: ['reservation-schedule'])]
     public function getSchedule(): ?Schedule
     {
         return $this->schedule;
     }
 
-    #[Setter(targetParameter: 'schedule_id', setterTask: ScheduleTask::class, groups: ['initOnly'])]
     public function setSchedule(?Schedule $schedule): self
     {
         $this->schedule = $schedule;
@@ -98,27 +130,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation'])]
-    public function getDate(): ?string
-    {
-        return $this->date;
-    }
-
-    #[Setter]
-    public function setDate(string $date): self
-    {
-        $this->date = $date;
-
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    #[Setter(groups:['initOnly'])]
     public function setEmail(string $email): self
     {
         $this->email = $email;
@@ -126,13 +142,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function getPhoneNumber(): ?string
     {
         return $this->phoneNumber;
     }
 
-    #[Setter]
     public function setPhoneNumber(string $phoneNumber): self
     {
         $this->phoneNumber = $phoneNumber;
@@ -140,13 +154,11 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation-service', 'schedule-reservations'])]
     public function getService(): ?Service
     {
         return $this->service;
     }
 
-    #[Setter(targetParameter: 'service_id', setterTask: ServiceTask::class)]
     public function setService(?Service $service): self
     {
         $this->service = $service;
@@ -154,20 +166,6 @@ class Reservation
         return $this;
     }
 
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
-    public function getTimeWindow(): ?TimeWindow
-    {
-        return $this->timeWindow;
-    }
-
-    #[Setter(targetParameter: 'start_time', setterTask: TimeWindowTask::class)]
-    public function setTimeWindow(TimeWindow $timeWindow): self
-    {
-        $this->timeWindow = $timeWindow;
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
     public function isVerified(): ?bool
     {
         return $this->verified;
@@ -176,19 +174,6 @@ class Reservation
     public function setVerified(bool $verified): self
     {
         $this->verified = $verified;
-
-        return $this;
-    }
-
-    #[Getter(groups: ['reservation', 'schedule-reservations'])]
-    public function isConfirmed(): ?bool
-    {
-        return $this->confirmed;
-    }
-
-    public function setConfirmed(bool $confirmed): self
-    {
-        $this->confirmed = $confirmed;
 
         return $this;
     }
@@ -205,16 +190,171 @@ class Reservation
         return $this;
     }
 
-    public function updateTimeWindow(): void
+    public function getReference(): ?string
     {
-        if($this->timeWindow && $this->service){
-            $startTime = $this->timeWindow->getStartTime();
-            $duration = $this->service->getDuration();
-    
-            $endTime = (new DateTime)->setTimestamp($startTime->getTimestamp())->add($duration);
+        return $this->reference;
+    }
 
-            $this->timeWindow->setEndTime($endTime);
+    public function setReference(string $reference): static
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getEstimatedPrice(): ?string
+    {
+        return $this->estimatedPrice;
+    }
+
+    public function setEstimatedPrice(string $estimatedPrice): static
+    {
+        $this->estimatedPrice = $estimatedPrice;
+
+        return $this;
+    }
+
+    public function getStartDateTime(): ?\DateTimeImmutable
+    {
+        return $this->startDateTime;
+    }
+
+    public function setStartDateTime(\DateTimeImmutable $startDateTime): static
+    {
+        $this->startDateTime = $startDateTime;
+
+        return $this;
+    }
+
+    public function getEndDateTime(): ?\DateTimeImmutable
+    {
+        return $this->endDateTime;
+    }
+
+    public function setEndDateTime(\DateTimeImmutable $endDateTime): static
+    {
+        $this->endDateTime = $endDateTime;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function setOrganization(?Organization $organization): static
+    {
+        $this->organization = $organization;
+
+        return $this;
+    }
+
+    public function getReservedBy(): ?User
+    {
+        return $this->reservedBy;
+    }
+
+    public function setReservedBy(?User $reservedBy): static
+    {
+        $this->reservedBy = $reservedBy;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EmailConfirmation>
+     */
+    public function getEmailConfirmations(): Collection
+    {
+        return $this->emailConfirmations;
+    }
+
+    public function addEmailConfirmation(EmailConfirmation $emailConfirmation): static
+    {
+        if (!$this->emailConfirmations->contains($emailConfirmation)) {
+            $this->emailConfirmations->add($emailConfirmation);
         }
+
+        return $this;
+    }
+
+    public function removeEmailConfirmation(EmailConfirmation $emailConfirmation): static
+    {
+        $this->emailConfirmations->removeElement($emailConfirmation);
+
+        return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'organizationId' => new FieldInSet('organization'),
+            'scheduleId' => new FieldInSet('schedule'),
+            'serviceId' => new FieldInSet('service'),
+            'reference' => new FieldContains('reference'),
+            'email' => new FieldContains('email'),
+            'phoneNumber' => new FieldContains('phoneNumber'),
+            'verified' => new FieldValue('verified', '='),
+            'expiryDateFrom' => new DateTimeFieldValue('expiryDate', '>='),
+            'expiryDateTo' => new DateTimeFieldValue('expiryDate', '<='),
+            'estimatedPriceFrom' => new FieldValue('estimatedPrice', '>='),
+            'estimatedPriceTo' => new FieldValue('estimatedPrice', '<='),
+            'startDateTimeFrom' => new DateTimeFieldValue('startDateTime', '>='),
+            'startDateTimeTo' => new DateTimeFieldValue('startDateTime', '<='),
+            'endDateTimeFrom' => new DateTimeFieldValue('endDateTime', '>='),
+            'endDateTimeTo' => new DateTimeFieldValue('endDateTime', '<='),
+            'type' => new FieldInSet('type'),
+            'status' => new FieldInSet('status'),
+            'reservedById' => new FieldInSet('reservedBy'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'reference' => new BaseFieldOrder('reference'),
+            'email' => new BaseFieldOrder('email'),
+            'verified' => new BaseFieldOrder('verified'),
+            'expiry_date' => new BaseFieldOrder('expiryDate'),
+            'estimated_price' => new BaseFieldOrder('estimatedPrice'),
+            'start_date_time' => new BaseFieldOrder('startDateTime'),
+            'end_date_time' => new BaseFieldOrder('endDateTime'),
+            'type' => new BaseFieldOrder('type'),
+            'status' => new BaseFieldOrder('status'),
+        ]);
+    }
+
+    public function getLanguagePreference(): string
+    {
+        return $this->languagePreference;
+    }
+
+    public function setLanguagePreference(string $languagePreference): static
+    {
+        $this->languagePreference = $languagePreference;
+
+        return $this;
     }
 
 }

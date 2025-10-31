@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DataFixtures\Test\User;
+
+use App\Entity\User;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
+class UserFixtures extends Fixture
+{
+    const USER_REFERENCE = 'user';
+
+    public function __construct(private UserPasswordHasherInterface $hasher)
+    {
+        
+    }
+
+    public function load(ObjectManager $manager): void
+    {
+        for ($i = 1; $i <= 35; $i++) {
+            $user = new User();
+            $user->setName('Test User ' . $i);
+            $user->setEmail("user{$i}@example.com");
+            $user->setUsername("user{$i}");
+            $user->setPassword(
+                $this->hasher->hashPassword($user, 'password123')
+            );
+            $user->setVerified(true);
+
+            $manager->persist($user);
+            $this->addReference(self::USER_REFERENCE.$i, $user);
+        }
+
+        $manager->flush();
+    }
+}

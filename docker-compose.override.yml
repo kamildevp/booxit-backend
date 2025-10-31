@@ -1,56 +1,20 @@
-version: "3.4"
-
-# Development environment override
 services:
   php:
     build:
-      target: app_php_dev
+      target: app_dev
     volumes:
-      - ./:/srv/app
-      - ./docker/php/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini:ro
-      # If you develop on Mac or Windows you can remove the vendor/ directory
-      #  from the bind-mount for better performance by enabling the next line:
-      #- /srv/app/vendor
-    environment:
-      # See https://xdebug.org/docs/all_settings#mode 
-      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+    - ./docker/php/xdebug/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
     extra_hosts:
-      # Ensure that host.docker.internal is correctly defined on Linux
-      - host.docker.internal:host-gateway
+    - host.docker.internal:host-gateway
 
-  caddy:
-    environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost, caddy:80}
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile", "--watch"]
-    volumes:
-      - ./public:/srv/app/public:ro
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+  nginx:
+    ports: 
+    - "${APP_PORT:-8000}:80"
 
-    ports:
-      # HTTP
-      - target: 80
-        published: ${HTTP_PORT:-80}
-        protocol: tcp
-      # HTTPS
-      - target: 443
-        published: ${HTTPS_PORT:-443}
-        protocol: tcp
-      # HTTP/3
-      - target: 443
-        published: ${HTTP3_PORT:-443}
-        protocol: udp
-
-###> symfony/mercure-bundle ###
-###< symfony/mercure-bundle ###
-
-###> doctrine/doctrine-bundle ###
   database:
-    ports:
-      - "5432"
-###< doctrine/doctrine-bundle ###
+    ports: 
+    - "${DATABASE_PORT:-32770}:5432"
 
-###> symfony/mailer ###
-  mailer:
-    image: schickling/mailcatcher
-    ports: ["1025", "1080"]
-###< symfony/mailer ###
+  rabbitmq:
+    ports: 
+    - "${RABBITMQ_MANAGEMENT_PORT:-32411}:15672"

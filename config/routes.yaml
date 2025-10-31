@@ -6,10 +6,17 @@ controllers:
     prefix:   '/api'
     trailing_slash_on_root: false
 
-api_login_check:
-    path: /api/login_check
+api_auth_login:
+    path: /api/auth/login
     methods: POST
 
-api_refresh_token:
-    path: /api/token/refresh
+api_auth_refresh:
+    path: /api/auth/refresh
     methods: POST
+
+home_redirect:
+    path: /
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
+    defaults:
+        path: /api/doc
+        permanent: true

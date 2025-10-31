@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Feature\ScheduleReservation\DataProvider;
+
+use App\Tests\Utils\DataProvider\BaseDataProvider;
+
+class ScheduleReservationConfirmDataProvider extends BaseDataProvider 
+{
+    
+    public static function validDataCases()
+    {
+        return [
+            [
+                [
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                ]
+            ]
+        ];
+    }
+
+    public static function validationDataCases()
+    {
+        return [
+            [
+                [
+                    'verification_handler' => '',
+                ],
+                [
+                    'verification_handler' => [
+                        'This value should not be blank.'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'verification_handler' => 'a',
+                ],
+                [
+                    'verification_handler' => [
+                        'Invalid verification handler'
+                    ]
+                ]
+            ],
+        ];
+    }
+}

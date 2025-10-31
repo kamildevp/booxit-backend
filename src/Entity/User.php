@@ -1,109 +1,117 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
+use App\Entity\Trait\Timestampable;
+use App\Enum\TranslationsLocale;
+use App\Enum\User\UserNormalizerGroup;
+use App\Enum\User\UserRole;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
+use App\Repository\ORM\Attribute\Verifiable;
 use App\Repository\UserRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\GetterHelper\CustomAccessRule\EmailAccessRule;
-use App\Service\SetterHelper\Task\User\EmailTask;
-use App\Service\SetterHelper\Task\User\PasswordTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
-#[UniqueEntity(
-    fields: ['email'],
-    message: 'This email is already taken')]
+#[Verifiable]
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    use Timestampable, SoftDeleteableEntity;
+
+    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        max: 180,
-        maxMessage: 'Max length of email is 180 characters'
-    )]
-    #[Assert\Email(
-        message: 'Value is not a valid email.',
-    )]
+    #[Groups([UserNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
+    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
+    #[ORM\Column(length: 255, unique: true)]
+    private ?string $username = null;
+
+    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[Assert\NotBlank(
-        groups: ['plainPassword'], 
-        message: 'Password cannot be blank'
-    )]
-    #[Assert\Regex(
-        groups: ['plainPassword'],
-        pattern: '/^(?=.*[A-Z])(?=.*\d)[A-Z\d!@#$%?&*]{8,}$/i',
-        message: 'Password length must be from 8 to 20 characters, can contain special characters(!#$%?&*) and must have at least one letter and digit'
-    )]
     private ?string $plainPassword = null;
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     private ?string $password = null;
 
+    #[Groups([UserNormalizerGroup::SENSITIVE->value])]
     #[ORM\Column]
-    private array $roles = ['ROLE_USER'];
+    private array $roles = [UserRole::REGULAR->value];
 
-    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: EmailConfirmation::class, cascade: ['remove'])]
     private Collection $emailConfirmations;
 
     #[ORM\Column]
     private ?bool $verified = null;
 
-    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: OrganizationMember::class, cascade: ['remove'])]
     private Collection $organizationAssignments;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expiryDate = null;
 
+    #[ORM\OneToMany(mappedBy: 'appUser', targetEntity: RefreshToken::class, cascade: ['remove'], orphanRemoval: true)]
+    private Collection $refreshTokens;
+
+    #[ORM\OneToMany(mappedBy: 'reservedBy', targetEntity: Reservation::class, fetch: 'EXTRA_LAZY')]
+    private Collection $reservations;
+
+    #[Groups([UserNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255)]
+    private string $languagePreference = TranslationsLocale::EN->value;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
         $this->organizationAssignments = new ArrayCollection();
+        $this->refreshTokens = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups: ['login', 'users', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(accessRule: EmailAccessRule::class, groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    #[Setter(setterTask: EmailTask::class)]
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): static
+    {
+        $this->username = $username;
 
         return $this;
     }
@@ -118,14 +126,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (string) $this->email;
     }
 
-
-    #[Getter(groups: ['login', 'users', 'user', 'organization-members', 'organization-admins', 'schedule-assignments'])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -170,7 +175,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see UserInterface
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
@@ -181,7 +186,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->plainPassword;
     }
 
-    #[Setter(targetParameter: 'password',  setterTask: PasswordTask::class)]
     public function setPlainPassword(string $plainPassword): self
     {
         $this->plainPassword = $plainPassword;
@@ -231,7 +235,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[Getter(propertyNameAlias: 'organizations', groups: ['user-organizations'])]
     /**
      * @return Collection<int, OrganizationMember>
      */
@@ -262,16 +265,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getOrganizations(): Collection
-    {
-        $organizations = new ArrayCollection([]);
-        foreach($this->organizationAssignments as $assignment){
-            $organizations->add($assignment->getOrganization());
-        }
-
-        return $organizations;
-    }
-
     public function getExpiryDate(): ?\DateTimeInterface
     {
         return $this->expiryDate;
@@ -280,6 +273,102 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setExpiryDate(?\DateTimeInterface $expiryDate): self
     {
         $this->expiryDate = $expiryDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, RefreshToken>
+     */
+    public function getRefreshTokens(): Collection
+    {
+        return $this->refreshTokens;
+    }
+
+    public function addRefreshToken(RefreshToken $refreshToken): self
+    {
+        if (!$this->refreshTokens->contains($refreshToken)) {
+            $this->refreshTokens->add($refreshToken);
+            $refreshToken->setAppUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRefreshToken(RefreshToken $refreshToken): self
+    {
+        if ($this->refreshTokens->removeElement($refreshToken)) {
+            // set the owning side to null (unless already changed)
+            if ($refreshToken->getAppUser() === $this) {
+                $refreshToken->setAppUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+            'email' => new FieldContains('email'),
+            'username' => new FieldContains('username'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+            'email' => new BaseFieldOrder('email'),
+            'username' => new BaseFieldOrder('username'),
+        ]);
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function hasReservation(Reservation $reservation): bool
+    {
+        return $this->reservations->contains($reservation);
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setReservedBy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getReservedBy() === $this) {
+                $reservation->setReservedBy(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getLanguagePreference(): string
+    {
+        return $this->languagePreference;
+    }
+
+    public function setLanguagePreference(string $languagePreference): static
+    {
+        $this->languagePreference = $languagePreference;
 
         return $this;
     }

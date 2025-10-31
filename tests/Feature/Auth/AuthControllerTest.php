@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Feature\Auth;
+
+use App\DataFixtures\Test\Auth\AuthRefreshFixtures;
+use App\Entity\RefreshToken;
+use App\Repository\RefreshTokenRepository;
+use App\Tests\Utils\Attribute\Fixtures;
+use App\Tests\Feature\Auth\DataProvider\AuthLoginDataProvider;
+use App\Tests\Feature\Auth\DataProvider\AuthLogoutDataProvider;
+use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use App\Tests\Utils\BaseWebTestCase;
+
+class AuthControllerTest extends BaseWebTestCase
+{
+    protected RefreshTokenRepository $refreshTokenRepository;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->refreshTokenRepository = $this->container->get(EntityManagerInterface::class)->getRepository(RefreshToken::class);
+    }
+
+    #[DataProviderExternal(AuthLoginDataProvider::class, 'validDataCases')]
+    public function testLogin(array $params): void
+    {
+        $responseData = $this->getSuccessfulResponseData($this->client,'POST', '/api/auth/login', $params);
+        $this->assertArrayHasKey('access_token', $responseData);
+        $this->assertArrayHasKey('refresh_token', $responseData);
+    }
+
+    #[DataProviderExternal(AuthLoginDataProvider::class, 'invalidCredentialsDataCases')]
+    public function testLoginWithInvalidCredentials(array $params): void
+    {
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/login', $params, expectedCode: 401);
+        $this->assertEquals('Invalid credentials', $responseData['message']);
+    }
+
+    #[Fixtures([AuthRefreshFixtures::class])]
+    public function testRefresh(): void
+    {
+        $refreshToken = $this->refreshTokenRepository->findOneBy(['appUser' => $this->user]);
+        $params = ['refresh_token' => $refreshToken->getValue()];
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/refresh', $params);
+        $this->assertArrayHasKey('access_token', $responseData);
+        $this->assertArrayHasKey('refresh_token', $responseData);
+        $this->assertNotEquals($params['refresh_token'], $responseData['refresh_token']);
+    }
+
+    public function testRefreshWithInvalidRefreshToken(): void
+    {
+        $params = ['refresh_token' => 'invalid'];
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/refresh', $params, expectedCode: 401);
+        $this->assertEquals('Invalid or expired refresh token', $responseData['message']);
+    }
+
+    #[Fixtures([AuthRefreshFixtures::class])]
+    public function testRefreshWithUsedRefreshToken(): void
+    {
+        $refreshToken = $this->refreshTokenRepository->findOneBy(['appUser' => $this->user]);
+        $params = ['refresh_token' => $refreshToken->getValue()];
+        $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/refresh', $params);
+
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/refresh', $params, expectedCode: 401);
+        $this->assertEquals('Invalid or expired refresh token', $responseData['message']);
+    }
+
+    #[Fixtures([AuthRefreshFixtures::class])]
+    #[DataProviderExternal(AuthLogoutDataProvider::class, 'validDataCases')]
+    public function testLogout(array $params, int $expectedRefreshTokensCount): void
+    {
+        $this->fullLogin($this->client); 
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/logout', $params);
+
+        $this->assertEquals('Logged out successfully', $responseData['message']);
+        $this->assertCount($expectedRefreshTokensCount, $this->user->getRefreshTokens());
+    }
+}

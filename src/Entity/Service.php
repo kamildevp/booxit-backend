@@ -1,54 +1,66 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Service\ServiceNormalizerGroup;
+use App\Repository\Filter\EntityFilter\DateIntervalFieldValue;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\FieldInSet;
+use App\Repository\Filter\EntityFilter\FieldValue;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\ServiceRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\GetterHelper\CustomFormat\DateIntervalFormat;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Service\DurationTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Normalizer\DateIntervalNormalizer;
 
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: ServiceRepository::class)]
 class Service
 {
+    use Timestampable, Blameable, SoftDeleteableEntity;
+
+    #[Groups([ServiceNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups([ServiceNormalizerGroup::ORGANIZATION->value])]
     #[ORM\ManyToOne(inversedBy: 'services')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Organization $organization = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
+    #[Groups([ServiceNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[Assert\Length(
-        max: 255,
-        maxMessage: 'Max length of description is 255 characters'
-    )]
+    #[Groups([ServiceNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 255)]
+    private ?string $category = null;
+
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[Context([DateIntervalNormalizer::FORMAT_KEY => 'P%yY%mM%dDT%hH%iM'])]
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
     #[ORM\Column]
     private ?\DateInterval $duration = null;
 
-    #[Assert\Length(
-        max: 10,
-        maxMessage: 'Max length of estimated price is 10 characters'
-    )]
-    #[ORM\Column(length: 255)]
+    #[OA\Property(example: '25.50')]
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $estimatedPrice = null;
 
     #[ORM\ManyToMany(targetEntity: Schedule::class, mappedBy: 'services')]
@@ -63,7 +75,6 @@ class Service
         $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -74,12 +85,6 @@ class Service
         return $this->organization;
     }
 
-    #[Getter]
-    public function getOrganizationId(): int
-    {
-        return $this->organization->getId();
-    }
-
     public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
@@ -87,13 +92,11 @@ class Service
         return $this;
     }
 
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -101,13 +104,23 @@ class Service
         return $this;
     }
 
-    #[Getter(groups: ['organization-services'])]
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(string $category): static
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    #[Setter]
     public function setDescription(string $description): self
     {
         $this->description = $description;
@@ -115,27 +128,22 @@ class Service
         return $this;
     }
 
-    #[Getter(format: DateIntervalFormat::class, groups: ['organization-services', 'schedule-services'])]
     public function getDuration(): ?\DateInterval
     {
         return $this->duration;
     }
 
-    #[Setter(setterTask: DurationTask::class)]
     public function setDuration(\DateInterval $duration): self
     {
         $this->duration = $duration;
 
         return $this;
     }
-
-    #[Getter(groups:['organization-services', 'schedule-services', 'reservation-service', 'schedule-reservations'])]
     public function getEstimatedPrice(): ?string
     {
         return $this->estimatedPrice;
     }
 
-    #[Setter]
     public function setEstimatedPrice(string $estimatedPrice): self
     {
         $this->estimatedPrice = $estimatedPrice;
@@ -200,4 +208,26 @@ class Service
         return $this;
     }
 
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+            'category' => new FieldInSet('category'),
+            'durationFrom' => new DateIntervalFieldValue('duration', '>='),
+            'durationTo' => new DateIntervalFieldValue('duration', '<='),
+            'estimatedPriceFrom' => new FieldValue('estimatedPrice', '>='),
+            'estimatedPriceTo' => new FieldValue('estimatedPrice', '<='),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+            'category' => new BaseFieldOrder('category'),
+            'duration' => new BaseFieldOrder('duration'),
+            'estimated_price' => new BaseFieldOrder('estimatedPrice'),
+        ]);
+    }
 }

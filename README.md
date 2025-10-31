@@ -1,28 +1,46 @@
-## Booxit Backend
-Dockerized back-end application built with Symfony Framework. Application purpose is to provide easy to use appointment planning and management platform, which handles reservation storage, free terms management, email notifications and does not require organization/service provider to be involved in reservation process.
- 
-It provides users the ability to: 
-- create and manage organizations 
-- add other users to their organizations
-- create and manage schedules
-- manage organization members and their privileges in regard to organization and organization schedules
-- create reservations based on organization schedules and services
+# Booxit Backend
 
-For detailed API endpoints description please refer to  [API documentation](docs/api-endpoints.md#API-Endpoints)
+Booxit is a RESTful API built with the Symfony Framework, designed to provide a user-friendly platform for appointment scheduling and management. It supports reservation storage, availability management and automated email notifications.
 
+## 🚀 Features
 
-## How to run locally (development mode)
+The API allows users to:
 
-Requirements:
+- **Create and manage organizations**
+- **Invite and manage members** with role-based access control
+- **Create and configure schedules** for organization services
+- **Manage services availability**
+- **Create and manage reservations** based on schedules and services
+
+## Tech Stack
+<div align="left">
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" height="40" alt="php logo"  />
+    <img width="12" height="40" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/symfony/symfony-original.svg" height="40" alt="symfony logo"  />
+    <img width="12" height="40" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" height="40" alt="postgresql logo"  />
+    <img width="12" height="40" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/rabbitmq/rabbitmq-original.svg" height="40" alt="rabbitmq logo"  />
+    <img width="12" height="40" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nginx/nginx-original.svg" height="40" alt="nginx logo"  />
+    <img width="12" height="40" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" height="40" alt="docker logo"  />
+</div>
+
+## 🛠 How to Run Locally (Development Mode)
+
+### ✅ Requirements
+
 - [Docker](https://docs.docker.com/engine/install/) installed on your system
-- mailing service provider configured for application access
+- Mailing service provider credentials configured for application access
 
-While in main folder, where docker-compose.yml file is located
-1. Using your mailing provider information, set ```MAILER_DSN=smtp://user:pass@smtp.example.com:port``` in ```.env``` file. 
-<br>Example using gmail:
- ```MAILER_DSN=smtp://mailer@gmail.com:example_password@smtp.gmail.com:465```
 
-2. Run `docker compose build --pull --no-cache` to build fresh images.
-3. Run `docker compose up` (the logs will be displayed in the current shell).
-4. Open `https://localhost` in your favorite web browser and [accept the auto-generated TLS certificate](https://stackoverflow.com/a/15076602/1352334).
-5. Run `docker compose down --remove-orphans` to stop the Docker containers.
+### 🔧 Setup Instructions
+
+From the project root directory (where the `docker-compose.yml` file is located):
+
+1. Create a `.env.local` file and configure your mail provider using the `MAILER_DSN` environment variable.
+2. Run `docker compose up -d`.
+3. Application will be available at `http://localhost:8000` (when using default `APP_PORT=8000`).
+4. Visit `http://localhost:8000/api/doc` to display  API documentation.
+

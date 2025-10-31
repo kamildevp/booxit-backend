@@ -1,77 +1,84 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
+use App\Entity\Embeddable\Address;
+use App\Entity\Trait\Blameable;
+use App\Entity\Trait\Timestampable;
+use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Repository\Filter\EntityFilter\EmbeddedFieldFilter;
+use App\Repository\Filter\EntityFilter\FieldContains;
+use App\Repository\Filter\EntityFilter\RelatedFieldInSet;
+use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationRepository;
-use App\Service\GetterHelper\Attribute\Getter;
-use App\Service\SetterHelper\Attribute\Setter;
-use App\Service\SetterHelper\Task\Organization\MembersTask;
-use App\Service\SetterHelper\Task\Organization\ServicesTask;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[DoctrineSoftDeleteable]
 #[ORM\Entity(repositoryClass: OrganizationRepository::class)]
 class Organization
 {
-    const ALLOWED_ROLES = ['MEMBER', 'ADMIN'];
+    use Timestampable, Blameable, SoftDeleteableEntity;
 
+    #[Groups([OrganizationNormalizerGroup::BASE_INFO->value])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(
-        min: 6,
-        max: 50,
-        minMessage: 'Minimum name length is 6 characters',
-        maxMessage: 'Maximum name length is 50 characters'
-    )]
-    #[ORM\Column(length: 50)]
+    #[Groups([OrganizationNormalizerGroup::BASE_INFO->value])]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, orphanRemoval: true, cascade: ['persist'])]
-    private Collection $members;
-
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, orphanRemoval: true, cascade: ['persist'])]
-    private Collection $services;
-
-    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, orphanRemoval: true)]
-    private Collection $schedules;
-
-    #[Assert\Length(
-        max: 2000,
-        maxMessage: 'Maximum description length is 2000 characters'
-    )]
+    #[Groups([OrganizationNormalizerGroup::DETAILS->value])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $banner = null;
+    #[Groups([OrganizationNormalizerGroup::ADDRESS->value])]
+    #[ORM\Embedded(class: Address::class)]
+    private Address $address;
+
+    #[ORM\OneToOne(cascade: ['remove'])]
+    #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
+    private ?File $bannerFile = null;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
+    private Collection $members;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Service::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
+    private Collection $services;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Schedule::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
+    private Collection $schedules;
+
+    #[ORM\OneToMany(mappedBy: 'organization', targetEntity: Reservation::class, cascade: ['remove'])]
+    private Collection $reservations;
 
     public function __construct()
     {
         $this->members = new ArrayCollection();
         $this->services = new ArrayCollection();
         $this->schedules = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
-    #[Getter(groups: ['schedule', 'user-organizations', 'organizations','reservation-organization'])]
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    #[Getter(groups:['schedule','user-organizations', 'organizations', 'organization', 'reservation-organization'])]
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    #[Setter]
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -79,13 +86,11 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization'])]
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    #[Setter]
     public function setDescription(string $description): self
     {
         $this->description = $description;
@@ -93,25 +98,17 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
-    public function getMembersCount(): ?string
-    {
-        return $this->members->count();
+    public function getAddress(): Address 
+    { 
+        return $this->address; 
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
-    public function getServicesCount(): ?string
-    {
-        return $this->services->count();
+    public function setAddress(Address $address): self 
+    { 
+        $this->address = $address; 
+        return $this; 
     }
 
-    #[Getter(groups: ['organizations', 'organization'])]
-    public function getSchedulesCount(): ?string
-    {
-        return $this->schedules->count();
-    }
-
-    #[Getter(groups: ['organization-members'])]
     /**
      * @return Collection<int, OrganizationMember>
      */
@@ -120,7 +117,6 @@ class Organization
         return $this->members;
     }
 
-    #[Setter(setterTask: MembersTask::class, groups: ['members'])]
     public function setMembers(Collection $members): self
     {
         $this->members = $members;
@@ -150,23 +146,6 @@ class Organization
         return $this;
     }
 
-    public function hasMember(User $user):bool
-    {
-        $memberExists = $this->members->exists(function($key, $value) use ($user){
-            return $value->getAppUser() === $user;
-        });
-        return $memberExists;
-    }
-
-    public function getMember(User $user):?OrganizationMember
-    {
-        $member = $this->members->findFirst(function($key, $value) use ($user){
-            return $value->getAppUser() === $user;
-        });
-        return $member;
-    }
-
-    #[Getter(groups: ['organization-services'])]
     /**
      * @return Collection<int, Service>
      */
@@ -175,7 +154,6 @@ class Organization
         return $this->services;
     }
 
-    #[Setter(setterTask: ServicesTask::class, groups: ['services'])]
     public function setServices(Collection $services): self
     {
         $this->services = $services;
@@ -205,7 +183,6 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization-schedules'])]
     /**
      * @return Collection<int, Schedule>
      */
@@ -244,27 +221,61 @@ class Organization
         return $this;
     }
 
-    #[Getter(groups: ['organization-admins'])]
+    public function getBannerFile(): ?File
+    {
+        return $this->bannerFile;
+    }
+
+    public function setBannerFile(?File $bannerFile): static
+    {
+        $this->bannerFile = $bannerFile;
+        return $this;
+    }
+
+    public static function getFilterDefs(): array
+    {
+        return array_merge(self::getTimestampsFilterDefs(), [
+            'name' => new FieldContains('name'),
+            'address' => new EmbeddedFieldFilter('address', Address::class),
+            'serviceCategory' => new RelatedFieldInSet('services', 'category'),
+        ]);
+    }
+
+    public static function getOrderDefs(): array
+    {
+        return array_merge(self::getTimestampsOrderDefs(), [
+            'id' => new BaseFieldOrder('id'),
+            'name' => new BaseFieldOrder('name'),
+        ]);
+    }
+
     /**
-     * @return Collection<int, OrganizationMember>
+     * @return Collection<int, Reservation>
      */
-    public function getAdmins():Collection
+    public function getReservations(): Collection
     {
-        return $this->members->filter(function($element){
-            return $element->hasRoles(['ADMIN']);
-        });
+        return $this->reservations;
     }
 
-    public function getBanner(): ?string
+    public function addReservation(Reservation $reservation): static
     {
-        return $this->banner;
-    }
-
-    public function setBanner(?string $banner): self
-    {
-        $this->banner = $banner;
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setOrganization($this);
+        }
 
         return $this;
     }
 
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getOrganization() === $this) {
+                $reservation->setOrganization(null);
+            }
+        }
+
+        return $this;
+    }
 }

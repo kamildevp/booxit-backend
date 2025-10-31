@@ -1,26 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
+use App\Response\UnauthorizedResponse;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTExpiredEvent;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class JWTExpiredListener
 {
-    /**
-     * @param JWTExpiredEvent $event
-     */
     public function onJWTExpired(JWTExpiredEvent $event)
     {
-        $responseData = [
-            'status' => 'fail',
-            'data' => [
-                'message' => 'Expired JWT token'
-            ]
-        ];
-
-        $response = new JsonResponse($responseData, 401);
-
+        $response = new UnauthorizedResponse('Expired JWT token');
         $event->setResponse($response);
     }
 }

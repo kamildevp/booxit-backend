@@ -1,27 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\Filter\FiltersBuilder;
+use App\Repository\Order\OrderBuilder;
+use DateTime;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /**
- * @extends ServiceEntityRepository<User>
+ * @extends BaseRepository<User>
  *
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
  * @method User|null findOneBy(array $criteria, array $orderBy = null)
  * @method User[]    findAll()
  * @method User[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
+class UserRepository extends BaseRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, FiltersBuilder $filtersBuilder, OrderBuilder $orderBuilder)
     {
-        parent::__construct($registry, User::class);
+        parent::__construct($registry, $filtersBuilder, $orderBuilder, User::class);
     }
 
     public function save(User $entity, bool $flush = false): void
@@ -56,38 +61,34 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->save($user, true);
     }
 
-//    /**
-//     * @return User[] Returns an array of User objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function hardDelete(User $user): void
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $this->createQueryBuilder('u')
+            ->delete()
+            ->where('u.id = :id')
+            ->setParameter('id', $user->getId())
+            ->getQuery()
+            ->execute();
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+    }
 
-//    public function findOneBySomeField($value): ?User
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
-
-    public function findByPartialIdentifier(string $identifier, int $maxResults = 100){
-        $query = $this->createQueryBuilder('u')
-                    ->where('LOWER(u.name) LIKE LOWER(:identifier) OR LOWER(u.email) LIKE LOWER(:identifier)')
-                    ->setParameter('identifier', '%' . $identifier . '%')
-                    ->setMaxResults($maxResults)
-                    ->getQuery();
+    public function removeExpiredUserAccounts(): void
+    {
+        $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        $this->getEntityManager()->getFilters()->disable('verifiable');
+        $now = new DateTime();
+        $this->createQueryBuilder('u')
+            ->delete()
+            ->where('u.expiryDate IS NOT NULL')
+            ->andWhere('u.expiryDate < :now')
+            ->andWhere('u.verified = :verified')
+            ->setParameter('now', $now)
+            ->setParameter('verified', false)
+            ->getQuery()
+            ->execute();
         
-        return $query->getResult();
+        $this->getEntityManager()->getFilters()->enable('softdeleteable');
+        $this->getEntityManager()->getFilters()->enable('verifiable');
     }
 }

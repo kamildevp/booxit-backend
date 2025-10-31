@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Serializer;
+
+use App\Validator\Constraints\Compound\DateTimeStringRequirements;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer as SymfonyDateTimeNormalizer;
+
+class DateTimeNormalizer implements NormalizerInterface, DenormalizerInterface
+{
+    public function __construct(
+        private NormalizerInterface&DenormalizerInterface $defaultNormalizer,
+        private string $timezone
+    ) {}
+
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
+    {
+        try{
+            $datetime = $this->defaultNormalizer->denormalize($data, $type, $format, $context);
+        } catch (NotNormalizableValueException $e) {
+            throw NotNormalizableValueException::createForUnexpectedDataType($e->getMessage(), $data, ['datetime'], $e->getPath(), false, $e->getCode(), $e);
+        }
+
+        if ($datetime instanceof DateTimeInterface) {
+            $datetime = DateTimeImmutable::createFromInterface($datetime);
+            return $datetime->setTimezone(new DateTimeZone($this->timezone));
+        }
+
+        return $datetime;
+    }
+
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    {
+        return $this->defaultNormalizer->supportsDenormalization($data, $type, $format, $context);
+    }
+
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
+    {
+        $context = array_merge([SymfonyDateTimeNormalizer::FORMAT_KEY => DateTimeStringRequirements::FORMAT], $context);
+        return $this->defaultNormalizer->normalize($object, $format, $context);
+    }
+
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    {
+        return $this->defaultNormalizer->supportsNormalization($data, $format, $context);
+    }
+
+    public function getSupportedTypes(?string $format): array
+    {
+        return [
+            DateTimeInterface::class => true,
+        ];
+    }
+}

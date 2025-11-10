@@ -12,8 +12,6 @@ use Symfony\Component\Validator\Constraints\Compound;
 #[Attribute]
 class PhoneNumberRequirements extends Compound
 {
-    const FORMAT = 'Y-m-d\TH:iP';
-
     protected function getConstraints(array $options): array
     {
         return [

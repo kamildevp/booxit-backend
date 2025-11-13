@@ -1,9 +1,11 @@
 services:
   nginx:
+    hostname: booxit-backend-nginx
     networks:
       - proxy
 
   database:
+    hostname: booxit-backend-db
     networks:
       - proxy
 

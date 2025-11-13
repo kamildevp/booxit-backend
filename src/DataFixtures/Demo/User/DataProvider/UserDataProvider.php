@@ -1,0 +1,261 @@
+<?php 
+
+declare(strict_types=1);
+
+namespace App\DataFixtures\Demo\User\DataProvider;
+
+class UserDataProvider
+{
+    /** @return mixed[] */
+    public static function getData(): array
+    {
+        return [
+            [
+                'name' => 'Alice Johnson',
+                'email' => 'alice.johnson@example.com',
+                'username' => 'ajohnson_dev',
+                'created_at' => '2025-05-01T10:00:00+02:00',
+                'updated_at' => '2025-05-01T10:00:00+02:00',
+            ],
+            [
+                'name' => 'Bob Williams',
+                'email' => 'bob.williams@example.com',
+                'username' => 'bwill2000',
+                'created_at' => '2025-05-02T11:30:00+02:00',
+                'updated_at' => '2025-05-02T11:30:00+02:00',
+            ],
+            [
+                'name' => 'Charlie Brown',
+                'email' => 'charlie.brown@example.com',
+                'username' => 'cbrownie',
+                'created_at' => '2025-05-03T14:45:00+02:00',
+                'updated_at' => '2025-05-03T14:45:00+02:00',
+            ],
+            [
+                'name' => 'Diana Prince',
+                'email' => 'diana.prince@example.com',
+                'username' => 'wondergal',
+                'created_at' => '2025-05-04T08:00:00+02:00',
+                'updated_at' => '2025-05-04T08:00:00+02:00',
+            ],
+            [
+                'name' => 'Ethan Hunt',
+                'email' => 'ethan.hunt@example.com',
+                'username' => 'mi_agent',
+                'created_at' => '2025-05-05T16:20:00+02:00',
+                'updated_at' => '2025-05-05T16:20:00+02:00',
+            ],
+            [
+                'name' => 'Fiona Glenanne',
+                'email' => 'fiona.glenanne@example.com',
+                'username' => 'fi_burn',
+                'created_at' => '2025-05-06T09:15:00+02:00',
+                'updated_at' => '2025-05-06T09:15:00+02:00',
+            ],
+            [
+                'name' => 'George Costanza',
+                'email' => 'george.costanza@example.com',
+                'username' => 'gcostanz',
+                'created_at' => '2025-05-07T12:05:00+02:00',
+                'updated_at' => '2025-05-07T12:05:00+02:00',
+            ],
+            [
+                'name' => 'Hannah Baker',
+                'email' => 'hannah.baker@example.com',
+                'username' => 'hbakes',
+                'created_at' => '2025-05-08T15:35:00+02:00',
+                'updated_at' => '2025-05-08T15:35:00+02:00',
+            ],
+            [
+                'name' => 'Ivy Tannenbaum',
+                'email' => 'ivy.tannenbaum@example.com',
+                'username' => 'ivytree',
+                'created_at' => '2025-05-09T18:10:00+02:00',
+                'updated_at' => '2025-05-09T18:10:00+02:00',
+            ],
+            [
+                'name' => 'Jack Ryan',
+                'email' => 'jack.ryan@example.com',
+                'username' => 'jryan_cia',
+                'created_at' => '2025-05-10T07:40:00+02:00',
+                'updated_at' => '2025-05-10T07:40:00+02:00',
+            ],
+            [
+                'name' => 'Kelly Kapowski',
+                'email' => 'kelly.kapowski@example.com',
+                'username' => 'kkap',
+                'created_at' => '2025-05-11T13:25:00+02:00',
+                'updated_at' => '2025-05-11T13:25:00+02:00',
+            ],
+            [
+                'name' => 'Liam Neeson',
+                'email' => 'liam.neeson@example.com',
+                'username' => 'taken_guy',
+                'created_at' => '2025-05-12T10:55:00+02:00',
+                'updated_at' => '2025-05-12T10:55:00+02:00',
+            ],
+            [
+                'name' => 'Mia Thermopolis',
+                'email' => 'mia.thermopolis@example.com',
+                'username' => 'princessmia',
+                'created_at' => '2025-05-13T16:00:00+02:00',
+                'updated_at' => '2025-05-13T16:00:00+02:00',
+            ],
+            [
+                'name' => 'Noah Bennet',
+                'email' => 'noah.bennet@example.com',
+                'username' => 'hrg_co',
+                'created_at' => '2025-05-14T09:30:00+02:00',
+                'updated_at' => '2025-05-14T09:30:00+02:00',
+            ],
+            [
+                'name' => 'Olivia Pope',
+                'email' => 'olivia.pope@example.com',
+                'username' => 'opope_fixer',
+                'created_at' => '2025-05-15T11:15:00+02:00',
+                'updated_at' => '2025-05-15T11:15:00+02:00',
+            ],
+            [
+                'name' => 'Peter Quill',
+                'email' => 'peter.quill@example.com',
+                'username' => 'star_lord',
+                'created_at' => '2025-05-16T17:05:00+02:00',
+                'updated_at' => '2025-05-16T17:05:00+02:00',
+            ],
+            [
+                'name' => 'Quinn Morgendorffer',
+                'email' => 'quinn.morgendorffer@example.com',
+                'username' => 'fashion_club',
+                'created_at' => '2025-05-17T14:20:00+02:00',
+                'updated_at' => '2025-05-17T14:20:00+02:00',
+            ],
+            [
+                'name' => 'Rachel Green',
+                'email' => 'rachel.green@example.com',
+                'username' => 'rgreen_ralph',
+                'created_at' => '2025-05-18T19:00:00+02:00',
+                'updated_at' => '2025-05-18T19:00:00+02:00',
+            ],
+            [
+                'name' => 'Steve Rogers',
+                'email' => 'steve.rogers@example.com',
+                'username' => 'captain_a',
+                'created_at' => '2025-05-19T06:50:00+02:00',
+                'updated_at' => '2025-05-19T06:50:00+02:00',
+            ],
+            [
+                'name' => 'Tiffany Aching',
+                'email' => 'tiffany.aching@example.com',
+                'username' => 'witch_ach',
+                'created_at' => '2025-05-20T12:30:00+02:00',
+                'updated_at' => '2025-05-20T12:30:00+02:00',
+            ],
+            [
+                'name' => 'Ulysses Klaw',
+                'email' => 'ulysses.klaw@example.com',
+                'username' => 'sound_guy',
+                'created_at' => '2025-05-21T08:10:00+02:00',
+                'updated_at' => '2025-05-21T08:10:00+02:00',
+            ],
+            [
+                'name' => 'Victoria Chase',
+                'email' => 'victoria.chase@example.com',
+                'username' => 'vchase_art',
+                'created_at' => '2025-05-22T15:45:00+02:00',
+                'updated_at' => '2025-05-22T15:45:00+02:00',
+            ],
+            [
+                'name' => 'Walter White',
+                'email' => 'walter.white@example.com',
+                'username' => 'heisenberg_chem',
+                'created_at' => '2025-05-23T11:00:00+02:00',
+                'updated_at' => '2025-05-23T11:00:00+02:00',
+            ],
+            [
+                'name' => 'Xena Warrior',
+                'email' => 'xena.warrior@example.com',
+                'username' => 'xena_princess',
+                'created_at' => '2025-05-24T13:35:00+02:00',
+                'updated_at' => '2025-05-24T13:35:00+02:00',
+            ],
+            [
+                'name' => 'Yasmine Khan',
+                'email' => 'yasmine.khan@example.com',
+                'username' => 'ykhan_writer',
+                'created_at' => '2025-05-25T18:50:00+02:00',
+                'updated_at' => '2025-05-25T18:50:00+02:00',
+            ],
+            [
+                'name' => 'Zack Morris',
+                'email' => 'zack.morris@example.com',
+                'username' => 'zack_attack',
+                'created_at' => '2025-05-26T07:20:00+02:00',
+                'updated_at' => '2025-05-26T07:20:00+02:00',
+            ],
+            [
+                'name' => 'Amy Pond',
+                'email' => 'amy.pond@example.com',
+                'username' => 'the_girl_who',
+                'created_at' => '2025-05-27T10:40:00+02:00',
+                'updated_at' => '2025-05-27T10:40:00+02:00',
+            ],
+            [
+                'name' => 'Bruce Wayne',
+                'email' => 'bruce.wayne@example.com',
+                'username' => 'dark_knight',
+                'created_at' => '2025-05-28T14:15:00+02:00',
+                'updated_at' => '2025-05-28T14:15:00+02:00',
+            ],
+            [
+                'name' => 'Chloe Sullivan',
+                'email' => 'chloe.sullivan@example.com',
+                'username' => 'chloesk',
+                'created_at' => '2025-05-29T16:55:00+02:00',
+                'updated_at' => '2025-05-29T16:55:00+02:00',
+            ],
+            [
+                'name' => 'Dale Cooper',
+                'email' => 'dale.cooper@example.com',
+                'username' => 'special_agent_coop',
+                'created_at' => '2025-05-30T09:00:00+02:00',
+                'updated_at' => '2025-05-30T09:00:00+02:00',
+            ],
+            [
+                'name' => 'Erin Hannon',
+                'email' => 'erin.hannon@example.com',
+                'username' => 'erin_reception',
+                'created_at' => '2025-05-31T11:25:00+02:00',
+                'updated_at' => '2025-05-31T11:25:00+02:00',
+            ],
+            [
+                'name' => 'Frank Reynolds',
+                'email' => 'frank.reynolds@example.com',
+                'username' => 'dr_mantis',
+                'created_at' => '2025-06-01T15:10:00+02:00',
+                'updated_at' => '2025-06-01T15:10:00+02:00',
+            ],
+            [
+                'name' => 'Gina Linetti',
+                'email' => 'gina.linetti@example.com',
+                'username' => 'gina_knows',
+                'created_at' => '2025-06-02T17:30:00+02:00',
+                'updated_at' => '2025-06-02T17:30:00+02:00',
+            ],
+            [
+                'name' => 'Harold Finch',
+                'email' => 'harold.finch@example.com',
+                'username' => 'the_machine_guy',
+                'created_at' => '2025-06-03T08:45:00+02:00',
+                'updated_at' => '2025-06-03T08:45:00+02:00',
+            ],
+            [
+                'name' => 'Isabelle Lightwood',
+                'email' => 'isabelle.lightwood@example.com',
+                'username' => 'shadow_hunter',
+                'created_at' => '2025-06-04T12:00:00+02:00',
+                'updated_at' => '2025-06-04T12:00:00+02:00',
+            ],
+        ];
+
+    }
+}

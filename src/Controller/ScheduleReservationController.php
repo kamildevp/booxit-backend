@@ -232,7 +232,9 @@ class ScheduleReservationController extends AbstractController
         dataModelGroups: ReservationNormalizerGroup::SCHEDULE_RESERVATIONS
     )]
     #[ValidationErrorResponseDoc]
+    #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
+    #[RestrictedAccess(ScheduleReadPrivilegesRule::class)]
     #[RestrictedAccess]
     #[Route('schedules/{schedule}/reservations', name: 'schedule_reservations_list', methods: ['GET'], requirements: ['schedule' => '\d+'])]
     public function list(

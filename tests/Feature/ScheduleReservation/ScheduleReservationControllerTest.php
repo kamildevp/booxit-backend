@@ -11,7 +11,6 @@ use App\DataFixtures\Test\ScheduleReservation\ConfirmScheduleReservationConflict
 use App\DataFixtures\Test\ScheduleReservation\ScheduleReservationFixtures;
 use App\DataFixtures\Test\ScheduleReservation\ScheduleReservationSortingFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
-use App\DataFixtures\Test\UserReservation\UserReservationSortingFixtures;
 use App\Enum\Organization\OrganizationNormalizerGroup;
 use App\Enum\Reservation\ReservationNormalizerGroup;
 use App\Enum\Schedule\ScheduleNormalizerGroup;

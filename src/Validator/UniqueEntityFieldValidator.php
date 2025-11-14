@@ -51,7 +51,7 @@ class UniqueEntityFieldValidator extends ConstraintValidator
         }
 
         $excludeBy = $this->mapExcludeByParams($constraint->ignore);
-        $matchingEntity = $repository->findOneByFieldValue($constraint->fieldName, $value, $excludeBy, true);
+        $matchingEntity = $repository->findOneByFieldValue($constraint->fieldName, $value, $excludeBy, ['verifiable', 'softdeleteable']);
 
         if (!empty($matchingEntity)) {
             $shortName = (new \ReflectionClass($constraint->entityClass))->getShortName();

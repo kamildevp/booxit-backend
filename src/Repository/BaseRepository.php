@@ -113,10 +113,15 @@ abstract class BaseRepository extends ServiceEntityRepository
         $this->orderBuilder->applyOrder($qb, $this->getEntityName(), $orderDTO, static::DEFAULT_ORDER_MAP, $relationMap);
     }
 
-    public function findOneByFieldValue(string $fieldName, mixed $value, array $excludeBy = [], bool $disableSoftDeletedFilter = false)
+    public function findOneByFieldValue(
+        string $fieldName, 
+        mixed $value, 
+        array $excludeBy = [], 
+        array $disableFilters = [],
+    )
     {
-        if($disableSoftDeletedFilter){
-            $this->getEntityManager()->getFilters()->disable('softdeleteable');
+        foreach($disableFilters as $filter){
+            $this->getEntityManager()->getFilters()->disable($filter);
         }
         
         $qb = $this->createQueryBuilder(static::QB_IDENTIFIER);
@@ -130,8 +135,10 @@ abstract class BaseRepository extends ServiceEntityRepository
 
         $result = $qb->getQuery()->getOneOrNullResult();
 
-        if(!$this->getEntityManager()->getFilters()->isEnabled('softdeleteable')){
-            $this->getEntityManager()->getFilters()->enable('softdeleteable');
+        foreach($disableFilters as $filter){
+            if(!$this->getEntityManager()->getFilters()->isEnabled($filter)){
+                $this->getEntityManager()->getFilters()->enable($filter);
+            }
         }
         
         return $result;

@@ -9,6 +9,7 @@ use App\DataFixtures\Test\Organization\OrganizationSortingFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
 use App\DataFixtures\Test\User\ChangeUserPasswordFixtures;
 use App\DataFixtures\Test\User\PasswordResetFixtures;
+use App\DataFixtures\Test\User\UnverifiedUserFixtures;
 use App\DataFixtures\Test\User\UserFixtures;
 use App\DataFixtures\Test\User\UserSortingFixtures;
 use App\DataFixtures\Test\User\VerifyUserEmailFixtures;
@@ -59,7 +60,7 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount(1, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([UserFixtures::class])]
+    #[Fixtures([UserFixtures::class, UnverifiedUserFixtures::class])]
     #[DataProviderExternal(UserCreateDataProvider::class, 'validationDataCases')]
     public function testCreateValidation(array $params, array $expectedErrors): void
     {
@@ -126,7 +127,7 @@ class UserControllerTest extends BaseWebTestCase
         $this->assertCount($mailSent ? 1 : 0, $this->mailerTransport->getSent());
     }
 
-    #[Fixtures([UserFixtures::class])]
+    #[Fixtures([UserFixtures::class, UnverifiedUserFixtures::class])]
     #[DataProviderExternal(UserPatchDataProvider::class, 'validationDataCases')]
     public function testPatchValidation(array $params, array $expectedErrors): void
     {

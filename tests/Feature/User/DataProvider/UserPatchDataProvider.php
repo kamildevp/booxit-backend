@@ -164,6 +164,20 @@ class UserPatchDataProvider extends BaseDataProvider
                     ],
                 ]
             ],
+            [
+                [
+                    'name' => 'New Test User',
+                    'email' => 'unverified_user@example.com',
+                    'username' => 'username',
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
+                ],
+                [
+                    'email' => [
+                        'User with provided email already exists',
+                    ],
+                ]
+            ],
         ];
     }
 }

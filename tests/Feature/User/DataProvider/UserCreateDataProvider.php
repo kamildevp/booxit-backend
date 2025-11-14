@@ -127,6 +127,21 @@ class UserCreateDataProvider extends BaseDataProvider
                     ],
                 ]
             ],
+            [
+                [
+                    'name' => 'New Test User',
+                    'email' => 'unverified_user@example.com',
+                    'username' => 'username',
+                    'password' => 'password123',
+                    'verification_handler' => self::VERIFICATION_HANDLER,
+                    'language_preference' => TranslationsLocale::EN->value,
+                ],
+                [
+                    'email' => [
+                        'User with provided email already exists',
+                    ],
+                ]
+            ],
         ];
     }
 }

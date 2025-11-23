@@ -34,4 +34,8 @@ trait ServiceBaseFieldsDTO
     #[OA\Property(example: '25.50')]
     #[Compound\DecimalRequirements]
     public readonly string $estimatedPrice;
+
+    #[OA\Property(example: 5)]
+    #[Assert\Range(min: 0, max: 525600)]
+    public readonly int $availabilityOffset;
 }

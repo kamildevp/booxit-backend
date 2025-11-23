@@ -20,6 +20,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'description' => 'test',
                     'duration' => 'PT01H30M',
                     'estimated_price' => '15.5',
+                    'availability_offset' => 5,
                 ],
                 [
                     'name' => 'Test Service',
@@ -27,6 +28,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'description' => 'test',
                     'duration' => 'P0Y0M0DT1H30M',
                     'estimated_price' => '15.5',
+                    'availability_offset' => 5,
                 ]
             ]
         ];
@@ -41,7 +43,8 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'category' => '',
                     'description' => '',
                     'duration' => '',
-                    'estimated_price' => ''
+                    'estimated_price' => '',
+                    'availability_offset' => -1,
                 ],
                 [
                     'name' => [
@@ -55,7 +58,10 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     ],
                     'estimated_price' => [
                         'This value should not be blank.'
-                    ]
+                    ],
+                    'availability_offset' => [
+                        'This value should be between 0 and 525600.',
+                    ],
                 ]
             ],
             [
@@ -64,7 +70,8 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'category' => 'a',
                     'description' => str_repeat('a', 2001),
                     'duration' => 'a',
-                    'estimated_price' => 'a'
+                    'estimated_price' => 'a',
+                    'availability_offset' => 15,
                 ],
                 [
                     'name' => [
@@ -91,6 +98,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'description' => 'test',
                     'duration' => 'PT1M',
                     'estimated_price' => str_repeat('1', 11),
+                    'availability_offset' => 15,
                 ],
                 [
                     'estimated_price' => [
@@ -108,6 +116,7 @@ class ServiceCreateDataProvider extends BaseDataProvider
                     'description' => 'test',
                     'duration' => 'P1DT1M',
                     'estimated_price' => '25.25',
+                    'availability_offset' => 15,
                 ],
                 [
                     'duration' => [

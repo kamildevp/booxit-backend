@@ -69,6 +69,10 @@ class Service
     #[ORM\OneToMany(mappedBy: 'service', targetEntity: Reservation::class)]
     private Collection $reservations;
 
+    #[Groups([ServiceNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 5])]
+    private int $availabilityOffset = 5;
+
     public function __construct()
     {
         $this->schedules = new ArrayCollection();
@@ -229,5 +233,17 @@ class Service
             'duration' => new BaseFieldOrder('duration'),
             'estimated_price' => new BaseFieldOrder('estimatedPrice'),
         ]);
+    }
+
+    public function getAvailabilityOffset(): int
+    {
+        return $this->availabilityOffset;
+    }
+
+    public function setAvailabilityOffset(int $availabilityOffset): static
+    {
+        $this->availabilityOffset = $availabilityOffset;
+
+        return $this;
     }
 }

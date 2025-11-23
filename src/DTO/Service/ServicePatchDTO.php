@@ -16,7 +16,8 @@ class ServicePatchDTO extends AbstractDTO
         string $category,
         string $description, 
         string $duration, 
-        string $estimatedPrice
+        string $estimatedPrice,
+        int $availabilityOffset,
     )
     {
         $this->name = $name;
@@ -24,5 +25,6 @@ class ServicePatchDTO extends AbstractDTO
         $this->description = $description;
         $this->duration = $duration;
         $this->estimatedPrice = $estimatedPrice;
+        $this->availabilityOffset = $availabilityOffset;
     }
 }

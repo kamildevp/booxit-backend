@@ -22,6 +22,11 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[DoctrineSoftDeleteable]
+#[ORM\Index(
+    name: 'idx_organization_postal_code_city_active',
+    columns: ['address_postal_code', 'address_city'],
+    options: ['where' => '(deleted_at IS NULL)']
+)]
 #[ORM\Entity(repositoryClass: OrganizationRepository::class)]
 class Organization
 {

@@ -14,9 +14,11 @@ class SchedulePatchDTO extends AbstractDTO
     public function __construct(
         string $name, 
         string $description,
+        int $division,
     )
     {
         $this->name = $name;
         $this->description = $description;
+        $this->division = $division;
     }
 }

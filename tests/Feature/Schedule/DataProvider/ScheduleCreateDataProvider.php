@@ -16,10 +16,12 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                 [
                     'name' => 'Test Schedule',
                     'description' => 'test',
+                    'division' => 15,
                 ],
                 [
                     'name' => 'Test Schedule',
                     'description' => 'test',
+                    'division' => 15,
                 ]
             ]
         ];
@@ -32,10 +34,14 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                 [
                     'name' => '',
                     'description' => '',
+                    'division' => 4,
                 ],
                 [
                     'name' => [
                         'Parameter must be at least 6 characters long',
+                    ],
+                    'division' => [
+                        'This value should be between 5 and 60.',
                     ],
                 ]
             ],
@@ -43,6 +49,7 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                 [
                     'name' => str_repeat('a', 51),
                     'description' => str_repeat('a', 2001),
+                    'division' => 61,
                 ],
                 [
                     'name' => [
@@ -50,6 +57,9 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     ],
                     'description' => [
                         'Parameter cannot be longer than 2000 characters',
+                    ],
+                    'division' => [
+                        'This value should be between 5 and 60.',
                     ],
                 ]
             ],

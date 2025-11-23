@@ -43,6 +43,10 @@ class Schedule
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
+    #[Groups([ScheduleNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 15])]
+    private int $division = 15;
+
     #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules', fetch: 'EXTRA_LAZY')]
     private Collection $services;
 
@@ -104,6 +108,18 @@ class Schedule
     public function setDescription(string $description): self
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function getDivision(): int
+    {
+        return $this->division;
+    }
+
+    public function setDivision(int $division): self
+    {
+        $this->division = $division;
+
         return $this;
     }
 

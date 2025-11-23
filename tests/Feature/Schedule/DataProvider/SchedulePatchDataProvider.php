@@ -15,10 +15,12 @@ class SchedulePatchDataProvider extends BaseDataProvider
                 [
                     'name' => 'New Test Schedule',
                     'description' => 'new test',
+                    'division' => 30,
                 ],
                 [
                     'name' => 'New Test Schedule',
                     'description' => 'new test',
+                    'division' => 30,
                 ],
             ],
         ];
@@ -31,10 +33,14 @@ class SchedulePatchDataProvider extends BaseDataProvider
                 [
                     'name' => '',
                     'description' => '',
+                    'division' => 4,
                 ],
                 [
                     'name' => [
                         'Parameter must be at least 6 characters long',
+                    ],
+                    'division' => [
+                        'This value should be between 5 and 60.',
                     ],
                 ]
             ],
@@ -42,6 +48,7 @@ class SchedulePatchDataProvider extends BaseDataProvider
                 [
                     'name' => str_repeat('a', 51),
                     'description' => str_repeat('a', 2001),
+                    'division' => 61,
                 ],
                 [
                     'name' => [
@@ -49,6 +56,9 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     ],
                     'description' => [
                         'Parameter cannot be longer than 2000 characters',
+                    ],
+                    'division' => [
+                        'This value should be between 5 and 60.',
                     ],
                 ]
             ],

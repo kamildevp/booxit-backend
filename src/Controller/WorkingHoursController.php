@@ -38,8 +38,7 @@ class WorkingHoursController extends AbstractController
         description: 'Updates schedule weekly working hours.
         <br><br>**Note:** Working hours that cross midnight are supported. 
         For example, a time window defined as (start_time=15:00, end_time=02:00) will continue into the next day and end at 02:00.
-        </br></br>**Important:** Working hours must be specified in Europe/Warsaw timezone.
-        </br>This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+        </br></br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule weekly working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]

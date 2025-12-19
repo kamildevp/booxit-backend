@@ -16,6 +16,7 @@ use App\Repository\ScheduleRepository;
 use App\Service\Utils\DateTimeUtils;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class WorkingHoursService
 {
@@ -23,6 +24,7 @@ class WorkingHoursService
         private ScheduleRepository $scheduleRepository,
         private CustomTimeWindowRepository $customTimeWindowRepository,
         private DateTimeUtils $dateTimeUtils,
+        #[Autowire('%timezone%')]private string $defaultTimezone,
     )
     {
         
@@ -38,7 +40,8 @@ class WorkingHoursService
                     fn($key, $element) => 
                         $element->getWeekDay() == $weekday && 
                         $element->getStartTime()->format('H:i') == $timeWindow->startTime && 
-                        $element->getEndTime()->format('H:i') == $timeWindow->endTime
+                        $element->getEndTime()->format('H:i') == $timeWindow->endTime &&
+                        $element->getTimezone() == $dto->timezone
                 );
                 
                 if(!$weekdayTimeWindow){
@@ -46,6 +49,7 @@ class WorkingHoursService
                     $weekdayTimeWindow->setWeekday($weekday);
                     $weekdayTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->startTime));
                     $weekdayTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->endTime));
+                    $weekdayTimeWindow->setTimezone($dto->timezone);
                     $schedule->addWeekdayTimeWindow($weekdayTimeWindow);
                 }
 
@@ -121,6 +125,9 @@ class WorkingHoursService
     {
         /** @var WeekdayTimeWindow[] */
         $weekdayTimeWindows = $schedule->getWeekdayTimeWindows()->toArray();
+        $firstWindow = $schedule->getWeekdayTimeWindows()->first();
+        $timezone = $firstWindow !== false ? $firstWindow->getTimezone() : $this->defaultTimezone;
+        
         $weeklyWorkingHours = [];
         foreach(Weekday::values() as $weekday){
             $dayTimeWindows = array_filter($weekdayTimeWindows, fn($weekdayTimeWindow) => $weekdayTimeWindow->getWeekday() == $weekday);
@@ -131,6 +138,8 @@ class WorkingHoursService
 
             $weeklyWorkingHours[$weekday] = $this->dateTimeUtils->sortTimeWindowCollection($dayTimeWindows);
         }
+
+        $weeklyWorkingHours['timezone'] = $timezone;
 
         return $weeklyWorkingHours;
     }

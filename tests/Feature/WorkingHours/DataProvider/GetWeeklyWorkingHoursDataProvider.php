@@ -24,7 +24,7 @@ class GetWeeklyWorkingHoursDataProvider extends BaseDataProvider
     public static function dataCases()
     {
         return [
-            [self::weeklyWorkingHours()]
+            [array_merge(self::weeklyWorkingHours(), ['timezone' => 'Europe/Warsaw'])]
         ];
     }
 }

@@ -30,6 +30,12 @@ class TimeWindowsPerWeekdayResponseDoc extends SuccessResponseDoc
             );
         }
 
+        $properties[] = new OA\Property(
+                'timezone', 
+                type: 'string', 
+                example: 'Europe/Warsaw' 
+        );
+
         $dataContent = new OA\JsonContent(type: 'object', properties: $properties);
 
         parent::__construct(

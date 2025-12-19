@@ -18,21 +18,13 @@ use DateTimeInterface;
 
 class AvailabilityService
 {
-    const DEFAULT_AVAILABILITY_OFFSET = 'PT5M';
-    const DEFAULT_TIME_WINDOW_DIVISION = 15;
-
-    private DateTimeImmutable $availabilityOffset;
-    private DateTimeImmutable $availabilityOffsetDate;
-
     public function __construct(
         private ReservationRepository $reservationRepository,
-        private ServiceRepository $serviceRepository,
         private WorkingHoursService $workingHoursService,
         private DateTimeUtils $dateTimeUtils,
     )
     {
-        $this->availabilityOffset = (new DateTimeImmutable())->add(new DateInterval(self::DEFAULT_AVAILABILITY_OFFSET));
-        $this->availabilityOffsetDate = $this->availabilityOffset->setTime(0, 0);
+
     }
 
     /** @return array<string, string[]> */
@@ -45,7 +37,9 @@ class AvailabilityService
     {
         $startDate = DateTimeImmutable::createFromInterface($startDate)->setTime(0,0);
         $endDate = DateTimeImmutable::createFromInterface($endDate)->setTime(23,59);
-        $searchStartDate = $startDate < $this->availabilityOffsetDate ? $this->availabilityOffsetDate : $startDate;
+        $earliestAvailabilityDateTime = $this->getEarliestAvailabilityDateTime($service);
+        $earliestAvailabilityDate = $earliestAvailabilityDateTime->setTime(0,0);
+        $searchStartDate = $startDate < $earliestAvailabilityDate ? $earliestAvailabilityDate : $startDate;
         $weeklyWorkingHours = $this->workingHoursService->getScheduleWeeklyWorkingHours($schedule);
         $customWorkingHours = $this->workingHoursService->getScheduleCustomWorkingHours($schedule, $searchStartDate, $endDate);
         $reservations = $this->reservationRepository->getScheduleReservations($schedule, $searchStartDate, $endDate);
@@ -56,7 +50,9 @@ class AvailabilityService
             $weeklyWorkingHours,
             $customWorkingHours,
             $reservations,
-            $service
+            $schedule,
+            $service,
+            $earliestAvailabilityDateTime,
         );
     }
 
@@ -72,7 +68,9 @@ class AvailabilityService
         array $weeklyWorkingHours,
         array $customWorkingHours,
         array $reservations,
-        Service $service
+        Schedule $schedule,
+        Service $service,
+        DateTimeImmutable $earliestAvailabilityDateTime,
     ): array 
     {
         $mappedAvailability = [];
@@ -80,12 +78,12 @@ class AvailabilityService
         $workingHours = [];
         foreach ($datePeriod as $date) {
             $mappedAvailability[$date->format('Y-m-d')] = [];
-            $dateWorkingHours = $this->getDateWorkingHours($weeklyWorkingHours, $customWorkingHours, $date);
+            $dateWorkingHours = $this->getDateWorkingHours($weeklyWorkingHours, $customWorkingHours, $date, $earliestAvailabilityDateTime);
             $workingHours = array_merge($workingHours, $dateWorkingHours);
         }
 
-        $availabilityBorders = $startDate < $this->availabilityOffset ? 
-            [new TimeWindow($startDate, $this->availabilityOffset), new TimeWindow($endDate, $endDate->modify('+1 day'))] : 
+        $availabilityBorders = $startDate < $earliestAvailabilityDateTime ? 
+            [new TimeWindow($startDate, $earliestAvailabilityDateTime), new TimeWindow($endDate, $endDate->modify('+1 day'))] : 
             [new TimeWindow($endDate, $endDate->modify('+1 day'))];
 
         $workingHours = $this->dateTimeUtils->timeWindowCollectionDiff($workingHours, $availabilityBorders);
@@ -97,7 +95,7 @@ class AvailabilityService
             $this->mapTimeWindowCollectionToDatesAvailability(
                 $availableTimeWindows, 
                 $service->getDuration(), 
-                self::DEFAULT_TIME_WINDOW_DIVISION
+                $schedule->getDivision()
             )
         );
 
@@ -109,9 +107,10 @@ class AvailabilityService
         array $weeklyWorkingHours,
         array $customWorkingHours,
         DateTimeImmutable $date,
+        DateTimeImmutable $earliestAvailabilityDateTime,
     ): array
     {
-        if($date < $this->availabilityOffsetDate){
+        if($date < $earliestAvailabilityDateTime){
             return [];
         }
 
@@ -183,5 +182,11 @@ class AvailabilityService
         $addMinutes = ($division - ($minutes % $division)) % $division;
         
         return $rounded->modify("+{$addMinutes} minutes");
+    }
+
+    private function getEarliestAvailabilityDateTime(Service $service)
+    {
+        $offsetInMinutes = $service->getAvailabilityOffset();
+        return (new DateTimeImmutable())->modify("+{$offsetInMinutes} minutes");
     }
 }

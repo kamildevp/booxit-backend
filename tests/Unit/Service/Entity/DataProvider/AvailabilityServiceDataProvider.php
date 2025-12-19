@@ -26,7 +26,7 @@ class AvailabilityServiceDataProvider extends BaseDataProvider
                     Weekday::WEDNESDAY->value => $weekdayTimeWindows,
                 ],
                 [
-                    $startDate->format('Y-m-d') => $customTimeWindows
+                    $startDate->format('Y-m-d') => ['time_windows' => $customTimeWindows, 'timezone' => 'UTC']
                 ],
                 [
                     new TimeWindow($startDate->setTime(23,30), $startDate->modify('+1 day')->setTime(0,0)),
@@ -68,7 +68,7 @@ class AvailabilityServiceDataProvider extends BaseDataProvider
                     Weekday::WEDNESDAY->value => $weekdayTimeWindows,
                 ],
                 [
-                    $startDate->format('Y-m-d') => $customTimeWindows
+                    $startDate->format('Y-m-d') => ['time_windows' => $customTimeWindows, 'timezone' => 'UTC']
                 ],
                 [
                     new TimeWindow($startDate->setTime(23,30), $startDate->modify('+1 day')->setTime(0,0)),
@@ -108,7 +108,7 @@ class AvailabilityServiceDataProvider extends BaseDataProvider
                     Weekday::WEDNESDAY->value => $weekdayTimeWindows,
                 ],
                 [
-                    $startDate->format('Y-m-d') => $customTimeWindows
+                    $startDate->format('Y-m-d') => ['time_windows' => $customTimeWindows, 'timezone' => 'UTC']
                 ],
                 [
                     new TimeWindow($startDate->setTime(23,30), $startDate->modify('+1 day')->setTime(0,0)),

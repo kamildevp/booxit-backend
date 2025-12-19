@@ -16,6 +16,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date' => '2025-01-01',
                     'time_windows' => [['start_time' => '09:00', 'end_time' => '17:00']],
+                    'timezone' => 'Europe/Warsaw'
                 ]
             ]
         ];
@@ -28,6 +29,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date' => '',
                     'time_windows' => [['start_time' => '', 'end_time' => '']],
+                    'timezone' => ''
                 ],
                 [
                     'date' => [
@@ -43,12 +45,16 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                             ]
                         ],
                     ],
+                    'timezone' => [
+                        'This value should not be blank.'
+                    ]
                 ]
             ],
             [
                 [
                     'date' => 'a',
                     'time_windows' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
+                    'timezone' => 'a'
                 ],
                 [
                     'date' => [
@@ -69,12 +75,16 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                             ]
                         ]
                     ],
+                    'timezone' => [
+                        'This value is not a valid timezone.'
+                    ]
                 ]
             ],
             [
                 [
                     'date' => '2025-01-01',
                     'time_windows' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '09:30', 'end_time' => '14:00']],
+                    'timezone' => 'Europe/Paris'
                 ],
                 [
                     'time_windows' => [
@@ -88,6 +98,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date' => '2025-10-01',
                     'time_windows' => [['start_time' => '15:00', 'end_time' => '10:00']],
+                    'timezone' => 'Europe/Paris'
                 ],
                 [
                     'errors' => [

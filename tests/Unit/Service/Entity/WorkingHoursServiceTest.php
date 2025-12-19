@@ -84,11 +84,13 @@ class WorkingHoursServiceTest extends TestCase
     public function testSetScheduleCustomWorkingHoursCreatesAndRemovesTimeWindows(): void
     {
         $date = '2025-10-01';
+        $dto = new CustomWorkingHoursUpdateDTO($date, [new TimeWindowDTO('13:00', '17:00')], $this->timezone);
         $datetime = DateTimeImmutable::createFromFormat('Y-m-d', $date);
         $existingTimeWindowMock = $this->createMock(CustomTimeWindow::class);
         $existingTimeWindowMock->method('getDate')->willReturn($datetime);
         $existingTimeWindowMock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','08:00'));
         $existingTimeWindowMock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','12:00'));
+        $existingTimeWindowMock->method('getTimezone')->willReturn($this->timezone);
         $scheduleMock = $this->createMock(Schedule::class);
 
         $this->customTimeWindowRepositoryMock
@@ -99,15 +101,16 @@ class WorkingHoursServiceTest extends TestCase
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function ($timeWindow) use ($datetime, $scheduleMock) {
+            ->with($this->callback(function ($timeWindow) use ($datetime, $scheduleMock, $dto) {
                 return 
                     $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getSchedule() == $scheduleMock &&
                     $timeWindow->getDate() == $datetime &&
                     $timeWindow->getStartTime()->format('H:i')  == '13:00' &&
-                    $timeWindow->getEndTime()->format('H:i')  == '17:00';
+                    $timeWindow->getEndTime()->format('H:i')  == '17:00' &&
+                    $timeWindow->getTimezone() == $dto->timezone;
             }));
-
+        
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('remove')
@@ -116,14 +119,15 @@ class WorkingHoursServiceTest extends TestCase
                     $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getDate() == $datetime &&
                     $timeWindow->getStartTime()->format('H:i')  == '08:00' &&
-                    $timeWindow->getEndTime()->format('H:i')  == '12:00';
+                    $timeWindow->getEndTime()->format('H:i')  == '12:00' &&
+                    $timeWindow->getTimezone() == $this->timezone;
             }));
 
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('flush');
 
-        $dto = new CustomWorkingHoursUpdateDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
+        
         $this->service->setScheduleCustomWorkingHours($scheduleMock, $dto);
     }
 
@@ -140,6 +144,7 @@ class WorkingHoursServiceTest extends TestCase
             $mock->method('getDate')->willReturn(DateTimeImmutable::createFromFormat('Y-m-d', $element['date']));
             $mock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['startTime']));
             $mock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['endTime']));
+            $mock->method('getTimezone')->willReturn($this->timezone);
             return $mock;
         }, $customTimeWindowsData);
 
@@ -160,12 +165,13 @@ class WorkingHoursServiceTest extends TestCase
         foreach ($customTimeWindowsData as $data) {
             $date = $data['date'];
             $this->assertArrayHasKey($date, $result);
-            $matchedTimeWindows = array_filter($result[$date],
+            $matchedTimeWindows = array_filter($result[$date]['time_windows'],
                 fn($tw) => 
                     $tw->getStartTime()->format('H:i') == $data['startTime'] && 
                     $tw->getEndTime()->format('H:i') == $data['endTime']
             );
 
+            $this->assertEquals($this->timezone, $result[$date]['timezone']);
             $this->assertNotEmpty($matchedTimeWindows);
         }
     }

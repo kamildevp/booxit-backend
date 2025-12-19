@@ -29,6 +29,9 @@ class CustomTimeWindow
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $endTime = null;
 
+    #[ORM\Column(length: 255, options: ['default' => 'Europe/Warsaw'])]
+    private string $timezone = 'Europe/Warsaw';
+
     public function __construct()
     {
         $this->id = Uuid::uuid4()->toString();
@@ -83,6 +86,18 @@ class CustomTimeWindow
     public function setEndTime(\DateTimeInterface $endTime): static
     {
         $this->endTime = $endTime;
+
+        return $this;
+    }
+
+    public function getTimezone(): string
+    {
+        return $this->timezone;
+    }
+
+    public function setTimezone(string $timezone): static
+    {
+        $this->timezone = $timezone;
 
         return $this;
     }

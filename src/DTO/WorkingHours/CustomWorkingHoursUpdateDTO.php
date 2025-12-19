@@ -22,6 +22,11 @@ class CustomWorkingHoursUpdateDTO extends AbstractDTO
         #[Assert\Valid]
         /** @var TimeWindowDTO[] */
         public readonly array $timeWindows,
+
+        #[OA\Property(example: 'Europe/Warsaw')]
+        #[Assert\NotBlank]
+        #[Assert\Timezone]
+        public readonly string $timezone,
     )
     {
 

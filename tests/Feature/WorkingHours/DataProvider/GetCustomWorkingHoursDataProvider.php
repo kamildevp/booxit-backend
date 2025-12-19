@@ -31,14 +31,14 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     'date_from' => '2025-10-01',
                     'date_to' => '2025-10-31'
                 ],
-                $customWorkingHours
+                array_map(fn($element) => ['time_windows' => $element, 'timezone' => 'Europe/Warsaw'] , $customWorkingHours)
             ],
             [
                 [
                     'date_from' => '2025-10-10',
                     'date_to' => '2025-10-10'
                 ],
-                ['2025-10-10' => $customWorkingHours['2025-10-10']]
+                ['2025-10-10' => ['time_windows' => $customWorkingHours['2025-10-10'], 'timezone' => 'Europe/Warsaw']]
             ]
         ];
     }

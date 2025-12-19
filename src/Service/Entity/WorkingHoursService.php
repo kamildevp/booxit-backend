@@ -76,7 +76,8 @@ class WorkingHoursService
                 $matchingCustomTimeWindows = array_filter($scheduleCustomTimeWindows,
                     fn($element) => 
                         $element->getStartTime()->format('H:i') == $timeWindow->startTime && 
-                        $element->getEndTime()->format('H:i') == $timeWindow->endTime
+                        $element->getEndTime()->format('H:i') == $timeWindow->endTime &&
+                        $element->getTimezone() == $dto->timezone
                 );
                 
                 if(count($matchingCustomTimeWindows) == 0){
@@ -85,6 +86,7 @@ class WorkingHoursService
                     $customTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->startTime));
                     $customTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->endTime));
                     $customTimeWindow->setSchedule($schedule);
+                    $customTimeWindow->setTimezone($dto->timezone);
                     $this->customTimeWindowRepository->save($customTimeWindow);
                 }
                 else{
@@ -103,8 +105,6 @@ class WorkingHoursService
         $this->customTimeWindowRepository->flush();
     }
 
-    
-    /** @return array<string,TimeWindow[]> */
     public function getScheduleCustomWorkingHours(Schedule $schedule, DateTimeInterface|string|null $startDate, DateTimeInterface|string|null $endDate): array
     {
         $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($startDate, new DateTimeImmutable('monday this week'));
@@ -114,13 +114,13 @@ class WorkingHoursService
         $customWorkingHours = [];
         foreach($customTimeWindows as $customTimeWindow){
             $dateString = $customTimeWindow->getDate()->format('Y-m-d');
-            $customWorkingHours[$dateString][] = new TimeWindow($customTimeWindow->getStartTime(), $customTimeWindow->getEndTime());
+            $customWorkingHours[$dateString]['time_windows'][] = new TimeWindow($customTimeWindow->getStartTime(), $customTimeWindow->getEndTime());
+            $customWorkingHours[$dateString]['timezone'] = $customTimeWindow->getTimezone();
         }
 
         return $customWorkingHours;
     }
 
-    /** @return array<string,TimeWindow[]> */
     public function getScheduleWeeklyWorkingHours(Schedule $schedule): array
     {
         /** @var WeekdayTimeWindow[] */

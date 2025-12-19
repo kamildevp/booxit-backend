@@ -117,7 +117,7 @@ class AvailabilityService
         $dateString = $date->format('Y-m-d');
         $weekday = Weekday::createFromInt((int)$date->format('N'))->value;
 
-        $workingHours = $customWorkingHours[$dateString] ?? $weeklyWorkingHours[$weekday];
+        $workingHours = array_key_exists($dateString, $customWorkingHours) ? $customWorkingHours[$dateString]['time_windows'] : $weeklyWorkingHours[$weekday];
         $dateTimeWindows = array_map(
             fn($wh) => TimeWindow::createFromDateAndTime(
                 $dateString,

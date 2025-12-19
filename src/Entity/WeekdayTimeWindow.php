@@ -29,7 +29,7 @@ class WeekdayTimeWindow
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $endTime = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, options: ['default' => 'Europe/Warsaw'])]
     private string $timezone = 'Europe/Warsaw';
 
     public function __construct()

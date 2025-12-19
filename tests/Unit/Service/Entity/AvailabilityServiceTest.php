@@ -24,7 +24,6 @@ use PHPUnit\Framework\TestCase;
 class AvailabilityServiceTest extends TestCase
 {
     private ReservationRepository&MockObject $reservationRepositoryMock;
-    private ServiceRepository&MockObject $serviceRepositoryMock;
     private WorkingHoursService&MockObject $workingHoursServiceMock;
     private DateTimeUtils&MockObject $dateTimeUtilsMock;
     private AvailabilityService $availabilityService;
@@ -32,13 +31,11 @@ class AvailabilityServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->reservationRepositoryMock = $this->createMock(ReservationRepository::class);
-        $this->serviceRepositoryMock = $this->createMock(ServiceRepository::class);
         $this->workingHoursServiceMock = $this->createMock(WorkingHoursService::class);
         $this->dateTimeUtilsMock = $this->createMock(DateTimeUtils::class);
 
         $this->availabilityService = new AvailabilityService(
             $this->reservationRepositoryMock,
-            $this->serviceRepositoryMock,
             $this->workingHoursServiceMock,
             $this->dateTimeUtilsMock
         );
@@ -51,6 +48,8 @@ class AvailabilityServiceTest extends TestCase
         array $reservationsTimeWindows,
         DateTimeImmutable $startDate,
         DateTimeImmutable $endDate,
+        int $scheduleDivision,
+        int $availabilityOffset,
         array $expectedWorkingHours,
         array $availableTimeWindowsResult,
         array $serviceFilterResults,
@@ -101,8 +100,10 @@ class AvailabilityServiceTest extends TestCase
             ->willReturn($timeWindowsMergedMock);
 
         $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getDivision')->willReturn($scheduleDivision);
         $serviceMock = $this->createMock(Service::class);
         $serviceMock->method('getDuration')->willReturn(new DateInterval('PT30M'));
+        $serviceMock->method('getAvailabilityOffset')->willReturn($availabilityOffset);
 
         $this->dateTimeUtilsMock
             ->method('compareDateIntervals')

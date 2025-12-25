@@ -29,16 +29,18 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
             [
                 [
                     'date_from' => '2025-10-01',
-                    'date_to' => '2025-10-31'
+                    'date_to' => '2025-10-31',
+                    'timezone' => 'Europe/Warsaw'
                 ],
-                array_map(fn($element) => ['time_windows' => $element, 'timezone' => 'Europe/Warsaw'] , $customWorkingHours)
+                $customWorkingHours
             ],
             [
                 [
                     'date_from' => '2025-10-10',
-                    'date_to' => '2025-10-10'
+                    'date_to' => '2025-10-10',
+                    'timezone' => 'Europe/Warsaw'
                 ],
-                ['2025-10-10' => ['time_windows' => $customWorkingHours['2025-10-10'], 'timezone' => 'Europe/Warsaw']]
+                ['2025-10-10' => $customWorkingHours['2025-10-10']]
             ]
         ];
     }
@@ -50,12 +52,16 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => '',
                     'date_to' => '',
+                    'timezone' => ''
                 ],
                 [
                     'date_from' => [
                         'This value should not be blank.'
                     ],
                     'date_to' => [
+                        'This value should not be blank.'
+                    ],
+                    'timezone' => [
                         'This value should not be blank.'
                     ]
                 ],
@@ -67,7 +73,7 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_to' => [
                         'The end date must be provided when a start date is specified.'
-                    ]
+                    ],
                 ],
             ],
             [
@@ -84,6 +90,7 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => 'a',
                     'date_to' => 'a',
+                    'timezone' => 'a',
                 ],
                 [
                     'date_to' => [
@@ -91,6 +98,9 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     ],
                     'date_from' => [
                         'Parameter must be date in format Y-m-d'
+                    ],
+                    'timezone' => [
+                        'This value is not a valid timezone.'
                     ]
                 ],
             ],

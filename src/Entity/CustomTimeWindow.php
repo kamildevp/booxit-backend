@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\CustomTimeWindowRepository;
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
@@ -20,17 +21,11 @@ class CustomTimeWindow
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Schedule $schedule = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?DateTimeImmutable $startDateTime = null;
 
-    #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTimeInterface $startTime = null;
-
-    #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTimeInterface $endTime = null;
-
-    #[ORM\Column(length: 255, options: ['default' => 'Europe/Warsaw'])]
-    private string $timezone = 'Europe/Warsaw';
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?DateTimeImmutable $endDateTime = null;
 
     public function __construct()
     {
@@ -54,50 +49,26 @@ class CustomTimeWindow
         return $this;
     }
 
-    public function getDate(): ?\DateTimeInterface
+    public function getStartDateTime(): ?DateTimeImmutable
     {
-        return $this->date;
+        return $this->startDateTime;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    public function setStartDateTime(DateTimeImmutable $startDateTime): static
     {
-        $this->date = $date;
+        $this->startDateTime = $startDateTime;
 
         return $this;
     }
 
-    public function getStartTime(): ?\DateTimeInterface
+    public function getEndDateTime(): ?DateTimeImmutable
     {
-        return $this->startTime;
+        return $this->endDateTime;
     }
 
-    public function setStartTime(\DateTimeInterface $startTime): static
+    public function setEndDateTime(DateTimeImmutable $endDateTime): static
     {
-        $this->startTime = $startTime;
-
-        return $this;
-    }
-
-    public function getEndTime(): ?\DateTimeInterface
-    {
-        return $this->endTime;
-    }
-
-    public function setEndTime(\DateTimeInterface $endTime): static
-    {
-        $this->endTime = $endTime;
-
-        return $this;
-    }
-
-    public function getTimezone(): string
-    {
-        return $this->timezone;
-    }
-
-    public function setTimezone(string $timezone): static
-    {
-        $this->timezone = $timezone;
+        $this->endDateTime = $endDateTime;
 
         return $this;
     }

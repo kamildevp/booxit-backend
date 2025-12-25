@@ -84,9 +84,8 @@ class AvailabilityFixtures extends Fixture implements DependentFixtureInterface
         foreach($customWorkingHours as $date => $data){
             $customTimeWindow = new CustomTimeWindow();
             $customTimeWindow->setSchedule($schedule);
-            $customTimeWindow->setDate(new DateTimeImmutable($date));
-            $customTimeWindow->setStartTime(new DateTimeImmutable($data['start_time']));
-            $customTimeWindow->setEndTime(new DateTimeImmutable($data['end_time']));
+            $customTimeWindow->setStartDateTime(new DateTimeImmutable($date.' '.$data['start_time']));
+            $customTimeWindow->setEndDateTime(new DateTimeImmutable($date.' '.$data['end_time']));
             $manager->persist($customTimeWindow);
         }
 

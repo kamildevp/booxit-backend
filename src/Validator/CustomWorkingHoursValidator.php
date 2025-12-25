@@ -11,6 +11,9 @@ use App\Repository\ScheduleRepository;
 use App\Service\Utils\DateTimeUtils;
 use App\Validator\Constraints\CustomWorkingHours;
 use DateTimeImmutable;
+use DateTimeZone;
+use Exception;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -19,14 +22,17 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 class CustomWorkingHoursValidator extends ConstraintValidator
 {
+    private DateTimeZone $defaultTimezone;
+
     public function __construct(
         private DateTimeUtils $dateTimeUtils,
         private ScheduleRepository $scheduleRepository,    
         private CustomTimeWindowRepository $customTimeWindowRepository,
         private RequestStack $requestStack,    
+        #[Autowire('%timezone%')]private string $defaultTimezoneString,
     )
     {
-        
+        $this->defaultTimezone = new DateTimeZone($defaultTimezoneString);
     }
 
     public function validate(mixed $value, Constraint $constraint): void
@@ -43,7 +49,14 @@ class CustomWorkingHoursValidator extends ConstraintValidator
             return;
         }
 
-        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value->date);
+        try{
+            $timezone = new DateTimeZone($value->timezone);
+        }
+        catch(Exception){
+            return;
+        }
+
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value->date, $timezone);
         if($date === false){
             return;
         }
@@ -54,29 +67,34 @@ class CustomWorkingHoursValidator extends ConstraintValidator
             return;
         }
 
+        $startDateTime = $date->setTime(0,0)->setTimezone($this->defaultTimezone);
+        $endDateTime = $date->setTime(23,59)->setTimezone($this->defaultTimezone);
         $customTimeWindowsToCheck = $this->customTimeWindowRepository->getScheduleCustomTimeWindows(
             $schedule, 
-            $date->modify('-1 day'), 
-            $date->modify('+1 day')
+            $startDateTime->modify('-1 day'), 
+            $endDateTime->modify('+1 day')
         );
 
         $customTimeWindowsToCheck = array_filter(
             $customTimeWindowsToCheck, 
-            fn($customTimeWindow) => $customTimeWindow->getDate()->format('Y-m-d') != $value->date
+            fn($customTimeWindow) => 
+                $customTimeWindow->getStartDateTime() < $startDateTime ||
+                $customTimeWindow->getStartDateTime() > $endDateTime
         );
 
-        $timeWindowsToCheck = array_map(fn($customTimeWindow) => TimeWindow::createFromDateAndTime(
-            $customTimeWindow->getDate(),
-            $customTimeWindow->getStartTime(),
-            $customTimeWindow->getDate(),
-            $customTimeWindow->getEndTime()
-        ), $customTimeWindowsToCheck);
+        $timeWindowsToCheck = array_map(fn($customTimeWindow) => 
+            new TimeWindow(
+                $customTimeWindow->getStartDateTime()->setTimezone($timezone),
+                $customTimeWindow->getEndDateTime()->setTimezone($timezone)
+            )
+        , $customTimeWindowsToCheck);
 
         $dateTimeWindows = array_map(fn($timeWindowDTO) => TimeWindow::createFromDateAndTime(
             $value->date,
             $timeWindowDTO->startTime,
             $value->date,
-            $timeWindowDTO->endTime
+            $timeWindowDTO->endTime,
+            $timezone
         ), $value->timeWindows);
 
         $sortedTimeWindows = $this->dateTimeUtils->sortTimeWindowCollection(array_merge($timeWindowsToCheck, $dateTimeWindows));

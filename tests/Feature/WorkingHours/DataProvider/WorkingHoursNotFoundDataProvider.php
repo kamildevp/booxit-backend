@@ -31,11 +31,6 @@ class WorkingHoursNotFoundDataProvider extends BaseDataProvider
                 'PUT',
                 'Schedule not found'
             ],
-            [
-                '/api/schedules/1000/custom-working-hours/2025-10-10',
-                'DELETE',
-                'Schedule not found'
-            ],
         ];
     }
 }

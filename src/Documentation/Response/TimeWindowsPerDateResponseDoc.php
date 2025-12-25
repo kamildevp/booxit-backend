@@ -18,26 +18,15 @@ class TimeWindowsPerDateResponseDoc extends SuccessResponseDoc
         $properties = [];
         foreach($dates as $date){
             $properties[] = new OA\Property(
-                    $date, 
+                $date, 
+                type: 'array', 
+                items: new OA\Items(
                     type: 'object',
                     properties: [
-                        new OA\Property(
-                            'time_windows',
-                            type: 'array', 
-                            items: new OA\Items(
-                                type: 'object',
-                                properties: [
-                                    new OA\Property('start_time', type: 'string', format: 'time', example: '09:00'),
-                                    new OA\Property('end_time', type: 'string', format: 'time', example: '12:00')
-                                ]
-                            )
-                        ),
-                        new OA\Property(
-                            'timezone',
-                            type: 'string',
-                            example: 'Europe/Warsaw'
-                        )
+                        new OA\Property('start_time', type: 'string', format: 'time', example: '09:00'),
+                        new OA\Property('end_time', type: 'string', format: 'time', example: '12:00')
                     ]
+                )
             );
         }
 

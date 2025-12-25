@@ -7,6 +7,7 @@ namespace App\Model;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use Symfony\Component\Serializer\Attribute\Context;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
@@ -26,6 +27,7 @@ class TimeWindow
         DateTimeInterface|string $startTime,
         DateTimeInterface|string $endDate, 
         DateTimeInterface|string $endTime,
+        ?DateTimeZone $timezone = null
     ): self|false
     {
         $startDateString = $startDate instanceof DateTimeInterface ? $startDate->format('Y-m-d') : $startDate;
@@ -33,8 +35,8 @@ class TimeWindow
         $endDateString = $endDate instanceof DateTimeInterface ? $endDate->format('Y-m-d') : $endDate;
         $endTimeString = $endTime instanceof DateTimeInterface ? $endTime->format('H:i') : $endTime;
 
-        $startDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$startDateString $startTimeString");
-        $endDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$endDateString $endTimeString");
+        $startDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$startDateString $startTimeString", $timezone);
+        $endDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i', "$endDateString $endTimeString", $timezone);
         if($startDateTime === false || $endDateTime === false){
             return false;
         }

@@ -98,7 +98,7 @@ class UpdateCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date' => '2025-10-01',
                     'time_windows' => [['start_time' => '15:00', 'end_time' => '10:00']],
-                    'timezone' => 'Europe/Paris'
+                    'timezone' => 'Europe/Warsaw'
                 ],
                 [
                     'errors' => [

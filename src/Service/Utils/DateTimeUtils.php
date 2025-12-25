@@ -8,6 +8,7 @@ use App\Model\TimeWindow;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 
 class DateTimeUtils
 {
@@ -121,7 +122,7 @@ class DateTimeUtils
         return $dateTime1 <=> $dateTime2;
     }
 
-    public function resolveDateTimeImmutableWithDefault(DateTimeInterface|string|null $date, DateTimeInterface $default, string $format = 'Y-m-d'): DateTimeImmutable
+    public function resolveDateTimeImmutableWithDefault(DateTimeInterface|string|null $date, DateTimeInterface $default, string $format = 'Y-m-d', ?DateTimeZone $timezone = null): DateTimeImmutable
     {
         if($date instanceof DateTimeImmutable){
             return $date;
@@ -132,7 +133,7 @@ class DateTimeUtils
         }
 
         $defaultImmutable = DateTimeImmutable::createFromInterface($default);
-        $result = $date ? DateTimeImmutable::createFromFormat($format, $date) : $defaultImmutable;
+        $result = $date ? DateTimeImmutable::createFromFormat($format, $date, $timezone) : $defaultImmutable;
 
         return $result === false ? $defaultImmutable : $result;
     }

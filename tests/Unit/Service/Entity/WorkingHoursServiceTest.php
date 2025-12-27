@@ -82,13 +82,14 @@ class WorkingHoursServiceTest extends TestCase
 
     public function testSetScheduleCustomWorkingHoursCreatesAndRemovesTimeWindows(): void
     {
-        $timezone = new DateTimeZone('Asia/Tokyo');
-        $dto = new CustomWorkingHoursUpdateDTO('2025-12-01', [new TimeWindowDTO('13:00', '17:00')], $timezone->getName());
+        $timezone = new DateTimeZone('Europe/Warsaw');
+        $dto = new CustomWorkingHoursUpdateDTO('2025-12-01', [new TimeWindowDTO('13:00', '17:00')]);
         $date = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date, $timezone);
         $existingTimeWindowMock = $this->createMock(CustomTimeWindow::class);
         $existingTimeWindowMock->method('getStartDateTime')->willReturn($date->setTime(8,0)->setTimezone($this->defaultTimezone));
         $existingTimeWindowMock->method('getEndDateTime')->willReturn($date->setTime(12,0)->setTimezone($this->defaultTimezone));
         $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getTimezone')->willReturn($timezone->getName());
         $searchStart = $date->setTime(0,0)->setTimezone($this->defaultTimezone);
         $searchEnd = $date->setTime(23,59)->setTimezone($this->defaultTimezone);
 
@@ -107,8 +108,8 @@ class WorkingHoursServiceTest extends TestCase
             ->with($this->callback(fn($timeWindow) =>
                     $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getSchedule() == $scheduleMock &&
-                    $timeWindow->getStartDateTime()->format('Y-m-d H:i')  == '2025-12-01 04:00' &&
-                    $timeWindow->getEndDateTime()->format('Y-m-d H:i')  == '2025-12-01 08:00'
+                    $timeWindow->getStartDateTime()->format('Y-m-d H:i')  == '2025-12-01 12:00' &&
+                    $timeWindow->getEndDateTime()->format('Y-m-d H:i')  == '2025-12-01 16:00'
             ));
         
         $this->customTimeWindowRepositoryMock
@@ -131,7 +132,7 @@ class WorkingHoursServiceTest extends TestCase
             ['date' => '2025-10-13', 'startTime' => '15:30', 'endTime' => '16:00'],
             ['date' => '2025-10-14', 'startTime' => '08:00', 'endTime' => '12:00']
         ];
-        $timezone = new DateTimeZone('Asia/Tokyo');
+        $timezone = new DateTimeZone('Europe/Warsaw');
 
         $customTimeWindowsMock = array_map(function($element) use ($timezone){
             $mock = $this->createMock(CustomTimeWindow::class);
@@ -141,6 +142,7 @@ class WorkingHoursServiceTest extends TestCase
         }, $customTimeWindowsData);
 
         $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getTimezone')->willReturn('Europe/Warsaw');
         $start = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-13', $timezone);
         $end = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-14', $timezone);
 
@@ -152,7 +154,7 @@ class WorkingHoursServiceTest extends TestCase
             ->method('getScheduleCustomTimeWindows')
             ->willReturn($customTimeWindowsMock);
 
-        $result = $this->service->getScheduleCustomWorkingHours($scheduleMock, $start, $end, $timezone);
+        $result = $this->service->getScheduleCustomWorkingHours($scheduleMock, $start, $end);
 
         foreach ($customTimeWindowsData as $data) {
             $date = $data['date'];

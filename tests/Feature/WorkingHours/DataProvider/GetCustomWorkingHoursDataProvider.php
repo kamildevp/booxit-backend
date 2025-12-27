@@ -30,7 +30,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => '2025-10-01',
                     'date_to' => '2025-10-31',
-                    'timezone' => 'Europe/Warsaw'
                 ],
                 $customWorkingHours
             ],
@@ -38,7 +37,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => '2025-10-10',
                     'date_to' => '2025-10-10',
-                    'timezone' => 'Europe/Warsaw'
                 ],
                 ['2025-10-10' => $customWorkingHours['2025-10-10']]
             ]
@@ -52,7 +50,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => '',
                     'date_to' => '',
-                    'timezone' => ''
                 ],
                 [
                     'date_from' => [
@@ -61,9 +58,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     'date_to' => [
                         'This value should not be blank.'
                     ],
-                    'timezone' => [
-                        'This value should not be blank.'
-                    ]
                 ],
             ],
             [
@@ -90,7 +84,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_from' => 'a',
                     'date_to' => 'a',
-                    'timezone' => 'a',
                 ],
                 [
                     'date_to' => [
@@ -99,9 +92,6 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     'date_from' => [
                         'Parameter must be date in format Y-m-d'
                     ],
-                    'timezone' => [
-                        'This value is not a valid timezone.'
-                    ]
                 ],
             ],
             [
@@ -127,11 +117,5 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 ],
             ],
         ];
-    }
-
-    public static function removeDataCases()
-    {
-        $customWorkingHours = self::customWorkingHours();
-        return array_map(fn($date) => [$date], array_keys($customWorkingHours));
     }
 }

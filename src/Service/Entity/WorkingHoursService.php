@@ -69,7 +69,7 @@ class WorkingHoursService
 
     public function setScheduleCustomWorkingHours(Schedule $schedule, CustomWorkingHoursUpdateDTO $dto): void
     {
-        $timezone = new DateTimeZone($dto->timezone);
+        $timezone = new DateTimeZone($schedule->getTimezone());
         $startDate = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date, $timezone)->setTime(0,0)->setTimezone($this->defaultTimezone);
         $endDate = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date, $timezone)->setTime(23,59)->setTimezone($this->defaultTimezone);
         $scheduleCustomTimeWindows = $this->customTimeWindowRepository->getScheduleCustomTimeWindows($schedule, $startDate, $endDate);
@@ -109,9 +109,9 @@ class WorkingHoursService
         $this->customTimeWindowRepository->flush();
     }
 
-    public function getScheduleCustomWorkingHours(Schedule $schedule, DateTimeInterface|string|null $startDate, DateTimeInterface|string|null $endDate, DateTimeZone|string $timezone): array
+    public function getScheduleCustomWorkingHours(Schedule $schedule, DateTimeInterface|string|null $startDate, DateTimeInterface|string|null $endDate): array
     {
-        $timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
+        $timezone = new DateTimeZone($schedule->getTimezone());
         $startDateTime = $this->dateTimeUtils
             ->resolveDateTimeImmutableWithDefault($startDate, new DateTimeImmutable('monday this week'), timezone: $timezone)
             ->setTime(0,0)

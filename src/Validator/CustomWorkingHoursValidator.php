@@ -49,21 +49,16 @@ class CustomWorkingHoursValidator extends ConstraintValidator
             return;
         }
 
-        try{
-            $timezone = new DateTimeZone($value->timezone);
-        }
-        catch(Exception){
-            return;
-        }
-
-        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value->date, $timezone);
-        if($date === false){
-            return;
-        }
-
         $scheduleId = $this->requestStack->getCurrentRequest()?->attributes->get($constraint->scheduleRouteParameter);
         $schedule = $scheduleId ? $this->scheduleRepository->find($scheduleId) : null;
         if(!$schedule){
+            return;
+        }
+
+
+        $timezone = new DateTimeZone($schedule->getTimezone());
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $value->date, $timezone);
+        if($date === false){
             return;
         }
 

@@ -16,11 +16,13 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     'name' => 'New Test Schedule',
                     'description' => 'new test',
                     'division' => 30,
+                    'timezone' => 'Asia/Tokyo',
                 ],
                 [
                     'name' => 'New Test Schedule',
                     'description' => 'new test',
                     'division' => 30,
+                    'timezone' => 'Asia/Tokyo',
                 ],
             ],
         ];
@@ -34,6 +36,7 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     'name' => '',
                     'description' => '',
                     'division' => 4,
+                    'timezone' => '',
                 ],
                 [
                     'name' => [
@@ -42,6 +45,9 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     'division' => [
                         'This value should be between 5 and 60.',
                     ],
+                    'timezone' => [
+                        'This value should not be blank.',
+                    ],
                 ]
             ],
             [
@@ -49,6 +55,7 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     'name' => str_repeat('a', 51),
                     'description' => str_repeat('a', 2001),
                     'division' => 61,
+                    'timezone' => 'a',
                 ],
                 [
                     'name' => [
@@ -59,6 +66,9 @@ class SchedulePatchDataProvider extends BaseDataProvider
                     ],
                     'division' => [
                         'This value should be between 5 and 60.',
+                    ],
+                    'timezone' => [
+                        'This value is not a valid timezone.',
                     ],
                 ]
             ],

@@ -17,11 +17,13 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     'name' => 'Test Schedule',
                     'description' => 'test',
                     'division' => 15,
+                    'timezone' => 'Europe/Warsaw',
                 ],
                 [
                     'name' => 'Test Schedule',
                     'description' => 'test',
                     'division' => 15,
+                    'timezone' => 'Europe/Warsaw',
                 ]
             ]
         ];
@@ -35,6 +37,7 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     'name' => '',
                     'description' => '',
                     'division' => 4,
+                    'timezone' => '',
                 ],
                 [
                     'name' => [
@@ -43,6 +46,9 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     'division' => [
                         'This value should be between 5 and 60.',
                     ],
+                    'timezone' => [
+                        'This value should not be blank.',
+                    ],
                 ]
             ],
             [
@@ -50,6 +56,7 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     'name' => str_repeat('a', 51),
                     'description' => str_repeat('a', 2001),
                     'division' => 61,
+                    'timezone' => 'a',
                 ],
                 [
                     'name' => [
@@ -60,6 +67,9 @@ class ScheduleCreateDataProvider extends BaseDataProvider
                     ],
                     'division' => [
                         'This value should be between 5 and 60.',
+                    ],
+                    'timezone' => [
+                        'This value is not a valid timezone.',
                     ],
                 ]
             ],

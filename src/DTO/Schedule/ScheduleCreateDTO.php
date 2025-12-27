@@ -15,10 +15,12 @@ class ScheduleCreateDTO extends AbstractDTO
         string $name,
         string $description,
         int $division,
+        string $timezone,
     )
     {
         $this->name = $name;
         $this->description = $description;
         $this->division = $division;
+        $this->timezone = $timezone;
     }
 }

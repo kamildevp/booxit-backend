@@ -47,11 +47,6 @@ class WeeklyWorkingHoursUpdateDTO extends AbstractDTO
         /** @var TimeWindowDTO[] */
         #[Assert\Valid]
         public readonly array $sunday,
-
-        #[OA\Property(example: 'Europe/Warsaw')]
-        #[Assert\NotBlank]
-        #[Assert\Timezone]
-        public readonly string $timezone,
     )
     {
 

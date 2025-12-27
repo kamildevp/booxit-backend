@@ -50,7 +50,6 @@ class WorkingHoursServiceTest extends TestCase
         $existingTimeWindowMock->method('getWeekDay')->willReturn(Weekday::MONDAY->value);
         $existingTimeWindowMock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','08:00'));
         $existingTimeWindowMock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','12:00'));
-        $existingTimeWindowMock->method('getTimezone')->willReturn($this->defaultTimezone->getName());
         $scheduleWeekdayTimeWindows = new ArrayCollection([$existingTimeWindowMock]);
         $scheduleMock = $this->createMock(Schedule::class);
 
@@ -65,7 +64,6 @@ class WorkingHoursServiceTest extends TestCase
                     $timeWindow->getWeekday() == Weekday::MONDAY->value &&
                     $timeWindow->getStartTime()->format('H:i')  == '13:00' &&
                     $timeWindow->getEndTime()->format('H:i')  == '17:00';
-                    $timeWindow->getTimezone() == $this->timezone;
             }));
 
         $scheduleMock
@@ -78,7 +76,7 @@ class WorkingHoursServiceTest extends TestCase
             ->method('save')
             ->with($scheduleMock, true);
 
-        $dto = new WeeklyWorkingHoursUpdateDTO([new TimeWindowDTO('13:00', '17:00')], [], [], [], [], [], [], $this->defaultTimezone->getName());
+        $dto = new WeeklyWorkingHoursUpdateDTO([new TimeWindowDTO('13:00', '17:00')], [], [], [], [], [], []);
         $this->service->setScheduleWeeklyWorkingHours($scheduleMock, $dto);
     }
 
@@ -182,7 +180,6 @@ class WorkingHoursServiceTest extends TestCase
             $mock->method('getWeekday')->willReturn($element['weekday']);
             $mock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['startTime']));
             $mock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['endTime']));
-            $mock->method('getTimezone')->willReturn($this->defaultTimezone->getName());
             return $mock;
         }, $weekdayTimeWindowsData);
 
@@ -209,7 +206,5 @@ class WorkingHoursServiceTest extends TestCase
             $this->assertArrayHasKey($weekday, $result);
             $this->assertEquals([], $result[$weekday]);
         }
-
-        $this->assertEquals($this->defaultTimezone->getName(), $result['timezone']);
     }
 }

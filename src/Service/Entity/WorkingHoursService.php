@@ -43,8 +43,7 @@ class WorkingHoursService
                     fn($key, $element) => 
                         $element->getWeekDay() == $weekday && 
                         $element->getStartTime()->format('H:i') == $timeWindow->startTime && 
-                        $element->getEndTime()->format('H:i') == $timeWindow->endTime &&
-                        $element->getTimezone() == $dto->timezone
+                        $element->getEndTime()->format('H:i') == $timeWindow->endTime
                 );
                 
                 if(!$weekdayTimeWindow){
@@ -52,7 +51,6 @@ class WorkingHoursService
                     $weekdayTimeWindow->setWeekday($weekday);
                     $weekdayTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->startTime));
                     $weekdayTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow->endTime));
-                    $weekdayTimeWindow->setTimezone($dto->timezone);
                     $schedule->addWeekdayTimeWindow($weekdayTimeWindow);
                 }
 
@@ -141,9 +139,6 @@ class WorkingHoursService
     {
         /** @var WeekdayTimeWindow[] */
         $weekdayTimeWindows = $schedule->getWeekdayTimeWindows()->toArray();
-        $firstWindow = $schedule->getWeekdayTimeWindows()->first();
-        $timezone = $firstWindow !== false ? $firstWindow->getTimezone() : $this->defaultTimezoneString;
-        
         $weeklyWorkingHours = [];
         foreach(Weekday::values() as $weekday){
             $dayTimeWindows = array_filter($weekdayTimeWindows, fn($weekdayTimeWindow) => $weekdayTimeWindow->getWeekday() == $weekday);
@@ -154,8 +149,6 @@ class WorkingHoursService
 
             $weeklyWorkingHours[$weekday] = $this->dateTimeUtils->sortTimeWindowCollection($dayTimeWindows);
         }
-
-        $weeklyWorkingHours['timezone'] = $timezone;
 
         return $weeklyWorkingHours;
     }

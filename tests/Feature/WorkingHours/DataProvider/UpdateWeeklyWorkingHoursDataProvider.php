@@ -21,7 +21,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'friday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'saturday' => [['start_time' => '09:00', 'end_time' => '11:00'], ['start_time' => '15:00', 'end_time' => '18:00']],
                     'sunday' => [],
-                    'timezone' => 'UTC'
                 ]
             ]
         ];
@@ -39,7 +38,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'friday' => [['start_time' => '', 'end_time' => '']],
                     'saturday' => [['start_time' => '', 'end_time' => '']],
                     'sunday' => [['start_time' => '', 'end_time' => '']],
-                    'timezone' => ''
                 ],
                 [
                     'monday' => [
@@ -112,9 +110,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                             ]
                         ],
                     ],
-                    'timezone' => [
-                        'This value should not be blank.'
-                    ]
                 ]
             ],
             [
@@ -126,7 +121,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'friday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
                     'saturday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
                     'sunday' => [['start_time' => 'a', 'end_time' => 'a'], ['start_time' => '10:00', 'end_time' => '10:05']],
-                    'timezone' => 'a',
                 ],
                 [
                     'monday' => [
@@ -234,9 +228,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                             ]
                         ]
                     ],
-                    'timezone' => [
-                        'This value is not a valid timezone.'
-                    ]
                 ]
             ],
             [
@@ -248,7 +239,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'friday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '09:30', 'end_time' => '14:00']],
                     'saturday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '09:30', 'end_time' => '14:00']],
                     'sunday' => [['start_time' => '09:00', 'end_time' => '10:00'], ['start_time' => '09:30', 'end_time' => '14:00']],
-                    'timezone' => 'Europe/Warsaw',
                 ],
                 [
                     'errors' => [
@@ -265,7 +255,6 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'friday' => [['start_time' => '09:00', 'end_time' => '10:00']],
                     'saturday' => [['start_time' => '09:00', 'end_time' => '10:00']],
                     'sunday' => [['start_time' => '09:00', 'end_time' => '10:00']],
-                    'timezone' => 'Europe/Warsaw',
                 ],
                 [
                     'errors' => [

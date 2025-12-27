@@ -20,7 +20,7 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                     'thursday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'friday' => [['start_time' => '09:00', 'end_time' => '17:00']],
                     'saturday' => [['start_time' => '09:00', 'end_time' => '11:00'], ['start_time' => '15:00', 'end_time' => '18:00']],
-                    'sunday' => []
+                    'sunday' => [],
                 ]
             ]
         ];
@@ -109,7 +109,7 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                                 'This value should not be blank.'
                             ]
                         ],
-                    ]
+                    ],
                 ]
             ],
             [
@@ -227,7 +227,7 @@ class UpdateWeeklyWorkingHoursDataProvider extends BaseDataProvider
                                 'Time window cannot be shorter than 10 minutes.',
                             ]
                         ]
-                    ]
+                    ],
                 ]
             ],
             [

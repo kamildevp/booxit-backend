@@ -8,9 +8,7 @@ use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use App\Repository\Filter\FiltersBuilder;
 use App\Repository\Order\OrderBuilder;
-use DateTimeImmutable;
 use DateTimeInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -44,31 +42,17 @@ class CustomTimeWindowRepository extends BaseRepository
     /**
      * @return CustomTimeWindow[]
      */
-    public function getScheduleCustomTimeWindows(Schedule $schedule, DateTimeInterface $startDate, DateTimeInterface $endDate)
+    public function getScheduleCustomTimeWindows(Schedule $schedule, DateTimeInterface $startDateTime, DateTimeInterface $endDateTime)
     {
         $qb = $this->createQueryBuilder('e')
             ->where('e.schedule = :schedule')
-            ->andWhere('e.date >= :startDate')
-            ->andWhere('e.date <= :endDate')
+            ->andWhere('e.startDateTime >= :startDateTime')
+            ->andWhere('e.startDateTime <= :endDateTime')
             ->setParameter('schedule', $schedule)
-            ->setParameter('startDate', $startDate)
-            ->setParameter('endDate', $endDate)
-            ->orderBy('e.date', 'asc')
-            ->addOrderBy('e.startTime', 'asc');
+            ->setParameter('startDateTime', $startDateTime)
+            ->setParameter('endDateTime', $endDateTime)
+            ->orderBy('e.startDateTime', 'asc');
 
         return $qb->getQuery()->getResult();
-    }
-
-    public function removeScheduleCustomTimeWindowsForDate(Schedule $schedule, DateTimeInterface|string $date): void
-    {
-        $date = is_string($date) ? DateTimeImmutable::createFromFormat('Y-m-d', $date) : $date;
-        $qb = $this->createQueryBuilder('e')
-            ->delete()
-            ->where('e.schedule = :schedule')
-            ->andWhere('e.date = :date')
-            ->setParameter('schedule', $schedule)
-            ->setParameter('date', $date);
-
-        $qb->getQuery()->execute();
     }
 }

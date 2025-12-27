@@ -9,12 +9,21 @@ use App\Entity\CustomTimeWindow;
 use App\Entity\Schedule;
 use App\Tests\Feature\WorkingHours\DataProvider\GetCustomWorkingHoursDataProvider;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class CustomWorkingHoursFixtures extends Fixture implements DependentFixtureInterface
 {
+    private DateTimeZone $defaultTimezone;
+
+    public function __construct(#[Autowire('%timezone%')]private string $defaultTimezoneString)
+    {
+        $this->defaultTimezone = new DateTimeZone($defaultTimezoneString);
+    }
+
     public function load(ObjectManager $manager): void
     {
         $schedule = $this->getReference(ScheduleAssignmentFixtures::SCHEDULE_REFERENCE, Schedule::class);
@@ -24,9 +33,9 @@ class CustomWorkingHoursFixtures extends Fixture implements DependentFixtureInte
         foreach($data as $date => $timeWindows){
             foreach($timeWindows as $timeWindow){
                 $customTimeWindow = new CustomTimeWindow();
-                $customTimeWindow->setDate(DateTimeImmutable::createFromFormat('Y-m-d', $date));
-                $customTimeWindow->setStartTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow['start_time']));
-                $customTimeWindow->setEndTime(DateTimeImmutable::createFromFormat('H:i', $timeWindow['end_time']));
+                $timezone = new DateTimeZone('Europe/Warsaw');
+                $customTimeWindow->setStartDateTime(DateTimeImmutable::createFromFormat('Y-m-d H:i', $date.' '.$timeWindow['start_time'], $timezone)->setTimezone($this->defaultTimezone));
+                $customTimeWindow->setEndDateTime(DateTimeImmutable::createFromFormat('Y-m-d H:i', $date.' '.$timeWindow['end_time'], $timezone)->setTimezone($this->defaultTimezone));
                 $customTimeWindow->setSchedule($schedule);
                 $manager->persist($customTimeWindow);
             }

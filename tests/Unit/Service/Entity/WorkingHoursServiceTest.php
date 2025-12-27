@@ -13,9 +13,11 @@ use App\Entity\WeekdayTimeWindow;
 use App\DTO\WorkingHours\WeeklyWorkingHoursUpdateDTO;
 use App\Entity\CustomTimeWindow;
 use App\Enum\Weekday;
+use App\Model\TimeWindow;
 use App\Repository\CustomTimeWindowRepository;
 use App\Service\Utils\DateTimeUtils;
 use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -26,17 +28,20 @@ class WorkingHoursServiceTest extends TestCase
     private CustomTimeWindowRepository&MockObject $customTimeWindowRepositoryMock;
     private DateTimeUtils&MockObject $dateTimeUtilsMock;
     private WorkingHoursService $service;
+    private DateTimeZone $defaultTimezone;
 
     protected function setUp(): void
     {
         $this->scheduleRepositoryMock = $this->createMock(ScheduleRepository::class);
         $this->customTimeWindowRepositoryMock = $this->createMock(CustomTimeWindowRepository::class);
         $this->dateTimeUtilsMock = $this->createMock(DateTimeUtils::class);
+        $this->defaultTimezone = new DateTimeZone('UTC');
 
         $this->service = new WorkingHoursService(
             $this->scheduleRepositoryMock,
             $this->customTimeWindowRepositoryMock,
-            $this->dateTimeUtilsMock
+            $this->dateTimeUtilsMock,
+            $this->defaultTimezone->getName(),
         );
     }
 
@@ -78,47 +83,46 @@ class WorkingHoursServiceTest extends TestCase
 
     public function testSetScheduleCustomWorkingHoursCreatesAndRemovesTimeWindows(): void
     {
-        $date = '2025-10-01';
-        $datetime = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+        $timezone = new DateTimeZone('Europe/Warsaw');
+        $dto = new CustomWorkingHoursUpdateDTO('2025-12-01', [new TimeWindowDTO('13:00', '17:00')]);
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $dto->date, $timezone);
         $existingTimeWindowMock = $this->createMock(CustomTimeWindow::class);
-        $existingTimeWindowMock->method('getDate')->willReturn($datetime);
-        $existingTimeWindowMock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','08:00'));
-        $existingTimeWindowMock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i','12:00'));
+        $existingTimeWindowMock->method('getStartDateTime')->willReturn($date->setTime(8,0)->setTimezone($this->defaultTimezone));
+        $existingTimeWindowMock->method('getEndDateTime')->willReturn($date->setTime(12,0)->setTimezone($this->defaultTimezone));
         $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getTimezone')->willReturn($timezone->getName());
+        $searchStart = $date->setTime(0,0)->setTimezone($this->defaultTimezone);
+        $searchEnd = $date->setTime(23,59)->setTimezone($this->defaultTimezone);
 
         $this->customTimeWindowRepositoryMock
-            ->method('findBy')
-            ->with(['schedule' => $scheduleMock, 'date' => $datetime])
+            ->method('getScheduleCustomTimeWindows')
+            ->with(
+                $scheduleMock, 
+                $this->callback(fn($datetime) => $datetime == $searchStart && $datetime->getTimezone() == $this->defaultTimezone),
+                $this->callback(fn($datetime) => $datetime == $searchEnd && $datetime->getTimezone() == $this->defaultTimezone),
+            )
             ->willReturn([$existingTimeWindowMock]);
 
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function ($timeWindow) use ($datetime, $scheduleMock) {
-                return 
+            ->with($this->callback(fn($timeWindow) =>
                     $timeWindow instanceof CustomTimeWindow && 
                     $timeWindow->getSchedule() == $scheduleMock &&
-                    $timeWindow->getDate() == $datetime &&
-                    $timeWindow->getStartTime()->format('H:i')  == '13:00' &&
-                    $timeWindow->getEndTime()->format('H:i')  == '17:00';
-            }));
-
+                    $timeWindow->getStartDateTime()->format('Y-m-d H:i')  == '2025-12-01 12:00' &&
+                    $timeWindow->getEndDateTime()->format('Y-m-d H:i')  == '2025-12-01 16:00'
+            ));
+        
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('remove')
-            ->with($this->callback(function ($timeWindow) use ($datetime) {
-                return 
-                    $timeWindow instanceof CustomTimeWindow && 
-                    $timeWindow->getDate() == $datetime &&
-                    $timeWindow->getStartTime()->format('H:i')  == '08:00' &&
-                    $timeWindow->getEndTime()->format('H:i')  == '12:00';
-            }));
+            ->with($existingTimeWindowMock);
 
         $this->customTimeWindowRepositoryMock
             ->expects($this->once())
             ->method('flush');
 
-        $dto = new CustomWorkingHoursUpdateDTO($date, [new TimeWindowDTO('13:00', '17:00')]);
+        
         $this->service->setScheduleCustomWorkingHours($scheduleMock, $dto);
     }
 
@@ -129,18 +133,19 @@ class WorkingHoursServiceTest extends TestCase
             ['date' => '2025-10-13', 'startTime' => '15:30', 'endTime' => '16:00'],
             ['date' => '2025-10-14', 'startTime' => '08:00', 'endTime' => '12:00']
         ];
+        $timezone = new DateTimeZone('Europe/Warsaw');
 
-        $customTimeWindowsMock = array_map(function($element){
+        $customTimeWindowsMock = array_map(function($element) use ($timezone){
             $mock = $this->createMock(CustomTimeWindow::class);
-            $mock->method('getDate')->willReturn(DateTimeImmutable::createFromFormat('Y-m-d', $element['date']));
-            $mock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['startTime']));
-            $mock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['endTime']));
+            $mock->method('getStartDateTime')->willReturn(DateTimeImmutable::createFromFormat('Y-m-d H:i', $element['date'].' '.$element['startTime'], $timezone)->setTimezone($this->defaultTimezone));
+            $mock->method('getEndDateTime')->willReturn(DateTimeImmutable::createFromFormat('Y-m-d H:i', $element['date'].' '.$element['endTime'], $timezone)->setTimezone($this->defaultTimezone));
             return $mock;
         }, $customTimeWindowsData);
 
         $scheduleMock = $this->createMock(Schedule::class);
-        $start = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-13');
-        $end = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-14');
+        $scheduleMock->method('getTimezone')->willReturn('Europe/Warsaw');
+        $start = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-13', $timezone);
+        $end = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-14', $timezone);
 
         $this->dateTimeUtilsMock
             ->method('resolveDateTimeImmutableWithDefault')
@@ -204,5 +209,88 @@ class WorkingHoursServiceTest extends TestCase
             $this->assertArrayHasKey($weekday, $result);
             $this->assertEquals([], $result[$weekday]);
         }
+    }
+
+    public function testGetScheduleWorkingHoursForDateRange(): void
+    {
+        $weekdayTimeWindowsData = [
+            ['weekday' => Weekday::MONDAY->value, 'startTime' => '10:00', 'endTime' => '15:00'],
+            ['weekday' => Weekday::MONDAY->value, 'startTime' => '15:30', 'endTime' => '16:00'],
+            ['weekday' => Weekday::TUESDAY->value, 'startTime' => '08:00', 'endTime' => '12:00'],
+            ['weekday' => Weekday::WEDNESDAY->value, 'startTime' => '08:00', 'endTime' => '12:00']
+        ];
+        $customTimeWindowsData = [
+            ['date' => '2025-10-14', 'startTime' => '23:00', 'endTime' => '00:00', 'timezone' => 'Europe/Warsaw']
+        ];
+        $targetTimezone = new DateTimeZone('Asia/Tokyo');
+        $scheduleTimezone = new DateTimeZone('Europe/Warsaw');
+
+        $weekdayTimeWindowsMock = array_map(function($element){
+            $mock = $this->createMock(WeekdayTimeWindow::class);
+            $mock->method('getWeekday')->willReturn($element['weekday']);
+            $mock->method('getStartTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['startTime']));
+            $mock->method('getEndTime')->willReturn(DateTimeImmutable::createFromFormat('H:i', $element['endTime']));
+            return $mock;
+        }, $weekdayTimeWindowsData);
+
+        $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getTimezone')->willReturn($scheduleTimezone->getName());
+        $scheduleMock->method('getWeekdayTimeWindows')->willReturn(new ArrayCollection($weekdayTimeWindowsMock));
+        $this->dateTimeUtilsMock->method('sortTimeWindowCollection')->willReturnCallback(fn($value) => $value);
+
+        $customTimeWindowsMock = array_map(function($element){
+            $mock = $this->createMock(CustomTimeWindow::class);
+            $startDateTime = (DateTimeImmutable::createFromFormat('Y-m-d H:i', $element['date'].' '.$element['startTime'], new DateTimeZone($element['timezone']))->setTimezone($this->defaultTimezone));
+            $endDateTime = (DateTimeImmutable::createFromFormat('Y-m-d H:i', $element['date'].' '.$element['endTime'], new DateTimeZone($element['timezone']))->setTimezone($this->defaultTimezone));
+            $endDateTime = $endDateTime <= $startDateTime ? $endDateTime->modify('+1 day') : $endDateTime;
+            
+            $mock->method('getStartDateTime')->willReturn($startDateTime);
+            $mock->method('getEndDateTime')->willReturn($endDateTime);
+            return $mock;
+        }, $customTimeWindowsData);
+
+        $start = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-13', $targetTimezone)->setTime(0,0);
+        $end = DateTimeImmutable::createFromFormat('Y-m-d', '2025-10-15', $targetTimezone)->setTime(23,59);
+
+        $this->customTimeWindowRepositoryMock
+            ->method('getScheduleCustomTimeWindows')
+            ->willReturn($customTimeWindowsMock);
+
+        $this->dateTimeUtilsMock
+            ->method('resolveDateTimeImmutableWithDefault')
+            ->willReturnOnConsecutiveCalls($start, $end);
+
+        $this->dateTimeUtilsMock
+            ->method('timeWindowCollectionDiff')
+            ->with(
+                $this->callback(fn($arg) => is_array($arg)),
+                [
+                    new TimeWindow($start->setTimezone($scheduleTimezone)->setTime(0,0), $start),
+                    new TimeWindow($end, $end->setTimezone($scheduleTimezone)->setTime(23,59))
+                ]
+            )
+            ->willReturnCallback(fn($arg1) => $arg1);
+
+        $expectedResult = [
+            new TimeWindow(
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-13 17:00', $targetTimezone),
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-13 22:00', $targetTimezone)
+            ),
+            new TimeWindow(
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-13 22:30', $targetTimezone),
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-13 23:00', $targetTimezone)
+            ),
+            new TimeWindow(
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-15 06:00', $targetTimezone),
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-15 07:00', $targetTimezone)
+            ),
+            new TimeWindow(
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-15 15:00', $targetTimezone),
+                DateTimeImmutable::createFromFormat('Y-m-d H:i', '2025-10-15 19:00', $targetTimezone)
+            ),
+        ];
+
+        $result = $this->service->getScheduleWorkingHoursForDateRange($scheduleMock, $start, $end, $targetTimezone);
+        $this->assertEquals($expectedResult, $result);
     }
 }

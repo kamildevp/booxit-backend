@@ -17,6 +17,8 @@ use App\Tests\Unit\Service\Entity\DataProvider\AvailabilityServiceDataProvider;
 use DateInterval;
 use DateTime;
 use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -27,35 +29,39 @@ class AvailabilityServiceTest extends TestCase
     private WorkingHoursService&MockObject $workingHoursServiceMock;
     private DateTimeUtils&MockObject $dateTimeUtilsMock;
     private AvailabilityService $availabilityService;
+    private DateTimeZone $defaultTimezone;
 
     protected function setUp(): void
     {
         $this->reservationRepositoryMock = $this->createMock(ReservationRepository::class);
         $this->workingHoursServiceMock = $this->createMock(WorkingHoursService::class);
         $this->dateTimeUtilsMock = $this->createMock(DateTimeUtils::class);
+        $this->defaultTimezone = new DateTimeZone('UTC');
 
         $this->availabilityService = new AvailabilityService(
             $this->reservationRepositoryMock,
             $this->workingHoursServiceMock,
-            $this->dateTimeUtilsMock
+            $this->dateTimeUtilsMock,
+            $this->defaultTimezone->getName()
         );
     }
 
     #[DataProviderExternal(AvailabilityServiceDataProvider::class, 'getScheduleAvailabilityDataCases')]
     public function testGetScheduleAvailabilityReturnsExpectedAvailability(
-        array $weeklyWorkingHours,
-        array $customWorkingHours,
+        array $workingHoursTimeWindows,
+        DateTimeZone $timezone,
         array $reservationsTimeWindows,
         DateTimeImmutable $startDate,
         DateTimeImmutable $endDate,
         int $scheduleDivision,
         int $availabilityOffset,
-        array $expectedWorkingHours,
         array $availableTimeWindowsResult,
         array $serviceFilterResults,
         array $expectedResult
     ): void
     {
+        $scheduleMock = $this->createMock(Schedule::class);
+        $scheduleMock->method('getDivision')->willReturn($scheduleDivision);
 
         $reservationsMock = array_map(function($timeWindow){
             $reservationMock = $this->createMock(Reservation::class);
@@ -64,43 +70,37 @@ class AvailabilityServiceTest extends TestCase
             return $reservationMock;
         }, $reservationsTimeWindows);
 
-        $this->reservationRepositoryMock->method('getScheduleReservations')->willReturn($reservationsMock);
-        $this->workingHoursServiceMock->method('getScheduleWeeklyWorkingHours')->willReturn($weeklyWorkingHours);
-        $this->workingHoursServiceMock->method('getScheduleCustomWorkingHours')->willReturn($customWorkingHours);
+        $this->workingHoursServiceMock->method('getScheduleWorkingHoursForDateRange')
+            ->with(
+                $scheduleMock,
+                $this->callback(fn($arg) => $arg instanceof DateTimeInterface && $arg >= $startDate->setTime(0,0)),
+                $endDate->setTime(23,59),
+                $timezone
+            )
+        ->willReturn($workingHoursTimeWindows);
 
-        $timeWindowsMergedMock = array_fill(0, 1, new TimeWindow(new DateTime, new DateTime));
+        $this->reservationRepositoryMock->method('getActiveScheduleReservations')
+            ->with(
+                $scheduleMock,
+                $this->callback(fn($arg) => $arg == $startDate->setTime(0,0) && $arg->getTimezone() == $this->defaultTimezone),
+                $this->callback(fn($arg) => $arg == $endDate->setTime(23,59) && $arg->getTimezone() == $this->defaultTimezone),
+            )
+            ->willReturn($reservationsMock);
 
-        $arg1CallNr = 1;
-        $arg2CallNr = 1;
+        $timeWindowsMergedMock = [new TimeWindow(new DateTime, new DateTime)];
+
         $this->dateTimeUtilsMock
             ->method('timeWindowCollectionDiff')
-            ->with(
-                $this->callback(function($collection2) use (&$arg1CallNr, $expectedWorkingHours, $timeWindowsMergedMock){
-                    $valid = match($arg1CallNr){
-                        1 => $collection2 == $expectedWorkingHours,
-                        2 => $collection2 === $timeWindowsMergedMock
-                    };
-                    $arg1CallNr++;
-                    return $valid;
-                }),
-                $this->callback(function($collection2) use (&$arg2CallNr, $endDate, $reservationsTimeWindows){
-                    $valid = match($arg2CallNr){
-                        1 => $collection2[0]->getStartTime() == $endDate && $collection2[0]->getEndTime() == $endDate->modify('+1 day'),
-                        2 => $collection2 == $reservationsTimeWindows
-                    };
-                    $arg2CallNr++;
-                    return $valid;
-                }),
-            )
-            ->willReturnOnConsecutiveCalls($expectedWorkingHours, $availableTimeWindowsResult);
+            ->willReturnCallback(fn($arg1) => match($arg1){
+                $workingHoursTimeWindows => $workingHoursTimeWindows,
+                $timeWindowsMergedMock => $availableTimeWindowsResult
+            });
 
         $this->dateTimeUtilsMock
             ->method('mergeAdjacentTimeWindows')
-            ->with($expectedWorkingHours)
+            ->with($workingHoursTimeWindows)
             ->willReturn($timeWindowsMergedMock);
 
-        $scheduleMock = $this->createMock(Schedule::class);
-        $scheduleMock->method('getDivision')->willReturn($scheduleDivision);
         $serviceMock = $this->createMock(Service::class);
         $serviceMock->method('getDuration')->willReturn(new DateInterval('PT30M'));
         $serviceMock->method('getAvailabilityOffset')->willReturn($availabilityOffset);
@@ -113,7 +113,8 @@ class AvailabilityServiceTest extends TestCase
             $scheduleMock,
             $serviceMock,
             $startDate,
-            $endDate
+            $endDate,
+            $timezone
         );
 
         $this->assertEquals($expectedResult, $result);

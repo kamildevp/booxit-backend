@@ -13,7 +13,6 @@ class WorkingHoursAuthDataProvider extends BaseDataProvider
         return [
             ['/api/schedules/{schedule}/weekly-working-hours', 'PUT'],
             ['/api/schedules/{schedule}/custom-working-hours', 'PUT'],
-            ['/api/schedules/{schedule}/custom-working-hours/2025-10-10', 'DELETE'],
         ];
     }
 
@@ -26,9 +25,6 @@ class WorkingHoursAuthDataProvider extends BaseDataProvider
             ['/api/schedules/{schedule}/custom-working-hours', 'PUT', 'user1@example.com'],
             ['/api/schedules/{schedule}/custom-working-hours', 'PUT', 'om-user1@example.com'],
             ['/api/schedules/{schedule}/custom-working-hours', 'PUT', 'sa-user2@example.com'],
-            ['/api/schedules/{schedule}/custom-working-hours/2025-10-10', 'DELETE', 'user1@example.com'],
-            ['/api/schedules/{schedule}/custom-working-hours/2025-10-10', 'DELETE', 'om-user1@example.com'],
-            ['/api/schedules/{schedule}/custom-working-hours/2025-10-10', 'DELETE', 'sa-user2@example.com'],
         ];
     }
 }

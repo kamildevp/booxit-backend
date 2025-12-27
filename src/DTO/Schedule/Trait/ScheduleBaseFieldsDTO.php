@@ -19,4 +19,9 @@ trait ScheduleBaseFieldsDTO
     #[OA\Property(example: 15)]
     #[Assert\Range(min: 5, max: 60)]
     public readonly int $division;
+
+    #[OA\Property(example: 'Europe/Warsaw')]
+    #[Assert\NotBlank]
+    #[Assert\Timezone]
+    public readonly string $timezone;
 }

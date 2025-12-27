@@ -104,20 +104,6 @@ class WorkingHoursControllerTest extends BaseWebTestCase
         $this->assertPathValidation($this->client, 'GET', $path, [], $expectedErrors);
     }
 
-    #[Fixtures([CustomWorkingHoursFixtures::class])]
-    #[DataProviderExternal(GetCustomWorkingHoursDataProvider::class, 'removeDataCases')]
-    public function testRemoveScheduleCustomWorkingHours(string $date): void
-    {
-        $user = $this->userRepository->findOneBy(['email' => 'sa-user1@example.com']);
-        $schedule = $this->scheduleRepository->findOneBy([]);
-        $path = '/api/schedules/'.$schedule->getId()."/custom-working-hours/$date";
-        
-        $this->client->loginUser($user, 'api');
-        $responseData = $this->getSuccessfulResponseData($this->client, 'DELETE', $path);
-
-        $this->assertEquals(['message' => 'Custom working hours for specified date have been removed'], $responseData);
-    }
-
     #[Fixtures([ScheduleAssignmentFixtures::class])]
     #[DataProviderExternal(WorkingHoursNotFoundDataProvider::class, 'dataCases')]
     public function testNotFoundResponses(string $path, string $method, string $expectedMessage): void

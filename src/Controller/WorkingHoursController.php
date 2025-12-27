@@ -38,8 +38,7 @@ class WorkingHoursController extends AbstractController
         description: 'Updates schedule weekly working hours.
         <br><br>**Note:** Working hours that cross midnight are supported. 
         For example, a time window defined as (start_time=15:00, end_time=02:00) will continue into the next day and end at 02:00.
-        </br></br>**Important:** Working hours must be specified in Europe/Warsaw timezone.
-        </br>This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+        </br></br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule weekly working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]
@@ -83,8 +82,7 @@ class WorkingHoursController extends AbstractController
         description: 'Updates custom schedule working hours for specific date.
         <br><br>**Note:** Working hours that cross midnight are supported. 
         For example, a time window defined as (start_time=15:00, end_time=02:00) will continue into the next day and end at 02:00.
-        </br></br>**Important:** Working hours must be specified in Europe/Warsaw timezone.
-        </br>This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
+        </br></br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
     )]
     #[SuccessResponseDoc(dataExample: ['message' => 'Schedule custom working hours have been updated'])]
     #[NotFoundResponseDoc('Schedule not found')]
@@ -118,32 +116,9 @@ class WorkingHoursController extends AbstractController
         #[MapQueryString] CustomWorkingHoursGetDTO $dto = new CustomWorkingHoursGetDTO,
     ): SuccessResponse
     {
-        $workingHours = $workingHoursService->getScheduleCustomWorkingHours($schedule, $dto->dateFrom, $dto->dateTo);
+        $workingHours = $workingHoursService->getScheduleCustomWorkingHours($schedule, $dto->dateFrom, $dto->dateTo, $dto->timezone);
         $responseData = $entitySerializer->normalize($workingHours, []);
 
         return new SuccessResponse($responseData);
-    }
-
-    #[OA\Delete(
-        summary: 'Remove schedule custom working hours',
-        description: 'Removes schedule custom working hours for the specified date.
-        </br>**Important:** This action can only be performed by organization admin or schedule assignee with *WRITE* privileges.'
-    )]
-    #[SuccessResponseDoc(dataExample: ['message' => 'Custom working hours for specified date have been removed'])]
-    #[NotFoundResponseDoc('Schedule not found')]
-    #[ForbiddenResponseDoc]
-    #[UnauthorizedResponseDoc]
-    #[RestrictedAccess(ScheduleWritePrivilegesRule::class)]
-    #[Route('schedules/{schedule}/custom-working-hours/{date}', name: 'schedule_custom_working_hours_delete', methods: ['DELETE'], requirements: ['schedule' => '\d+', 'date' => '\d{4}-\d{2}-\d{2}'])]
-    public function removeScheduleCustomWorkingHours(
-        Schedule $schedule, 
-        DateTimeInterface $date,
-        CustomTimeWindowRepository $customTimeWindowRepository
-
-    ): SuccessResponse
-    {
-        $customTimeWindowRepository->removeScheduleCustomTimeWindowsForDate($schedule, $date);
-
-        return new SuccessResponse(['message' => 'Custom working hours for specified date have been removed']);
     }
 }

@@ -52,37 +52,31 @@ class ReservationRepository extends BaseRepository
     /**
      * @return Reservation[]
     */
-    public function getScheduleReservations(
+    public function getActiveScheduleReservations(
         Schedule $schedule, 
-        DateTimeInterface|string|null $dateFrom, 
-        DateTimeInterface|string|null $dateTo,
-        array $joinRelations = []
+        DateTimeInterface $dateTimeFrom, 
+        DateTimeInterface $dateTimeTo, 
     )
     {
-        $defaultStartDate = (new DateTimeImmutable())->modify('monday this week')->setTime(0, 0);
-        $defaultEndDate = (new DateTimeImmutable())->modify('sunday this week')->setTime(23, 59);
+        $qb = $this->createQueryBuilder('e');
+        $expr = $qb->expr();
 
-        $startDate = is_string($dateFrom) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateFrom)->setTime(0, 0) : $dateFrom;
-        $endDate = is_string($dateTo) ? DateTimeImmutable::createFromFormat('Y-m-d', $dateTo)->setTime(23, 59) : $dateTo;
-
-        $startDate = $startDate instanceof DateTimeInterface ? $startDate : $defaultStartDate;
-        $endDate = $dateTo instanceof DateTimeInterface ? $endDate : $defaultEndDate;
-
-        $qb = $this->createQueryBuilder('e')
-            ->where('e.schedule = :schedule')
-            ->andWhere('e.startDateTime >= :startDate')
-            ->andWhere('e.endDateTime <= :endDate')
+        $qb->where('e.schedule = :schedule')
+            ->andWhere(
+                $expr->orX(
+                    $expr->andX('e.startDateTime >= :startDateTime', 'e.startDateTime < :endDateTime'),
+                    $expr->andX('e.startDateTime < :startDateTime', 'e.endDateTime > :startDateTime')
+                )
+            )
             ->andWhere('e.status NOT IN (:excludedStatuses)')
             ->setParameter('schedule', $schedule)
-            ->setParameter('startDate', $startDate)
-            ->setParameter('endDate', $endDate)
+            ->setParameter('startDateTime', $dateTimeFrom)
+            ->setParameter('endDateTime', $dateTimeTo)
             ->setParameter('excludedStatuses', [
                 ReservationStatus::CUSTOMER_CANCELLED->value, 
                 ReservationStatus::ORGANIZATION_CANCELLED->value
             ])
             ->orderBy('e.startDateTime', 'asc');
-
-        $this->joinRelations($qb, $joinRelations, 'e');
 
         return $qb->getQuery()->getResult();
     }

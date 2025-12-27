@@ -15,17 +15,27 @@ use App\Enum\Reservation\ReservationStatus;
 use App\Enum\Weekday;
 use App\Enum\Reservation\ReservationType;
 use DateTimeImmutable;
+use DateTimeZone;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class AvailabilityFixtures extends Fixture implements DependentFixtureInterface
 {   
+    private DateTimeZone $defaultTimezone;
+
+    public function __construct(#[Autowire('%timezone%')]private string $defaultTimezoneString)
+    {
+        $this->defaultTimezone = new DateTimeZone($defaultTimezoneString);
+    }
+
     public function load(ObjectManager $manager): void
     {
         $schedule = $this->getReference(ScheduleAssignmentFixtures::SCHEDULE_REFERENCE, Schedule::class);
-        $startDate = (new DateTimeImmutable('monday next week'))->setTime(0,0);
-        $endDate = (new DateTimeImmutable('wednesday next week'))->setTime(23,59);
+        $timezone = new DateTimeZone($schedule->getTimezone());
+        $startDate = new DateTimeImmutable('monday next week', $timezone);
+        $endDate = new DateTimeImmutable('wednesday next week', $timezone);
 
         $weeklyWorkingHours = [
             Weekday::MONDAY->value => ['start_time' => '00:00', 'end_time' => '02:00'],
@@ -40,33 +50,33 @@ class AvailabilityFixtures extends Fixture implements DependentFixtureInterface
 
         $reservations = [
             [   
-                'start_date_time' => $startDate->setTime(23,30), 
-                'end_date_time' => $startDate->modify('+1 day')->setTime(0,0), 
+                'start_date_time' => $startDate->setTime(23,30)->setTimezone($this->defaultTimezone), 
+                'end_date_time' => $startDate->modify('+1 day')->setTime(0,0)->setTimezone($this->defaultTimezone), 
                 'verified' => false, 
                 'status' => ReservationStatus::PENDING->value, 
             ],
             [
-                'start_date_time' => $startDate->modify('+1 day')->setTime(0,30),
-                'end_date_time' => $startDate->modify('+1 day')->setTime(1,30),  
+                'start_date_time' => $startDate->modify('+1 day')->setTime(0,30)->setTimezone($this->defaultTimezone),
+                'end_date_time' => $startDate->modify('+1 day')->setTime(1,30)->setTimezone($this->defaultTimezone),  
                 'verified' => true, 
                 'status' => ReservationStatus::CONFIRMED->value, 
             ],
             [
-                'start_date_time' => $endDate->setTime(1,0), 
-                'end_date_time' => $endDate->setTime(1,30), 
+                'start_date_time' => $endDate->setTime(1,0)->setTimezone($this->defaultTimezone), 
+                'end_date_time' => $endDate->setTime(1,30)->setTimezone($this->defaultTimezone), 
                 'verified' => true, 
                 'status' => ReservationStatus::CONFIRMED->value, 
             ],
             [
-                'start_date_time' => $endDate->setTime(2,0), 
-                'end_date_time' => $endDate->setTime(2,30), 
+                'start_date_time' => $endDate->setTime(2,0)->setTimezone($this->defaultTimezone), 
+                'end_date_time' => $endDate->setTime(2,30)->setTimezone($this->defaultTimezone), 
                 'verified' => true, 
                 'status' => ReservationStatus::CUSTOMER_CANCELLED->value, 
                 'duration' => 'PT30M'
             ],
             [
-                'start_date_time' => $endDate->setTime(3,0), 
-                'end_date_time' => $endDate->setTime(3,30), 
+                'start_date_time' => $endDate->setTime(3,0)->setTimezone($this->defaultTimezone), 
+                'end_date_time' => $endDate->setTime(3,30)->setTimezone($this->defaultTimezone), 
                 'verified' => true, 
                 'status' => ReservationStatus::ORGANIZATION_CANCELLED->value, 
             ],
@@ -84,9 +94,12 @@ class AvailabilityFixtures extends Fixture implements DependentFixtureInterface
         foreach($customWorkingHours as $date => $data){
             $customTimeWindow = new CustomTimeWindow();
             $customTimeWindow->setSchedule($schedule);
-            $customTimeWindow->setDate(new DateTimeImmutable($date));
-            $customTimeWindow->setStartTime(new DateTimeImmutable($data['start_time']));
-            $customTimeWindow->setEndTime(new DateTimeImmutable($data['end_time']));
+            $startDateTime = (new DateTimeImmutable($date.' '.$data['start_time'], $timezone))->setTimezone($this->defaultTimezone);
+            $endDateTime = (new DateTimeImmutable($date.' '.$data['end_time'], $timezone))->setTimezone($this->defaultTimezone);
+            $endDateTime = $endDateTime <= $startDateTime ? $endDateTime->modify('+1 day') : $endDateTime;
+
+            $customTimeWindow->setStartDateTime($startDateTime);
+            $customTimeWindow->setEndDateTime($endDateTime);
             $manager->persist($customTimeWindow);
         }
 

@@ -47,6 +47,10 @@ class Schedule
     #[ORM\Column(type: Types::INTEGER, options: ['default' => 15])]
     private int $division = 15;
 
+    #[Groups([ScheduleNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255, options: ['default' => 'Europe/Warsaw'])]
+    private string $timezone = 'Europe/Warsaw';
+
     #[ORM\ManyToMany(targetEntity: Service::class, inversedBy: 'schedules', fetch: 'EXTRA_LAZY')]
     private Collection $services;
 
@@ -119,6 +123,18 @@ class Schedule
     public function setDivision(int $division): self
     {
         $this->division = $division;
+
+        return $this;
+    }
+
+    public function getTimezone(): string
+    {
+        return $this->timezone;
+    }
+
+    public function setTimezone(string $timezone): static
+    {
+        $this->timezone = $timezone;
 
         return $this;
     }

@@ -18,6 +18,9 @@ class CustomWorkingHoursGetDTO extends AbstractDTO
         public readonly ?string $dateFrom = null,
         #[Compound\DateStringRequirements(true)]
         public readonly ?string $dateTo = null,
+        #[Assert\NotBlank]
+        #[Assert\Timezone]
+        public readonly string $timezone = 'Europe/Warsaw',
     )
     {
 

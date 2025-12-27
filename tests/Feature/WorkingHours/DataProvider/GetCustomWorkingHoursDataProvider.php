@@ -29,14 +29,14 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
             [
                 [
                     'date_from' => '2025-10-01',
-                    'date_to' => '2025-10-31'
+                    'date_to' => '2025-10-31',
                 ],
                 $customWorkingHours
             ],
             [
                 [
                     'date_from' => '2025-10-10',
-                    'date_to' => '2025-10-10'
+                    'date_to' => '2025-10-10',
                 ],
                 ['2025-10-10' => $customWorkingHours['2025-10-10']]
             ]
@@ -57,7 +57,7 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     ],
                     'date_to' => [
                         'This value should not be blank.'
-                    ]
+                    ],
                 ],
             ],
             [
@@ -67,7 +67,7 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 [
                     'date_to' => [
                         'The end date must be provided when a start date is specified.'
-                    ]
+                    ],
                 ],
             ],
             [
@@ -91,7 +91,7 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                     ],
                     'date_from' => [
                         'Parameter must be date in format Y-m-d'
-                    ]
+                    ],
                 ],
             ],
             [
@@ -117,11 +117,5 @@ class GetCustomWorkingHoursDataProvider extends BaseDataProvider
                 ],
             ],
         ];
-    }
-
-    public static function removeDataCases()
-    {
-        $customWorkingHours = self::customWorkingHours();
-        return array_map(fn($date) => [$date], array_keys($customWorkingHours));
     }
 }

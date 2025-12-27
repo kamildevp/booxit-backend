@@ -13,6 +13,8 @@ use App\Repository\ScheduleRepository;
 use App\Repository\ServiceRepository;
 use App\Service\Utils\DateTimeUtils;
 use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 
 class ScheduleService
 {
@@ -55,9 +57,10 @@ class ScheduleService
             throw new EntityNotFoundException(Service::class);
         }
 
-        $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateFrom, new DateTimeImmutable('monday this week'));
-        $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateTo, new DateTimeImmutable('sunday this week'));
+        $timezone = new DateTimeZone($dto->timezone);
+        $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateFrom, new DateTimeImmutable('monday this week', $timezone), timezone: $timezone);
+        $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateTo, new DateTimeImmutable('sunday this week', $timezone), timezone: $timezone);
 
-        return $this->availabilityService->getScheduleAvailability($schedule, $service, $startDate, $endDate);
+        return $this->availabilityService->getScheduleAvailability($schedule, $service, $startDate, $endDate, $timezone);
     }
 }

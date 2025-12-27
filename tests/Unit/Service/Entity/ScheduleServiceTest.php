@@ -16,6 +16,7 @@ use App\Service\Entity\AvailabilityService;
 use App\Service\Entity\ScheduleService;
 use App\Service\Utils\DateTimeUtils;
 use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -145,29 +146,26 @@ class ScheduleServiceTest extends TestCase
         $startDate = '2025-10-10';
         $endDate = '2025-10-12';
         $availabilityMock = ['2025-10-10' => [], '2025-10-11' => [], '2025-10-12' => ['11:00', '11:15']];
+        $timezone = new DateTimeZone('Europe/Warsaw');
 
         $scheduleMock->method('hasService')->with($serviceMock)->willReturn(true);
-        $startDateTime = new DateTimeImmutable($startDate);
-        $endDateTime = new DateTimeImmutable($endDate);
+        $startDateTime = new DateTimeImmutable($startDate, $timezone);
+        $endDateTime = new DateTimeImmutable($endDate, $timezone);
 
         $this->dateTimeUtilsMock
             ->method('resolveDateTimeImmutableWithDefault')
-            ->willReturnCallback(function($date, $default) use ($startDate, $endDate, $startDateTime, $endDateTime){
-                switch(true){
-                    case $date == $startDate && $default == new DateTimeImmutable('monday this week'):
-                        return $startDateTime;
-                    case $date == $endDate && $default == new DateTimeImmutable('sunday this week'):
-                        return $endDateTime;
-                }
+            ->willReturnCallback(fn($date) => match($date){
+                $startDate => $startDateTime,
+                $endDate => $endDateTime
             });
 
         $this->availabilityServiceMock
             ->expects($this->once())
             ->method('getScheduleAvailability')
-            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime)
+            ->with($scheduleMock, $serviceMock, $startDateTime, $endDateTime, $timezone)
             ->willReturn($availabilityMock);
 
-        $result = $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleServiceAvailabilityGetDTO($startDate, $endDate));
+        $result = $this->scheduleService->getScheduleAvailability($scheduleMock, $serviceMock, new ScheduleServiceAvailabilityGetDTO($startDate, $endDate, $timezone->getName()));
         $this->assertEquals($availabilityMock, $result);
     }
 

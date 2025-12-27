@@ -6,19 +6,26 @@ namespace App\Tests\Feature\ScheduleService\DataProvider;
 
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use DateTimeImmutable;
+use DateTimeZone;
 
 class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider 
 {
     public static function validDataCases()
     {
-        $startDate = (new DateTimeImmutable('monday next week'));
-        $endDate = (new DateTimeImmutable('wednesday next week'));
+        $timezone = new DateTimeZone('Europe/Warsaw');
+        $startDate = new DateTimeImmutable('monday next week', $timezone);
+        $endDate = new DateTimeImmutable('wednesday next week', $timezone);
+
+        $timezone2 = new DateTimeZone('Asia/Tokyo');
+        $startDate2 = DateTimeImmutable::createFromFormat('Y-m-d', $startDate->format('Y-m-d'), $timezone2);
+        $endDate2 = DateTimeImmutable::createFromFormat('Y-m-d', $endDate->format('Y-m-d'), $timezone2);
 
         return [
             [
                 [
                     'date_from' => $startDate->format('Y-m-d'),
                     'date_to' => $endDate->format('Y-m-d'),
+                    'timezone' => 'Europe/Warsaw'
                 ],
                 'Test Service 1',
                 [
@@ -49,6 +56,7 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                 [
                     'date_from' => $startDate->format('Y-m-d'),
                     'date_to' => $endDate->format('Y-m-d'),
+                    'timezone' => 'Europe/Warsaw'
                 ],
                 'Test Service 2',
                 [
@@ -70,6 +78,7 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                 [
                     'date_from' => $startDate->format('Y-m-d'),
                     'date_to' => $endDate->modify('+1 day')->format('Y-m-d'),
+                    'timezone' => 'Europe/Warsaw'
                 ],
                 'Test Service 1',
                 [
@@ -97,6 +106,28 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                     $endDate->modify('+1 day')->format('Y-m-d') => []
                 ]
             ],
+            [
+                [
+                    'date_from' => $startDate->format('Y-m-d'),
+                    'date_to' => $endDate->format('Y-m-d'),
+                    'timezone' => 'Asia/Tokyo'
+                ],
+                'Test Service 2',
+                [
+                    $startDate->format('Y-m-d') => [],
+                    $startDate->modify('+1 day')->format('Y-m-d') => [],
+                    $endDate->format('Y-m-d') => [
+                        $endDate->setTime(0,0)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(1,30)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(1,45)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(2,0)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(2,15)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(2,30)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(2,45)->setTimezone($timezone2)->format('H:i'),
+                        $endDate->setTime(3,0)->setTimezone($timezone2)->format('H:i'),
+                    ]
+                ]
+            ],
         ];
     }
 
@@ -107,12 +138,16 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                 [
                     'date_from' => '',
                     'date_to' => '',
+                    'timezone' => ''
                 ],
                 [
                     'date_from' => [
                         'This value should not be blank.'
                     ],
                     'date_to' => [
+                        'This value should not be blank.'
+                    ],
+                    'timezone' => [
                         'This value should not be blank.'
                     ]
                 ],
@@ -141,6 +176,7 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                 [
                     'date_from' => 'a',
                     'date_to' => 'a',
+                    'timezone' => 'a'
                 ],
                 [
                     'date_to' => [
@@ -148,6 +184,9 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                     ],
                     'date_from' => [
                         'Parameter must be date in format Y-m-d'
+                    ],
+                    'timezone' => [
+                        'This value is not a valid timezone.'
                     ]
                 ],
             ],

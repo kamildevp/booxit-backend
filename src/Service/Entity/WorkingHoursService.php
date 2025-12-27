@@ -14,6 +14,8 @@ use App\Model\TimeWindow;
 use App\Repository\CustomTimeWindowRepository;
 use App\Repository\ScheduleRepository;
 use App\Service\Utils\DateTimeUtils;
+use DateInterval;
+use DatePeriod;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
@@ -151,5 +153,54 @@ class WorkingHoursService
         }
 
         return $weeklyWorkingHours;
+    }
+
+    /** @return TimeWindow[] */
+    public function getScheduleWorkingHoursForDateRange(        
+        Schedule $schedule,
+        DateTimeImmutable $dateFrom,
+        DateTimeImmutable $dateTo,
+        DateTimeZone $timezone,
+    ): array
+    {
+        $scheduleTimezone = new DateTimeZone($schedule->getTimezone());
+        $startDate = $dateFrom->setTimezone($scheduleTimezone)->setTime(0,0);
+        $endDate = $dateTo->setTimezone($scheduleTimezone)->setTime(23,59);
+
+        $weeklyWorkingHours = $this->getScheduleWeeklyWorkingHours($schedule);
+        $customWorkingHours = $this->getScheduleCustomWorkingHours(
+            $schedule, 
+            $startDate->modify('-1 day'), 
+            $endDate, 
+        );
+
+        $datePeriod = new DatePeriod($startDate, new DateInterval('P1D'), $endDate);
+        $workingHours = [];
+        foreach ($datePeriod as $date) {
+            $dateString = $date->format('Y-m-d');
+            if(array_key_exists($dateString, $customWorkingHours)){
+                $dateWorkingHours = array_map(fn($timeWindow) => $timeWindow->setTimezone($timezone), $customWorkingHours[$dateString]);
+            }
+            else{
+                $weekday = Weekday::createFromInt((int)$date->format('N'))->value;
+                $dateWorkingHours = array_map(
+                    fn($wh) => TimeWindow::createFromDateAndTime(
+                        $dateString,
+                        $wh->getStartTime(),
+                        $dateString,
+                        $wh->getEndTime(),
+                        $scheduleTimezone
+                    )->setTimezone($timezone),
+                    $weeklyWorkingHours[$weekday]
+                );
+            }
+
+            $workingHours = array_merge($workingHours, $dateWorkingHours);
+        }
+
+        return $this->dateTimeUtils->timeWindowCollectionDiff($workingHours, [
+            new TimeWindow($startDate, $dateFrom),
+            new TimeWindow($dateTo, $endDate)
+        ]);
     }
 }

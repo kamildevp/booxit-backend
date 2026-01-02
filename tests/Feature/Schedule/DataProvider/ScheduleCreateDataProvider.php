@@ -75,4 +75,19 @@ class ScheduleCreateDataProvider extends BaseDataProvider
             ],
         ];
     }
+
+    public static function conflictDataCases()
+    {
+        return [
+            [
+                [
+                    'name' => 'Test Schedule',
+                    'description' => 'test',
+                    'division' => 15,
+                    'timezone' => 'Europe/Warsaw',
+                ],
+                'The organization has already reached its maximum allowed number of schedules.'
+            ],
+        ];
+    }
 }

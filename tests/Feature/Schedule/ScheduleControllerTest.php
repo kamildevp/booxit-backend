@@ -6,6 +6,7 @@ namespace App\Tests\Feature\Schedule;
 
 use App\DataFixtures\Test\OrganizationMember\OrganizationAdminFixtures;
 use App\DataFixtures\Test\OrganizationMember\OrganizationMemberFixtures;
+use App\DataFixtures\Test\Schedule\CreateScheduleConflictFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleFixtures;
 use App\DataFixtures\Test\ScheduleService\ScheduleServiceFixtures;
 use App\DataFixtures\Test\Schedule\ScheduleSortingFixtures;
@@ -58,6 +59,17 @@ class ScheduleControllerTest extends BaseWebTestCase
         $organizationId = $this->organizationRepository->findOneBy([])->getId();
         $this->client->loginUser($this->user, 'api');
         $this->assertPathValidation($this->client, 'POST', "/api/organizations/$organizationId/schedules", $params, $expectedErrors);
+    }
+
+    #[Fixtures([CreateScheduleConflictFixtures::class])]
+    #[DataProviderExternal(ScheduleCreateDataProvider::class, 'conflictDataCases')]
+    public function testCreateConflict(array $params, string $expectedMessage): void
+    {
+        $organizationId = $this->organizationRepository->findOneBy([])->getId();
+        $this->client->loginUser($this->user, 'api');
+        $responseData = $this->getFailureResponseData($this->client,'POST', "/api/organizations/$organizationId/schedules", $params, expectedCode: 409);
+
+        $this->assertEquals($expectedMessage, $responseData['message']);
     }
 
     #[Fixtures([ScheduleFixtures::class])]

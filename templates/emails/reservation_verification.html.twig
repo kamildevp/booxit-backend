@@ -28,7 +28,7 @@
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
                   {{ 'email.reservation_verification.message_line1'|trans }}<br>
                   <p style="color: #555555; font-size: 0.875rem; line-height: 1.4; margin-top: 0.5rem;">
-                    {{ 'email.reservation_verification.auto_remove_warning'|trans({'%date%': verification_expiration_date|date("d.m.Y H:i")}) }}
+                    {{ 'email.reservation_verification.auto_remove_warning'|trans }}
                   </p>
                 </p>
                 <a href="{{ verification_url }}"
@@ -54,6 +54,12 @@
                     <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
                       <div><strong style="color: #333;">{{ 'email.reservation_verification.organization'|trans }}</strong></div>
                       <div style="text-align: right;">{{ organization_name }}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #eeeeee;">
+                      <div><strong style="color: #333;">{{ 'email.reservation_verification.schedule'|trans }}</strong></div>
+                      <div style="text-align: right;">{{ schedule_name }}</div>
                     </td>
                   </tr>
                   <tr>
@@ -87,10 +93,7 @@
               <td style="padding-top: 2rem; text-align: center;">
                 <h1 style="color: #333333;">{{ 'email.reservation_verification.cancel_heading'|trans }}</h1>
                 <p style="color: #555555; font-size: 1rem; line-height: 1.5;">
-                  {{ 'email.reservation_verification.cancel_message'|trans }}<br>
-                  <strong style="font-size: 0.875rem;">
-                    {{ 'email.reservation_verification.cancel_expiration'|trans({'%date%': cancellation_expiration_date|date("d.m.Y H:i")}) }}
-                  </strong>
+                  {{ 'email.reservation_verification.cancel_message'|trans }}
                 </p>
                 <a href="{{ cancellation_url }}"
                   style="display: inline-block; margin-top: 1.25rem; padding: 0.75rem 1.5rem; background-color: #6a0dad; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 0.3125rem;">

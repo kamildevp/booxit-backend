@@ -8,6 +8,7 @@ use App\Entity\Embeddable\Address;
 use App\Entity\Trait\Blameable;
 use App\Entity\Trait\Timestampable;
 use App\Enum\Organization\OrganizationNormalizerGroup;
+use App\Enum\Organization\OrganizationTier;
 use App\Repository\Filter\EntityFilter\EmbeddedFieldFilter;
 use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Filter\EntityFilter\RelatedFieldInSet;
@@ -53,6 +54,10 @@ class Organization
     #[ORM\OneToOne(cascade: ['remove'])]
     #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
     private ?File $bannerFile = null;
+
+    #[Groups([OrganizationNormalizerGroup::DETAILS->value])]
+    #[ORM\Column(length: 255, options: ['default' => OrganizationTier::BASIC->value])]
+    private string $tier = OrganizationTier::BASIC->value;
 
     #[ORM\OneToMany(mappedBy: 'organization', targetEntity: OrganizationMember::class, fetch: 'EXTRA_LAZY', cascade: ['remove'])]
     private Collection $members;
@@ -234,6 +239,17 @@ class Organization
     public function setBannerFile(?File $bannerFile): static
     {
         $this->bannerFile = $bannerFile;
+        return $this;
+    }
+
+    public function getTier(): string
+    {
+        return $this->tier;
+    }
+
+    public function setTier(string $tier): static
+    {
+        $this->tier = $tier;
         return $this;
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Documentation\Response\ConflictResponseDoc;
 use App\Documentation\Response\ForbiddenResponseDoc;
 use App\Documentation\Response\NotFoundResponseDoc;
 use App\Documentation\Response\PaginatorResponseDoc;
@@ -21,6 +22,7 @@ use App\Repository\ScheduleRepository;
 use App\Response\ResourceCreatedResponse;
 use App\Response\SuccessResponse;
 use App\Service\Auth\AccessRule\OrganizationManagementPrivilegesRule;
+use App\Service\Auth\AccessRule\OrganizationScheduleCountRule;
 use App\Service\Auth\Attribute\RestrictedAccess;
 use App\Service\EntitySerializer\EntitySerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,10 +47,12 @@ class ScheduleController extends AbstractController
         dataModel: Schedule::class,
         dataModelGroups: ScheduleNormalizerGroup::PRIVATE
     )]
+    #[ConflictResponseDoc('The organization has already reached its maximum allowed number of schedules.')]
     #[ValidationErrorResponseDoc]
     #[ForbiddenResponseDoc]
     #[UnauthorizedResponseDoc]
     #[RestrictedAccess(OrganizationManagementPrivilegesRule::class)]
+    #[RestrictedAccess(OrganizationScheduleCountRule::class)]
     #[Route('organizations/{organization}/schedules', name: 'schedule_new', methods: ['POST'], requirements: ['organization' => '\d+'])]
     public function create(
         Organization $organization,

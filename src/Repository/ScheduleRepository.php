@@ -42,4 +42,14 @@ class ScheduleRepository extends BaseRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function getOrganizationSchedulesCount(int $organizationId): int
+    {
+        $qb = $this->createQueryBuilder('s')
+                    ->select('COUNT(s.id)')
+                    ->where('s.organization = :organization')
+                    ->setParameter('organization', $organizationId);
+        
+        return (int)$qb->getQuery()->getSingleScalarResult();
+    }
 }

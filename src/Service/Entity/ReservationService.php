@@ -142,6 +142,7 @@ class ReservationService
                 'cancellation_url' => $this->emailConfirmationHandler->generateSignedUrl($cancellationEmailConfirmation),
                 'cancellation_expiration_date' => $cancellationEmailConfirmation->getExpiryDate(),
                 'organization_name' => $reservation->getOrganization()->getName(),
+                'schedule_name' => $reservation->getSchedule()->getName(),
                 'service_name' => $reservation->getService()->getName(),
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),
@@ -165,6 +166,7 @@ class ReservationService
                 'cancellation_url' => $this->emailConfirmationHandler->generateSignedUrl($cancellationEmailConfirmation),
                 'cancellation_expiration_date' => $cancellationEmailConfirmation->getExpiryDate(),
                 'organization_name' => $reservation->getOrganization()->getName(),
+                'schedule_name' => $reservation->getSchedule()->getName(),
                 'service_name' => $reservation->getService()->getName(),
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),
@@ -182,6 +184,7 @@ class ReservationService
             [
                 'reference' => $reservation->getReference(),
                 'organization_name' => $reservation->getOrganization()->getName(),
+                'schedule_name' => $reservation->getSchedule()->getName(),
                 'service_name' => $reservation->getService()->getName(),
                 'start_date_time' => $reservation->getStartDateTime(),
                 'estimated_price' => $reservation->getEstimatedPrice(),

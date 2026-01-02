@@ -172,7 +172,7 @@ class ReservationServiceTest extends TestCase
         $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
         $reservationMock->method('getStatus')->willReturn(ReservationStatus::CONFIRMED->value);
         $emailConfirmationMock = $this->createMock(EmailConfirmation::class);
-        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $scheduleMock, $serviceMock);
 
         $this->emailConfirmationServiceMock->method('resolveEmailConfirmation')->with(
             $dto->id,
@@ -342,7 +342,7 @@ class ReservationServiceTest extends TestCase
         $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, 'user@example.com', $startDateTime, $endDateTime, $languagePreference, $expiryDate);
         $verificationEmailConfirmationMock = $this->prepareEmailConfirmationMock(123, EmailConfirmationType::RESERVATION_VERIFICATION, $expiryDate);
         $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
-        $templateData = $this->prepareReservationVerificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock, $expiryDate);
+        $templateData = $this->prepareReservationVerificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $scheduleMock, $serviceMock, $expiryDate);
 
         $this->emailConfirmationServiceMock
             ->method('createEmailConfirmation')
@@ -414,7 +414,7 @@ class ReservationServiceTest extends TestCase
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
         $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
         $cancellationEmailConfirmationMock = $this->prepareEmailConfirmationMock(124, EmailConfirmationType::RESERVATION_CANCELLATION, $startDateTime);
-        $templateData = $this->prepareReservationNotificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+        $templateData = $this->prepareReservationNotificationTemplateParams($reservationMock, $startDateTime, $organizationMock, $scheduleMock, $serviceMock);
 
         $this->emailConfirmationServiceMock
             ->method('createEmailConfirmation')
@@ -460,7 +460,7 @@ class ReservationServiceTest extends TestCase
         $serviceMock = $this->prepareServiceMock();
         $scheduleMock = $this->prepareScheduleMock($organizationMock);
         $reservationMock = $this->prepareReservationMock($scheduleMock, $serviceMock, $email, $startDateTime, $endDateTime, $languagePreference);
-        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $serviceMock);
+        $templateData = $this->prepareReservationCancellationTemplateParams($reservationMock, $startDateTime, $organizationMock, $scheduleMock, $serviceMock);
 
         $this->messageBusMock
             ->expects($this->once())
@@ -481,6 +481,7 @@ class ReservationServiceTest extends TestCase
         Reservation $reservation, 
         DateTimeInterface $startDateTime, 
         Organization $organization,
+        Schedule $schedule,
         Service $service,
         DateTimeInterface $expiryDate,
     ): array
@@ -492,6 +493,7 @@ class ReservationServiceTest extends TestCase
             'cancellation_url' => 'api/reservation/cancel',
             'cancellation_expiration_date' => $startDateTime,
             'organization_name' => $organization->getName(),
+            'schedule_name' => $schedule->getName(),
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
@@ -503,6 +505,7 @@ class ReservationServiceTest extends TestCase
         Reservation $reservation, 
         DateTimeInterface $startDateTime, 
         Organization $organization,
+        Schedule $schedule,
         Service $service,
     ): array
     {
@@ -511,6 +514,7 @@ class ReservationServiceTest extends TestCase
             'cancellation_url' => 'api/reservation/cancel',
             'cancellation_expiration_date' => $startDateTime,
             'organization_name' => $organization->getName(),
+            'schedule_name' => $schedule->getName(),
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
@@ -522,12 +526,14 @@ class ReservationServiceTest extends TestCase
         Reservation $reservation, 
         DateTimeInterface $startDateTime, 
         Organization $organization,
+        Schedule $schedule,
         Service $service,
     ): array
     {
         return [
             'reference' => $reservation->getReference(),
             'organization_name' => $organization->getName(),
+            'schedule_name' => $schedule->getName(),
             'service_name' => $service->getName(),
             'start_date_time' => $startDateTime,
             'estimated_price' => '25.50',
@@ -584,6 +590,7 @@ class ReservationServiceTest extends TestCase
     {
         $scheduleMock = $this->createMock(Schedule::class);
         $scheduleMock->method('getId')->willReturn(3);
+        $scheduleMock->method('getName')->willReturn('Test Schedule');
         $scheduleMock->method('getOrganization')->willReturn($organizationMock);
 
         return $scheduleMock;

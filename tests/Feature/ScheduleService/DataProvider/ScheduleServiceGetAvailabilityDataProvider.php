@@ -17,8 +17,6 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
         $endDate = new DateTimeImmutable('wednesday next week', $timezone);
 
         $timezone2 = new DateTimeZone('Asia/Tokyo');
-        $startDate2 = DateTimeImmutable::createFromFormat('Y-m-d', $startDate->format('Y-m-d'), $timezone2);
-        $endDate2 = DateTimeImmutable::createFromFormat('Y-m-d', $endDate->format('Y-m-d'), $timezone2);
 
         return [
             [
@@ -125,6 +123,36 @@ class ScheduleServiceGetAvailabilityDataProvider extends BaseDataProvider
                         $endDate->setTime(2,30)->setTimezone($timezone2)->format('H:i'),
                         $endDate->setTime(2,45)->setTimezone($timezone2)->format('H:i'),
                         $endDate->setTime(3,0)->setTimezone($timezone2)->format('H:i'),
+                    ]
+                ]
+            ],
+            [
+                [
+                    'date_from' => $startDate->format('Y-m-d'),
+                    'date_to' => $endDate->format('Y-m-d'),
+                ],
+                'Test Service 1',
+                [
+                    $startDate->format('Y-m-d') => [
+                        '23:00',
+                    ],
+                    $startDate->modify('+1 day')->format('Y-m-d') => [
+                        '00:00',
+                        '01:30'
+                    ],
+                    $endDate->format('Y-m-d') => [
+                        '00:00',
+                        '00:15',
+                        '00:30',
+                        '01:30',
+                        '01:45',
+                        '02:00',
+                        '02:15',
+                        '02:30',
+                        '02:45',
+                        '03:00',
+                        '03:15',
+                        '03:30',
                     ]
                 ]
             ],

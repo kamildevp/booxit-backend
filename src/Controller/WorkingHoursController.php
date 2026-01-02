@@ -116,7 +116,7 @@ class WorkingHoursController extends AbstractController
         #[MapQueryString] CustomWorkingHoursGetDTO $dto = new CustomWorkingHoursGetDTO,
     ): SuccessResponse
     {
-        $workingHours = $workingHoursService->getScheduleCustomWorkingHours($schedule, $dto->dateFrom, $dto->dateTo, $dto->timezone);
+        $workingHours = $workingHoursService->getScheduleCustomWorkingHours($schedule, $dto->dateFrom, $dto->dateTo);
         $responseData = $entitySerializer->normalize($workingHours, []);
 
         return new SuccessResponse($responseData);

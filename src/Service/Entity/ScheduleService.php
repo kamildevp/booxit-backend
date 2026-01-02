@@ -57,7 +57,7 @@ class ScheduleService
             throw new EntityNotFoundException(Service::class);
         }
 
-        $timezone = new DateTimeZone($dto->timezone);
+        $timezone = new DateTimeZone($dto->timezone ?? $schedule->getTimezone());
         $startDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateFrom, new DateTimeImmutable('monday this week', $timezone), timezone: $timezone);
         $endDate = $this->dateTimeUtils->resolveDateTimeImmutableWithDefault($dto->dateTo, new DateTimeImmutable('sunday this week', $timezone), timezone: $timezone);
 

@@ -25,7 +25,6 @@ class UserSortingFixtures extends Fixture
         $sortedData = ListDataProvider::getSortedColumnsValuesSequence([
             'name' => 'string',
             'email' => 'email',
-            'username' => 'username',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ]);
@@ -40,7 +39,6 @@ class UserSortingFixtures extends Fixture
             $user = new User();
             $user->setName($item['name']);
             $user->setEmail($item['email']);
-            $user->setUsername($item['username']);
             $user->setPassword(
                 $this->hasher->hashPassword($user, 'password123')
             );

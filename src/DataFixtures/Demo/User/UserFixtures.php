@@ -21,7 +21,6 @@ class UserFixtures extends Fixture implements FixtureGroupInterface
             $user = new User();
             $user->setName($item['name']);
             $user->setEmail($item['email']);
-            $user->setUsername($item['username']);
             $user->setPassword('password123');
             $user->setVerified(true);
             $user->setCreatedAt(new DateTimeImmutable($item['created_at']));

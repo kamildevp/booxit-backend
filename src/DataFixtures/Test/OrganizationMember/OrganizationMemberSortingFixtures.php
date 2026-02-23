@@ -19,7 +19,6 @@ class OrganizationMemberSortingFixtures extends Fixture
         $sortedData = ListDataProvider::getSortedColumnsValuesSequence([
             'role' => 'organization_role',
             'app_user.name' => 'string',
-            'app_user.username' => 'username'
         ]);
 
         $data = [
@@ -47,7 +46,6 @@ class OrganizationMemberSortingFixtures extends Fixture
             $user = new User();
             $user->setName($item['app_user.name']);
             $user->setEmail("om-user{$i}@example.com");
-            $user->setUsername($item['app_user.username']);
             $user->setPassword('dummypass');
             $user->setVerified(true);
             $manager->persist($user);

@@ -41,10 +41,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     #[Groups([UserNormalizerGroup::BASE_INFO->value])]
-    #[ORM\Column(length: 255, unique: true)]
-    private ?string $username = null;
-
-    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
@@ -100,18 +96,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
-        return $this;
-    }
-
-    public function getUsername(): ?string
-    {
-        return $this->username;
-    }
-
-    public function setUsername(string $username): static
-    {
-        $this->username = $username;
 
         return $this;
     }
@@ -312,7 +296,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_merge(self::getTimestampsFilterDefs(), [
             'name' => new FieldContains('name'),
             'email' => new FieldContains('email'),
-            'username' => new FieldContains('username'),
         ]);
     }
 
@@ -322,7 +305,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'id' => new BaseFieldOrder('id'),
             'name' => new BaseFieldOrder('name'),
             'email' => new BaseFieldOrder('email'),
-            'username' => new BaseFieldOrder('username'),
         ]);
     }
 

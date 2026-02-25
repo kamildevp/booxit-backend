@@ -81,5 +81,9 @@ services:
             $options: 
                 clientId: '%env(GOOGLE_AUTH_CLIENT_ID)%'
                 clientSecret: '%env(GOOGLE_AUTH_CLIENT_SECRET)%'
+
+    _instanceof:
+        App\Service\Auth\Social\SocialAuthProviderInterface:
+            tags: ['social_auth_provider']
             
 

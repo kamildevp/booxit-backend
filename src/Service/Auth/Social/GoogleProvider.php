@@ -59,4 +59,9 @@ class GoogleProvider extends AbstractProvider implements SocialAuthProviderInter
 
         return $owner;
     }
+
+    public function getProviderType(): SocialAuthProvider
+    {
+        return SocialAuthProvider::GOOGLE;
+    }
 }

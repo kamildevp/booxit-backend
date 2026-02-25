@@ -46,7 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     private ?string $plainPassword = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?string $password = null;
 
     #[Groups([UserNormalizerGroup::SENSITIVE->value])]
@@ -74,6 +74,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups([UserNormalizerGroup::DETAILS->value])]
     #[ORM\Column(length: 255)]
     private string $languagePreference = TranslationsLocale::EN->value;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $authProvider = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $authProviderUserId = null;
 
     public function __construct()
     {
@@ -351,6 +357,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLanguagePreference(string $languagePreference): static
     {
         $this->languagePreference = $languagePreference;
+
+        return $this;
+    }
+
+    public function getAuthProvider(): ?string
+    {
+        return $this->authProvider;
+    }
+
+    public function setAuthProvider(?string $authProvider): static
+    {
+        $this->authProvider = $authProvider;
+
+        return $this;
+    }
+
+    public function getAuthProviderUserId(): ?string
+    {
+        return $this->authProviderUserId;
+    }
+
+    public function setAuthProviderUserId(?string $authProviderUserId): static
+    {
+        $this->authProviderUserId = $authProviderUserId;
 
         return $this;
     }

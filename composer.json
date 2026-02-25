@@ -15,6 +15,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.14",
         "dragonmantank/cron-expression": "^3.4",
+        "league/oauth2-google": "^4.1",
         "lexik/jwt-authentication-bundle": "^2.18",
         "nelmio/api-doc-bundle": "^5.5",
         "odolbeau/phone-number-bundle": "^4.2",

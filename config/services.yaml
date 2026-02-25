@@ -76,3 +76,10 @@ services:
         arguments:
             $inner: '@App\ValueResolver\EntityValueResolver.inner'
 
+    League\OAuth2\Client\Provider\Google:
+        arguments:
+            $options: 
+                clientId: '%env(GOOGLE_AUTH_CLIENT_ID)%'
+                clientSecret: '%env(GOOGLE_AUTH_CLIENT_SECRET)%'
+            
+

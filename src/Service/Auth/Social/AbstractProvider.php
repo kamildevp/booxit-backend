@@ -25,7 +25,7 @@ abstract class AbstractProvider
         
     }
 
-    protected function resolveAuthHandlerRedirectUrl(string $authHandler, SocialAuthProvider $provider): string
+    public function resolveAuthHandlerRedirectUrl(string $authHandler, SocialAuthProvider $provider): string
     {
         $envVarName = join('_', [
             strtoupper($authHandler),

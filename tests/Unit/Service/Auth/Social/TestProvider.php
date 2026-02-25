@@ -12,11 +12,6 @@ use App\Service\Auth\Social\DTO\SocialOwnerDTO;
 
 class TestProvider extends AbstractProvider
 {
-    public function resolveAuthHandlerRedirectUrlWrapper(string $authHandler, SocialAuthProvider $provider): string
-    {
-        return parent::resolveAuthHandlerRedirectUrl($authHandler, $provider);
-    }
-
     public function resolveUserWrapper(
         SocialAuthProvider $authProvider,
         string $email,

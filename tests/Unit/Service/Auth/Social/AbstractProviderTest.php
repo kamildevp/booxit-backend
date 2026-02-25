@@ -36,14 +36,14 @@ class AbstractProviderTest extends TestCase
 
     public function testResolveAuthHandlerRedirectUrlForDefinedAuthHandler(): void
     {
-        $url = $this->provider->resolveAuthHandlerRedirectUrlWrapper($this->authHandler, SocialAuthProvider::GOOGLE);
+        $url = $this->provider->resolveAuthHandlerRedirectUrl($this->authHandler, SocialAuthProvider::GOOGLE);
         $this->assertEquals($this->redirectUrl, $url);
     }
 
     public function testResolveAuthHandlerRedirectUrlThrowsExceptionForUndefinedAuthHandler(): void
     {
         $this->expectException(ResolveAuthHandlerRedirectUrlException::class);
-        $this->provider->resolveAuthHandlerRedirectUrlWrapper('INVALID', SocialAuthProvider::GOOGLE);
+        $this->provider->resolveAuthHandlerRedirectUrl('INVALID', SocialAuthProvider::GOOGLE);
     }
 
     public function testResolveUserReturnsExistingUserWhenEmailMatches(): void

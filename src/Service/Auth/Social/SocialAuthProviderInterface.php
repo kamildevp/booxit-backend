@@ -12,4 +12,6 @@ interface SocialAuthProviderInterface
     public function getUser(string $authHandler, string $code, string $pkceCode): User;
 
     public function getProviderType(): SocialAuthProvider;
+
+    public function resolveAuthHandlerRedirectUrl(string $authHandler, SocialAuthProvider $provider): string;
 }

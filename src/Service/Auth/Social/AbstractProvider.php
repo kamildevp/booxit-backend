@@ -25,11 +25,11 @@ abstract class AbstractProvider
         
     }
 
-    public function resolveAuthHandlerRedirectUrl(string $authHandler, SocialAuthProvider $provider): string
+    public function resolveAuthHandlerRedirectUrl(string $authHandler): string
     {
         $envVarName = join('_', [
             strtoupper($authHandler),
-            $provider->value,
+            $this->getProviderType()->value,
             self::AUTH_HANDLER_VAR_SUFFIX,
         ]);
         
@@ -41,7 +41,6 @@ abstract class AbstractProvider
     }
 
     protected function resolveUser(
-        SocialAuthProvider $authProvider,
         string $email,
         string $name,
         ?string $locale,
@@ -57,7 +56,7 @@ abstract class AbstractProvider
 
         $user = $this->userRepository->findOneByFieldValue('email', $ownerDTO->email, disableFilters: ['softdeleteable', 'verifiable']);
         if(!$user instanceof User){
-            return $this->createUser($ownerDTO, $authProvider);
+            return $this->createUser($ownerDTO);
         }
 
         if($user->isDeleted()){
@@ -73,13 +72,12 @@ abstract class AbstractProvider
 
     protected function createUser(
         SocialOwnerDTO $ownerDTO,
-        SocialAuthProvider $authProvider,
     ): User
     {
         $user = new User();
         $user->setEmail($ownerDTO->email);
         $user->setName($ownerDTO->name);
-        $user->setAuthProvider($authProvider->value);
+        $user->setAuthProvider($this->getProviderType()->value);
         $user->setAuthProviderUserId($ownerDTO->id);
         $user->setLanguagePreference($this->resolveUserLocale($ownerDTO->locale)->value);
         $user->setVerified(true);
@@ -121,4 +119,6 @@ abstract class AbstractProvider
 
         return $dto;
     }
+
+    abstract public function getProviderType(): SocialAuthProvider;
 }

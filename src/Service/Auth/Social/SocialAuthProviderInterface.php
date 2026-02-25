@@ -13,5 +13,5 @@ interface SocialAuthProviderInterface
 
     public function getProviderType(): SocialAuthProvider;
 
-    public function resolveAuthHandlerRedirectUrl(string $authHandler, SocialAuthProvider $provider): string;
+    public function resolveAuthHandlerRedirectUrl(string $authHandler): string;
 }

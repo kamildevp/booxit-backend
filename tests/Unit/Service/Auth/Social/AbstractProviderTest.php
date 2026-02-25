@@ -36,19 +36,18 @@ class AbstractProviderTest extends TestCase
 
     public function testResolveAuthHandlerRedirectUrlForDefinedAuthHandler(): void
     {
-        $url = $this->provider->resolveAuthHandlerRedirectUrl($this->authHandler, SocialAuthProvider::GOOGLE);
+        $url = $this->provider->resolveAuthHandlerRedirectUrl($this->authHandler);
         $this->assertEquals($this->redirectUrl, $url);
     }
 
     public function testResolveAuthHandlerRedirectUrlThrowsExceptionForUndefinedAuthHandler(): void
     {
         $this->expectException(ResolveAuthHandlerRedirectUrlException::class);
-        $this->provider->resolveAuthHandlerRedirectUrl('INVALID', SocialAuthProvider::GOOGLE);
+        $this->provider->resolveAuthHandlerRedirectUrl('INVALID');
     }
 
     public function testResolveUserReturnsExistingUserWhenEmailMatches(): void
     {
-        $authProvider = SocialAuthProvider::GOOGLE;
         $emailMock = 'user@example.com';
         $nameMock = 'User Mock';
         $localeMock = 'en-US';
@@ -68,13 +67,12 @@ class AbstractProviderTest extends TestCase
             ->method('validate')
             ->willReturn(new ConstraintViolationList([]));
 
-        $result = $this->provider->resolveUserWrapper($authProvider, $emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
+        $result = $this->provider->resolveUserWrapper($emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
         $this->assertSame($userMock, $result);
     }
 
     public function testResolveUserReturnsNewUserWhenEmailDoesNotMatch(): void
     {
-        $authProvider = SocialAuthProvider::GOOGLE;
         $emailMock = 'user@example.com';
         $nameMock = 'User Mock';
         $localeMock = 'en-US';
@@ -93,7 +91,7 @@ class AbstractProviderTest extends TestCase
                     $arg instanceof User &&
                     $arg->getEmail() === $emailMock &&
                     $arg->getName() === $nameMock &&
-                    $arg->getAuthProvider() === $authProvider->value &&
+                    $arg->getAuthProvider() === $this->provider->getProviderType()->value &&
                     $arg->getAuthProviderUserId() === $authProviderUserIdMock &&
                     $arg->getLanguagePreference() === 'en' &&
                     $arg->isVerified() === true
@@ -106,13 +104,12 @@ class AbstractProviderTest extends TestCase
             ->method('validate')
             ->willReturn(new ConstraintViolationList([]));
 
-        $result = $this->provider->resolveUserWrapper($authProvider, $emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
+        $result = $this->provider->resolveUserWrapper($emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
         $this->assertInstanceOf(User::class, $result);
     }
 
     public function testResolveUserThrowsExceptionWhenUserAccountHasBeenDeleted(): void
     {
-        $authProvider = SocialAuthProvider::GOOGLE;
         $emailMock = 'user@example.com';
         $nameMock = 'User Mock';
         $localeMock = 'en-US';
@@ -132,12 +129,11 @@ class AbstractProviderTest extends TestCase
             ->willReturn(new ConstraintViolationList([]));
 
         $this->expectException(SocialAuthFailedException::class);
-        $this->provider->resolveUserWrapper($authProvider, $emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
+        $this->provider->resolveUserWrapper($emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
     }
 
     public function testResolveUserMarksAccountAsVerifiedIfNotAlreadyVerified(): void
     {
-        $authProvider = SocialAuthProvider::GOOGLE;
         $emailMock = 'user@example.com';
         $nameMock = 'User Mock';
         $localeMock = 'en-US';
@@ -162,12 +158,11 @@ class AbstractProviderTest extends TestCase
             ->method('validate')
             ->willReturn(new ConstraintViolationList([]));
 
-        $this->provider->resolveUserWrapper($authProvider, $emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
+        $this->provider->resolveUserWrapper($emailMock, $nameMock, $localeMock, $authProviderUserIdMock);
     }
 
     public function testCreateUserCreatesUserFromSocialOwnerDTO(): void
     {
-        $authProvider = SocialAuthProvider::GOOGLE;
         $dto = new SocialOwnerDTO(
             'user@example.com',
             'User Mock',
@@ -183,7 +178,7 @@ class AbstractProviderTest extends TestCase
                     $arg instanceof User &&
                     $arg->getEmail() === $dto->email &&
                     $arg->getName() === $dto->name &&
-                    $arg->getAuthProvider() === $authProvider->value &&
+                    $arg->getAuthProvider() === $this->provider->getProviderType()->value &&
                     $arg->getAuthProviderUserId() === $dto->id &&
                     $arg->getLanguagePreference() === 'en' &&
                     $arg->isVerified() === true
@@ -191,7 +186,7 @@ class AbstractProviderTest extends TestCase
                 true
             );
 
-        $result = $this->provider->createUserWrapper($dto, $authProvider);
+        $result = $this->provider->createUserWrapper($dto);
         $this->assertInstanceOf(User::class, $result);
     }
 

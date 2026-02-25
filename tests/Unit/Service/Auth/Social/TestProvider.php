@@ -13,19 +13,18 @@ use App\Service\Auth\Social\DTO\SocialOwnerDTO;
 class TestProvider extends AbstractProvider
 {
     public function resolveUserWrapper(
-        SocialAuthProvider $authProvider,
         string $email,
         string $name,
         ?string $locale,
         ?string $authProviderUserId,
     ): User
     {
-        return parent::resolveUser($authProvider, $email, $name, $locale, $authProviderUserId);
+        return parent::resolveUser($email, $name, $locale, $authProviderUserId);
     }
 
-    public function createUserWrapper(SocialOwnerDTO $ownerDTO, SocialAuthProvider $authProvider): User
+    public function createUserWrapper(SocialOwnerDTO $ownerDTO): User
     {
-        return parent::createUser($ownerDTO, $authProvider);
+        return parent::createUser($ownerDTO);
     }
 
     public function resolveUserLocaleWrapper(?string $providerLocale): TranslationsLocale
@@ -41,5 +40,10 @@ class TestProvider extends AbstractProvider
     ): SocialOwnerDTO
     {
         return parent::parseOwnerInfo($email, $name, $locale, $authProviderUserId);
+    }
+
+    public function getProviderType(): SocialAuthProvider
+    {
+        return SocialAuthProvider::GOOGLE;
     }
 }

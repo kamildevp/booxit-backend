@@ -28,7 +28,6 @@ class GoogleProvider extends AbstractProvider implements SocialAuthProviderInter
     {
         $owner = $this->fetchGoogleUser($authHandler, $code, $pkceCode);
         return $this->resolveUser(
-            SocialAuthProvider::GOOGLE,
             $owner->getEmail() ?? '',
             $owner->getName(),
             $owner->getLocale(),
@@ -38,7 +37,7 @@ class GoogleProvider extends AbstractProvider implements SocialAuthProviderInter
 
     private function fetchGoogleUser(string $authHandler, string $code, string $pkceCode): GoogleUser
     {
-        $redirectUri = $this->resolveAuthHandlerRedirectUrl($authHandler, SocialAuthProvider::GOOGLE);
+        $redirectUri = $this->resolveAuthHandlerRedirectUrl($authHandler);
         try{
             $token = $this->provider->getAccessToken('authorization_code', [
                 'code' => $code,

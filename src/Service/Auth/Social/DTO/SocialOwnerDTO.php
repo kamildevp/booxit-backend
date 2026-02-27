@@ -14,7 +14,7 @@ class SocialOwnerDTO extends AbstractDTO
         public readonly string $email,
         #[Compound\NameRequirements]
         public readonly string $name,
-        public readonly string $locale,
+        public readonly ?string $locale,
         public readonly ?string $id
     )
     {

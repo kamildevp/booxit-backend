@@ -15,7 +15,7 @@ api_auth_refresh:
     methods: POST
 
 api_auth_google_login:
-    path: /api/auth/google_login
+    path: /api/auth/google-login
     methods: POST
 
 home_redirect:

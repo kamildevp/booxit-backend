@@ -37,7 +37,7 @@ security:
             custom_authenticators:
                 - App\Security\RefreshTokenAuthenticator
         google_login:
-            pattern: ^/api/auth/google_login
+            pattern: ^/api/auth/google-login
             stateless: true
             provider: app_user_provider
             custom_authenticators:

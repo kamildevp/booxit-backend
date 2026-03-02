@@ -122,7 +122,7 @@ class AuthControllerTest extends BaseWebTestCase
             ->with($tokenMock)
             ->willReturn($googleUserMock);
 
-        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/google_login', $params);
+        $responseData = $this->getSuccessfulResponseData($this->client, 'POST', '/api/auth/google-login', $params);
         $this->assertArrayHasKey('access_token', $responseData);
         $this->assertArrayHasKey('refresh_token', $responseData);
     }
@@ -130,7 +130,7 @@ class AuthControllerTest extends BaseWebTestCase
     #[DataProviderExternal(AuthGoogleLoginDataProvider::class, 'invalidAuthParametersDataCases')]
     public function testGoogleLoginWithInvalidAuthParameters(array $params): void
     {
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google_login', $params, expectedCode: 401);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google-login', $params, expectedCode: 401);
         $this->assertEquals('Invalid auth parameters', $responseData['message']);
     }
 
@@ -157,7 +157,7 @@ class AuthControllerTest extends BaseWebTestCase
             ->with($tokenMock)
             ->willThrowException(new Exception());
 
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google_login', $params, expectedCode: 401);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google-login', $params, expectedCode: 401);
         $this->assertEquals('Invalid credentials', $responseData['message']);
     }
 
@@ -173,7 +173,7 @@ class AuthControllerTest extends BaseWebTestCase
             ->expects($this->never())
             ->method('getResourceOwner');
 
-        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google_login', $params, expectedCode: 401);
+        $responseData = $this->getFailureResponseData($this->client, 'POST', '/api/auth/google-login', $params, expectedCode: 401);
         $this->assertEquals('Invalid credentials', $responseData['message']);
     }
 }

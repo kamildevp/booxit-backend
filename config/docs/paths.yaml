@@ -103,7 +103,7 @@ nelmio_api_doc:
                                 application/json:
                                     schema:
                                         $ref: '#/components/schemas/ServerErrorResponse'
-            /api/auth/google_login:
+            /api/auth/google-login:
                 post:
                     tags:
                         - Auth

@@ -18,15 +18,21 @@ class SuccessResponseDoc extends OA\Response
         ?string $description = 'Success Response', 
         ?string $dataModel = null, 
         NormalizerGroupInterface|array|null $dataModelGroups = null, 
-        ?OA\JsonContent $dataContent = null, 
+        OA\JsonContent|OA\Property|null $dataContent = null, 
         mixed $dataExample = Generator::UNDEFINED,
         array $headers = []
     )
     {
         $normalizerGroups = $dataModelGroups instanceof NormalizerGroupInterface ? $dataModelGroups->normalizationGroups() : $dataModelGroups;
-        $dataProperty = !is_null($dataModel) ? 
-            new OA\Property(property: 'data', ref: new Model(type: $dataModel, groups: $normalizerGroups)) : 
-            new OA\Property(property: 'data', type: 'object', properties: $dataContent->properties ?? [], example: $dataExample);
+
+        if(!is_null($dataModel)){
+            $dataProperty = new OA\Property(property: 'data', ref: new Model(type: $dataModel, groups: $normalizerGroups));
+        }
+        else{
+            $dataProperty = $dataContent instanceof OA\Property ? 
+                $dataContent : 
+                new OA\Property(property: 'data', type: 'object', properties: $dataContent->properties ?? [], example: $dataExample);
+        }
 
         $content = new OA\JsonContent(
             type: "object",

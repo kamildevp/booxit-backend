@@ -24,9 +24,6 @@ class UserCreateDTO extends AbstractDTO
         #[Compound\EmailRequirements]
         #[CustomAssert\UniqueEntityField(User::class, 'email')]
         public readonly string $email,
-        #[Compound\UsernameRequirements]
-        #[CustomAssert\UniqueEntityField(User::class, 'username')]
-        public readonly string $username,
         string $verificationHandler, 
         string $password,
         string $languagePreference,

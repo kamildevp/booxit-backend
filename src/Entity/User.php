@@ -41,16 +41,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     #[Groups([UserNormalizerGroup::BASE_INFO->value])]
-    #[ORM\Column(length: 255, unique: true)]
-    private ?string $username = null;
-
-    #[Groups([UserNormalizerGroup::BASE_INFO->value])]
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
     private ?string $plainPassword = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?string $password = null;
 
     #[Groups([UserNormalizerGroup::SENSITIVE->value])]
@@ -79,6 +75,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private string $languagePreference = TranslationsLocale::EN->value;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $authProvider = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $authProviderUserId = null;
+
     public function __construct()
     {
         $this->emailConfirmations = new ArrayCollection();
@@ -100,18 +102,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
-        return $this;
-    }
-
-    public function getUsername(): ?string
-    {
-        return $this->username;
-    }
-
-    public function setUsername(string $username): static
-    {
-        $this->username = $username;
 
         return $this;
     }
@@ -312,7 +302,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_merge(self::getTimestampsFilterDefs(), [
             'name' => new FieldContains('name'),
             'email' => new FieldContains('email'),
-            'username' => new FieldContains('username'),
         ]);
     }
 
@@ -322,7 +311,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'id' => new BaseFieldOrder('id'),
             'name' => new BaseFieldOrder('name'),
             'email' => new BaseFieldOrder('email'),
-            'username' => new BaseFieldOrder('username'),
         ]);
     }
 
@@ -369,6 +357,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLanguagePreference(string $languagePreference): static
     {
         $this->languagePreference = $languagePreference;
+
+        return $this;
+    }
+
+    public function getAuthProvider(): ?string
+    {
+        return $this->authProvider;
+    }
+
+    public function setAuthProvider(?string $authProvider): static
+    {
+        $this->authProvider = $authProvider;
+
+        return $this;
+    }
+
+    public function getAuthProviderUserId(): ?string
+    {
+        return $this->authProviderUserId;
+    }
+
+    public function setAuthProviderUserId(?string $authProviderUserId): static
+    {
+        $this->authProviderUserId = $authProviderUserId;
 
         return $this;
     }

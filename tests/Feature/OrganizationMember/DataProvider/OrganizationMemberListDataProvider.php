@@ -26,18 +26,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
             ],
             [
                 [
-                    'app_user' => [
-                        'username' => 'A'
-                    ]
-                ],
-                [
-                    'app_user' => [
-                        'username' => 'Sorted_A'
-                    ]
-                ],
-            ],
-            [
-                [
                     'role' => [OrganizationRole::ADMIN->value]
                 ],
                 [
@@ -59,14 +47,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
                 array_map(fn($val) => ['app_user' => $val], parent::getSortedColumnValueSequence('name', 'string', 'desc'))
             ],
             [
-                'app_user.username',
-                array_map(fn($val) => ['app_user' => $val], parent::getSortedColumnValueSequence('username', 'username'))
-            ],
-            [
-                '-app_user.username',
-                array_map(fn($val) => ['app_user' => $val], parent::getSortedColumnValueSequence('username', 'username', 'desc'))
-            ],
-            [
                 'role',
                 parent::getSortedColumnValueSequence('role', 'organization_role')
             ],
@@ -85,7 +65,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
                     'filters' => [
                         'app_user' => [
                             'name' => '',
-                            'username' => '',
                         ],
                         'role' => ['a'],
                     ]
@@ -94,9 +73,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
                     'filters' => [
                         'app_user' => [
                             'name' => [
-                                'Parameter must be at least 1 characters long'
-                            ],
-                            'username' => [
                                 'Parameter must be at least 1 characters long'
                             ],
                         ],
@@ -111,7 +87,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
                     'filters' => [
                         'app_user' => [
                             'name' => str_repeat('a', 55),
-                            'username' => str_repeat('a', 55),
                         ]
                     ]
                 ],
@@ -121,9 +96,6 @@ class OrganizationMemberListDataProvider extends ListDataProvider
                             'name' => [
                                 'Parameter cannot be longer than 50 characters'
                             ],
-                            'username' => [
-                                'Parameter cannot be longer than 50 characters'
-                            ]
                         ]
                     ]
                 ]

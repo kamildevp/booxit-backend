@@ -23,9 +23,6 @@ class UserPatchDTO extends AbstractDTO
         #[Compound\EmailRequirements]
         #[CustomAssert\UniqueEntityField(User::class, 'email', ['currentUser'])]
         public readonly string $email,
-        #[Compound\UsernameRequirements]
-        #[CustomAssert\UniqueEntityField(User::class, 'username', ['currentUser'])]
-        public readonly string $username,
         string $verificationHandler,
         string $languagePreference,
     )

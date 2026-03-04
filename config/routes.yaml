@@ -14,6 +14,10 @@ api_auth_refresh:
     path: /api/auth/refresh
     methods: POST
 
+api_auth_google_login:
+    path: /api/auth/google-login
+    methods: POST
+
 home_redirect:
     path: /
     controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController

@@ -103,4 +103,57 @@ nelmio_api_doc:
                                 application/json:
                                     schema:
                                         $ref: '#/components/schemas/ServerErrorResponse'
+            /api/auth/google-login:
+                post:
+                    tags:
+                        - Auth
+                    operationId: postGoogleCredentialsItem
+                    summary: Get auth tokens using Google OAuth 2.0
+                    description: |
+                        Authenticates the user with the provided google auth credentials and returns access and refresh tokens on success.  
+                        Google OAuth redirect url is generated using the specified **auth_handler**, which must match one of the predefined handlers to ensure it points to a trusted domain. 
+                        <br><br>**Note:** The *"internal"* auth handler is a dummy handler used to generate a safe Google OAuth redirect url when no external handler is provided.
+                    requestBody:
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/GoogleLoginCredentials'
+                    responses:
+                        '200':
+                            description: Auth tokens
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: success
+                                            data:
+                                                $ref: '#/components/schemas/AuthTokens'
+                        '401':
+                            description: Invalid credentials response
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: fail
+                                            data:
+                                                type: object
+                                                properties:
+                                                    message:
+                                                        type: string
+                                                        example: Invalid credentials
+                                                    errors: 
+                                                        type: object
+                                                        example: null
+                        '500':
+                            description: Server Error Response
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ServerErrorResponse'
 

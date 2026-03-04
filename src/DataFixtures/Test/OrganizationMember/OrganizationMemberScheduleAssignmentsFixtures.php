@@ -24,7 +24,6 @@ class OrganizationMemberScheduleAssignmentsFixtures extends Fixture implements D
         $user = new User();
         $user->setName('Test User');
         $user->setEmail("omsa-user@example.com");
-        $user->setUsername("omsa_user");
         $user->setPassword('dummypass');
         $user->setVerified(true);
         $manager->persist($user);

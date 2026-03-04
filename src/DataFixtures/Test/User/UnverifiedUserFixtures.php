@@ -23,7 +23,6 @@ class UnverifiedUserFixtures extends Fixture
         $user = new User();
         $user->setName('Unverified Test User');
         $user->setEmail("unverified_user@example.com");
-        $user->setUsername("unverified_user");
         $user->setPassword(
             $this->hasher->hashPassword($user, 'password123')
         );

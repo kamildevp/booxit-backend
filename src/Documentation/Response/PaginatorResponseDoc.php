@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Documentation\Response;
 
 use App\Enum\Interface\NormalizerGroupInterface;
-use App\Enum\ResponseStatus;
 use App\Repository\Pagination\Model\PaginationResult;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
@@ -31,19 +30,11 @@ class PaginatorResponseDoc extends SuccessResponseDoc
                     items: !is_null($dataModel) ? new OA\Items(ref: new Model(type: $dataModel, groups: $normalizerGroups)) : $itemSchema
                 )
             ])
-        ]); 
-
-        $dataContent = new OA\JsonContent(
-            type: "object",
-            properties: [
-                new OA\Property(property: "status", type: "string", example: ResponseStatus::SUCCESS->value),
-                $dataProperty
-            ]
-        );
+        ]);
 
         parent::__construct(
             description: $description,
-            dataContent: $dataContent,
+            dataContent: $dataProperty,
             headers: $headers
         );
     }

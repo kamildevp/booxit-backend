@@ -144,7 +144,7 @@ class OrganizationController extends AbstractController
         description: 'Retrieves a paginated list of existing organizations with their public information.'
     )]
     #[PaginatorResponseDoc(
-        description: 'Paginated users list', 
+        description: 'Paginated organizations list', 
         dataModel: Organization::class,
         dataModelGroups: OrganizationNormalizerGroup::PUBLIC
     )]

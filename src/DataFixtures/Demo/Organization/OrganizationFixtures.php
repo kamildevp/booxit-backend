@@ -16,11 +16,10 @@ use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 class OrganizationFixtures extends Fixture implements FixtureGroupInterface
-{    
-    const BANNER_SOURCE_FILE_PATH = '/src/DataFixtures/Demo/Organization/DataProvider/banner.png';
-    const BANNER_FILE_PATH = '/src/storage/organization/banner/fixture-banner.png';
+{   
+    const BANNER_FILE_PATH = '/storage/organization/banner/fixture-banner.png';
     const BANNER_FILE_SIZE = '96176';
-    const BANNER_FILE_NAME = 'banner.png';
+    const BANNER_FILE_NAME = 'fixture-banner.png';
     const BANNER_FILE_MIME_TYPE = 'image/png';
 
     public function __construct(private ContainerBagInterface $containerBag)

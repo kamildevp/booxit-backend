@@ -14,13 +14,16 @@ use App\Repository\Filter\EntityFilter\FieldContains;
 use App\Repository\Filter\EntityFilter\RelatedFieldInSet;
 use App\Repository\Order\EntityOrder\BaseFieldOrder;
 use App\Repository\OrganizationRepository;
+use App\Serializer\Attribute\ResourceUrl;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation\SoftDeleteable as DoctrineSoftDeleteable;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 use Symfony\Component\Serializer\Attribute\Groups;
+use OpenApi\Attributes as OA;
 
 #[DoctrineSoftDeleteable]
 #[ORM\Index(
@@ -51,6 +54,10 @@ class Organization
     #[ORM\Embedded(class: Address::class)]
     private Address $address;
 
+    #[OA\Property(type: 'string')]
+    #[Groups([OrganizationNormalizerGroup::DETAILS->value])]
+    #[SerializedName('banner_url')]
+    #[ResourceUrl('organization_banner_get', ['organization' => '{id}'])]
     #[ORM\OneToOne(cascade: ['remove'])]
     #[ORM\JoinColumn(onDelete: 'SET NULL', nullable: true)]
     private ?File $bannerFile = null;

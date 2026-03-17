@@ -20,8 +20,6 @@ class ResourceUrlNormalizer implements NormalizerInterface
         private NormalizerInterface $normalizer,
         private UrlGeneratorInterface $urlGenerator,
         private ClassMetadataFactoryInterface $classMetadataFactory,
-        #[Autowire(param: 'domain_url')]
-        private string $domainUrl,
     ) 
     {
 
@@ -100,8 +98,7 @@ class ResourceUrlNormalizer implements NormalizerInterface
             }
         }
 
-        $path = $this->urlGenerator->generate($routeName, $parameters, UrlGeneratorInterface::ABSOLUTE_PATH);
-        return $this->domainUrl.$path;
+        return $this->urlGenerator->generate($routeName, $parameters, UrlGeneratorInterface::ABSOLUTE_URL);
     }
 
     private function resolveRouteParamValue(mixed $object, ReflectionClass $refClass, string $value): mixed

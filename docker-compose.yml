@@ -28,6 +28,7 @@ services:
       - web-server-network
 
   nginx:
+    hostname: booxit-backend-nginx
     image: nginx:1.29.1-alpine
     depends_on:
       php:

@@ -7,7 +7,7 @@ parameters:
     timezone: '%env(APP_TIMEZONE)%'
     storage_directory: '%kernel.project_dir%/%env(STORAGE_DIRECTORY)%'
     defaultRefreshTokenTTL: 259200
-    
+
 services:
     # default configuration for services in *this* file
     _defaults:

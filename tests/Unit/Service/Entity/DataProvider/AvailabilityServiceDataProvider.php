@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Entity\DataProvider;
 
-use App\Enum\Weekday;
 use App\Model\TimeWindow;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use DateTimeImmutable;
@@ -144,13 +143,13 @@ class AvailabilityServiceDataProvider extends BaseDataProvider
                 [
                     $startDate->format('Y-m-d') => [],
                     $startDate->modify('+1 day')->format('Y-m-d') => [
-                        '07:00',
-                        '08:00'
+                        $startDate->setTime(23,00)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('H:i'),
+                        $startDate->modify('+1 day')->setTime(0,0)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('H:i'),
                     ],
                     $endDate->format('Y-m-d') => [
-                        '08:00',
-                        '08:15',
-                        '08:30'
+                        $endDate->setTime(0,0)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('H:i'),
+                        $endDate->setTime(0,15)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('H:i'),
+                        $endDate->setTime(0,30)->setTimezone(new DateTimeZone('Asia/Tokyo'))->format('H:i'),
                     ]
                 ]
             ],

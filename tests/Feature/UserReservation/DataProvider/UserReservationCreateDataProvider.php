@@ -8,14 +8,17 @@ use App\Enum\Reservation\ReservationStatus;
 use App\Tests\Utils\DataProvider\BaseDataProvider;
 use App\Validator\Constraints\Compound\DateTimeStringRequirements;
 use DateTimeImmutable;
+use DateTimeZone;
 
 class UserReservationCreateDataProvider extends BaseDataProvider 
 {
     
     public static function validDataCases()
     {
-        $startDateTime = (new DateTimeImmutable('wednesday next week'))->setTime(2,0);
-        $endDateTime = (new DateTimeImmutable('wednesday next week'))->setTime(2,30);
+        $timezone = new DateTimeZone('Europe/Warsaw');
+        $timezoneUTC = new DateTimeZone('UTC');
+        $startDateTime = (new DateTimeImmutable('wednesday next week', $timezone))->setTime(3,0);
+        $endDateTime = (new DateTimeImmutable('wednesday next week', $timezone))->setTime(3,30);
 
         return [
             [
@@ -26,8 +29,8 @@ class UserReservationCreateDataProvider extends BaseDataProvider
                 ],
                 [
                     'phone_number' => '+48213721372',
-                    'start_date_time' => $startDateTime->format(DateTimeStringRequirements::FORMAT),
-                    'end_date_time' => $endDateTime->format(DateTimeStringRequirements::FORMAT),
+                    'start_date_time' => $startDateTime->setTimezone($timezoneUTC)->format(DateTimeStringRequirements::FORMAT),
+                    'end_date_time' => $endDateTime->setTimezone($timezoneUTC)->format(DateTimeStringRequirements::FORMAT),
                     'estimated_price' => '20.50',
                     'status' => ReservationStatus::PENDING->value,
                 ]
